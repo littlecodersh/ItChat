@@ -11,14 +11,16 @@ class ItChat:
         self.uuid = None
         self.loginInfo = {}
         self.userName = None
-        self.heihei = '@e0da87603081255d7bc7648afb25bd7604f7d716542caff1f16c352dbd401832'
+        self.heihei = 0
         self.load()
     def load(self):
-        while c.get_QRuuid(): time.sleep(1)
-        c.get_QR()
-        while c.check_login(): time.sleep(1)
-        c.web_init()
-        c.get_contract()
+        while self.get_QRuuid(): time.sleep(1)
+        self.get_QR()
+        while self.check_login(): time.sleep(1)
+        self.web_init()
+        self.show_mobile_login()
+        self.get_contract()
+        self.polling()
     def get_QRuuid(self):
         url = '%s/jslogin'%BASE_URL
         payloads = {
@@ -71,6 +73,9 @@ class ItChat:
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
         dic = json.loads(r.content.decode('utf-8', 'replace'))
         self.userName = dic['User']['UserName']
+        self.loginInfo['SyncKey'] = dic['SyncKey']
+        self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val'])
+                        for item in dic['SyncKey']['List']])
     def get_contract(self):
         url = '%s/webwxgetcontact?r=%s&seq=0&skey=%s' % (self.loginInfo['url'],
                 int(time.time()), self.loginInfo['skey'])
@@ -82,10 +87,65 @@ class ItChat:
             i = 0
             for m in self.memberList:
                 if m['Sex'] == 0 or m['Sex'] == '0': self.memberList.remove(m);i+=1
-        # with codecs.open('contractList.txt', 'w', 'utf-8') as f: f.write(str(self.memberList).encode('utf-8','replace'))
-        # with codecs.open('contract.txt', 'w', 'utf-8') as f:
-        #     for m in self.memberList: f.write(m['NickName']+u' '+str(m['Sex'])+u'\n')
-    def send_msg(self, toUserName = self.userName, msg = 'Test Message'):
+    def show_mobile_login(self):
+        url = '%s/webwxstatusnotify'%self.loginInfo['url']
+        payloads = {
+                'BaseRequest': self.loginInfo['BaseRequest'],
+                'Code': 3,
+                'FromUserName': self.userName,
+                'ToUserName': self.userName,
+                'ClientMsgId': int(time.time()),
+                }
+        headers = { 'ContentType': 'application/json; charset=UTF-8' }
+        r = self.s.post(url, data = json.dumps(payloads), headers = headers)
+    def polling(self):
+        print 'Start Polling'
+        i = self.sync_check()
+        while i:
+            i = self.sync_check()
+            if i != '0': msgList = self.get_msg()
+            if msgList: self.print_msg(msgList)
+            time.sleep(3)
+        print 'LOGOUT'
+    def sync_check(self):
+        url = '%s/synccheck'%self.loginInfo['url']
+        payloads = {
+                'r': int(time.time()),
+                'skey': self.loginInfo['skey'],
+                'sid': self.loginInfo['wxsid'],
+                'uin': self.loginInfo['wxuin'],
+                'deviceid': self.loginInfo['pass_ticket'],
+                'synckey': self.loginInfo['synckey'],
+                }
+        r = self.s.get(url, params = payloads)
+
+        regx = r'window.synccheck={retcode:"(\d+)",selector:"(\d+)"}'
+        pm = re.search(regx, r.text)
+
+        if pm.group(1) != '0' : return None
+        return pm.group(2)
+    def get_msg(self):
+        url = '%s/webwxsync?sid=%s&skey=%s'%(
+            self.loginInfo['url'], self.loginInfo['wxsid'], self.loginInfo['skey'])
+        payloads = {
+            'BaseRequest': self.loginInfo['BaseRequest'],
+            'SyncKey': self.loginInfo['SyncKey'],
+            'rr': int(time.time())
+            }
+        headers = { 'ContentType': 'application/json; charset=UTF-8' }
+        r = self.s.post(url, data = json.dumps(payloads), headers = headers)
+
+        dic = json.loads(r.content.decode('utf-8', 'replace'))
+        self.loginInfo['SyncKey'] = dic['SyncKey']
+        if dic['AddMsgCount'] != 0: return dic['AddMsgList']
+        return None
+    def print_msg(self, l):
+        for m in l:
+            if m['FromUserName'] == self.userName: continue
+            print '%s: %s'%(self.find_nickname(m['FromUserName']), m['Content'])
+            # only for debug, reply the same msg
+            self.send_msg(self.find_nickname(m['FromUserName']), 'I received: %s'%m['Content'])
+    def send_msg(self, toUserName = None, msg = 'Test Message'):
         url = '%s/webwxsendmsg'%self.loginInfo['url']
         payloads = {
                 'BaseRequest': self.loginInfo['BaseRequest'],
@@ -93,20 +153,19 @@ class ItChat:
                     'Type': 1,
                     'Content': msg,
                     'FromUserName': self.userName,
-                    'ToUserName': self.find_user(toUserName),
+                    'ToUserName': self.find_user(toUserName) if toUserName else self.userName,
                     'LocalID': str(int(time.time())),
                     'ClientMsgId': str(int(time.time())),
                     },
                 }
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
-        print r.text
-    def find_user(self, u):
+    def find_user(self, n):
         for i in self.memberList:
-            if i['NickName'] == u: return i['UserName']
+            if i['NickName'] == n: return i['UserName']
+    def find_nickname(self, u):
+        for i in self.memberList:
+            if i['UserName'] == u: return i['NickName']
 
 if __name__ == '__main__':
     c = ItChat()
-    for i in range(20):
-        c.send_msg(msg = 'Yo~ *%s'%i)
-        time.sleep(1)
