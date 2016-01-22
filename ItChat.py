@@ -2,7 +2,7 @@
 import requests, time, re
 import os
 import json, xml.dom.minidom
-import codecs
+import codecs, urllib
 
 BASE_URL = 'https://login.weixin.qq.com'
 class ItChat:
@@ -57,13 +57,13 @@ class ItChat:
         self.loginInfo['BaseRequest'] = {}
         for node in xml.dom.minidom.parseString(s).documentElement.childNodes:
             if node.nodeName == 'skey':
-                self.loginInfo['skey'] = self.loginInfo['BaseRequest']['Skey'] = node.childNodes[0].data
+                self.loginInfo['skey'] = self.loginInfo['BaseRequest']['Skey'] = node.childNodes[0].data.encode('utf8')
             elif node.nodeName == 'wxsid':
-                self.loginInfo['wxsid'] = self.loginInfo['BaseRequest']['Sid'] = node.childNodes[0].data
+                self.loginInfo['wxsid'] = self.loginInfo['BaseRequest']['Sid'] = node.childNodes[0].data.encode('utf8')
             elif node.nodeName == 'wxuin':
-                self.loginInfo['wxuin'] = self.loginInfo['BaseRequest']['Uin'] = node.childNodes[0].data
+                self.loginInfo['wxuin'] = self.loginInfo['BaseRequest']['Uin'] = node.childNodes[0].data.encode('utf8')
             elif node.nodeName == 'pass_ticket':
-                self.loginInfo['pass_ticket'] = self.loginInfo['BaseRequest']['DeviceID'] = node.childNodes[0].data
+                self.loginInfo['pass_ticket'] = self.loginInfo['BaseRequest']['DeviceID'] = node.childNodes[0].data.encode('utf8')
     def web_init(self):
         url = '%s/webwxinit?r=%s' % (self.loginInfo['url'], int(time.time()))
         payloads = {
@@ -151,15 +151,16 @@ class ItChat:
                 'BaseRequest': self.loginInfo['BaseRequest'],
                 'Msg': {
                     'Type': 1,
-                    'Content': msg,
-                    'FromUserName': self.userName,
-                    'ToUserName': self.find_user(toUserName) if toUserName else self.userName,
-                    'LocalID': str(int(time.time())),
-                    'ClientMsgId': str(int(time.time())),
+                    'Content': msg.encode('utf8') if isinstance(msg, unicode) else msg,
+                    'FromUserName': self.userName.encode('utf8'),
+                    'ToUserName': (self.find_user(toUserName) if toUserName else self.userName).encode('utf8'),
+                    'LocalID': int(time.time()),
+                    'ClientMsgId': int(time.time()),
                     },
                 }
+        data = json.dumps(payloads, ensure_ascii = False)
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
-        r = self.s.post(url, data = json.dumps(payloads), headers = headers)
+        r = self.s.post(url, data = json.dumps(payloads, ensure_ascii = False), headers = headers)
     def find_user(self, n):
         for i in self.memberList:
             if i['NickName'] == n: return i['UserName']
@@ -169,3 +170,4 @@ class ItChat:
 
 if __name__ == '__main__':
     c = ItChat()
+    c.send_msg(msg = '测试')

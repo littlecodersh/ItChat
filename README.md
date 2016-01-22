@@ -21,3 +21,6 @@ Command line talks through Wechat
 **160112:**
 * sending and getting plain text
 * for demo, it will return what it gets
+**160122:**
+* fixed Chinese input and output
+* set up structure
