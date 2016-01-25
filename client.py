@@ -1,8 +1,13 @@
 import requests, time, re
-import os
+import os, sys
 import thread
 import json, xml.dom.minidom
-import config, storage, out
+import config, storage, out, log
+from QRCode import QRCode
+
+BASE_URL = config.BASE_URL
+CMD_QRCODE = True
+DEBUG = False
 
 class WeChatClient:
     def __init__(self, storageClass = None):
@@ -25,7 +30,7 @@ class WeChatClient:
         out.print_line('Login successfully as %s\n'%self.find_nickname(self.userName))
         thread.start_new_thread(self.maintain_loop, ())
     def get_QRuuid(self):
-        url = '%s/jslogin'%config.BASE_URL
+        url = '%s/jslogin'%BASE_URL
         payloads = {
             'appid': 'wx782c26e4c19acffb',
             'fun': 'new',
@@ -37,12 +42,20 @@ class WeChatClient:
         if data and data.group(1) == '200': self.uuid = data.group(2);return False
         # continous failing
     def get_QR(self):
-        url = '%s/qrcode/%s'%(config.BASE_URL, self.uuid)
+        url = '%s/qrcode/%s'%(BASE_URL, self.uuid)
         r = self.s.get(url, stream = True)# params = payloads, headers = HEADER, 
         with open('QR.jpg', 'wb') as f: f.write(r.content)
-        os.startfile('QR.jpg')
+        if CMD_QRCODE:
+            q = QRCode('QR.jpg', 37, 3, 'BLACK')
+            q.print_qr()
+        elif sys.platform.find('darwin') >= 0:
+            subprocess.call(['open', 'QR.jpg'])
+        elif sys.platform.find('linux') >= 0:
+            subprocess.call(['xdg-open', 'QR.jpg'])
+        else:
+            os.startfile('QR.jpg')
     def check_login(self):
-        url = '%s/cgi-bin/mmwebwx-bin/login'%config.BASE_URL
+        url = '%s/cgi-bin/mmwebwx-bin/login'%BASE_URL
         # add tip so that we can get many reply, use string payloads to avoid auto-urlencode
         payloads = 'tip=1&uuid=%s&_=%s'%(self.uuid, int(time.time()))
         r = self.s.get(url, params = payloads)
@@ -82,12 +95,13 @@ class WeChatClient:
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
         dic = json.loads(r.content.decode('utf-8', 'replace'))
         self.userName = dic['User']['UserName']
+        if DEBUG:
+            with open('userName.txt', 'w') as f: f.write(self.userName)
         self.loginInfo['SyncKey'] = dic['SyncKey']
-        self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val'])
-                        for item in dic['SyncKey']['List']])
+        self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val']) for item in dic['SyncKey']['List']])
     def get_contract(self):
         url = '%s/webwxgetcontact?r=%s&seq=0&skey=%s' % (self.loginInfo['url'],
-                int(time.time()), self.loginInfo['skey'])
+            int(time.time()), self.loginInfo['skey'])
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         r = self.s.get(url, headers = headers)
         self.memberList = json.loads(r.content.decode('utf-8', 'replace'))['MemberList']
@@ -96,6 +110,8 @@ class WeChatClient:
             i = 0
             for m in self.memberList:
                 if m['Sex'] == 0 or m['Sex'] == '0': self.memberList.remove(m);i+=1
+        if DEBUG:
+            with open('MemberList.txt', 'w') as f: f.write(str(self.memberList))
     def show_mobile_login(self):
         url = '%s/webwxstatusnotify'%self.loginInfo['url']
         payloads = {
@@ -109,13 +125,21 @@ class WeChatClient:
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
     def maintain_loop(self):
         i = self.sync_check()
-        while i:
-            # ISSUE 1
-            if i != '0': msgList = self.get_msg()
-            if msgList: self.store_msg(msgList)
-            time.sleep(3)
-            i = self.sync_check()
+        count = 0
+        while i and count <4:
+            try:
+                # ISSUE 1
+                if i != '0': msgList = self.get_msg()
+                if msgList: self.store_msg(msgList)
+                time.sleep(3)
+                i = self.sync_check()
+                count = 0
+            except:
+                count += 1
+                log.log('Exception%s'%count, False)
+                time.sleep(count*3)
         # Issue 2
+        log.log('LOG OUT', False)
         raise Exception('Log out')
     def sync_check(self):
         url = '%s/synccheck'%self.loginInfo['url']
