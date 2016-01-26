@@ -6,7 +6,7 @@ Command line talks through Wechat
         Talks with friends on WeChat through command line
     Environment:
         Windows 8.1 - 64
-        Python 2.7.10 (with requests installed)
+        Python 2.7.10 (with requests, Image)
     Attention:
         More information, contact me!
     目的：
@@ -14,7 +14,7 @@ Command line talks through Wechat
         通过命令行与微信好友交流
     环境：
         Windows 8.1 - 64
-        Python 2.7.10 （安装了requests库）
+        Python 2.7.10 （安装了requests, Image）
     注意事项：
         有什么问题都可以联系我哟~
 ###Log
@@ -27,3 +27,6 @@ Command line talks through Wechat
 * **160124:**
     * existance test
     * show QRCode through command line
+* **160126:**
+    * accept special messages
+    * add configurations

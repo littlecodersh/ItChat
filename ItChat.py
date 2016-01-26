@@ -15,5 +15,22 @@ if __name__ == '__main__':
         if s: 
             msg = s.pop()
             if client.find_nickname(msg['FromUserName']):
-                print '%s: %s'%(client.find_nickname(msg['FromUserName']), msg['Content'])
-                client.send_msg(msg['FromUserName'], 'I received: ' + msg['Content'])
+                if msg['MsgType'] == 'Text':
+                    client.send_msg(msg['FromUserName'], 'I received: ' + msg['Content'])
+                    print '%s: %s'%(client.find_nickname(msg['FromUserName']), msg['Content'])
+                elif msg['MsgType'] == 'Picture':
+                    client.send_msg(msg['FromUserName'], 'I received a picture')
+                    print '%s sent a picture [%s]'%(client.find_nickname(msg['FromUserName']), msg['Content'])
+                elif msg['MsgType'] == 'Card':
+                    client.send_msg(msg['FromUserName'], 'Greeting, %s!'%msg['Content'])
+                    print '%s sent a business card of [%s]'%(client.find_nickname(msg['FromUserName']), msg['Content'])
+                elif msg['MsgType'] == 'Sharing':
+                    client.send_msg(msg['FromUserName'], '"%s" is good!'%msg['Content'])
+                    print '%s sent a web about [%s]'%(client.find_nickname(msg['FromUserName']), msg['Content'])
+                elif msg['MsgType'] == 'Video':
+                    client.send_msg(msg['FromUserName'], 'I received a video')
+                    print '%s sent a video [%s]'%(client.find_nickname(msg['FromUserName']), msg['Content'])
+                elif msg['MsgType'] == 'Note':
+                    print 'Notification: %s'%(msg['Content'])
+                else:
+                    print str(msg)

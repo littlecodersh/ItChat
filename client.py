@@ -71,7 +71,7 @@ class WeChatClient:
         if data and data.group(1) == '201':
             out.print_line(' '*40 + '\rPlease press confirm')
         if data and data.group(1) == '408':
-            out.print_line(' '*40 + '\rReloading QR Code')
+            out.print_line(' '*40 + '\rReloading QR Code\r')
             while self.get_QRuuid(): time.sleep(1)
             self.get_QR()
         return True
@@ -106,6 +106,7 @@ class WeChatClient:
         r = self.s.get(url, headers = headers)
         self.memberList = json.loads(r.content.decode('utf-8', 'replace'))['MemberList']
         i = 1
+        # ISSUE 1.3
         while i != 0:
             i = 0
             for m in self.memberList:
@@ -127,18 +128,19 @@ class WeChatClient:
         i = self.sync_check()
         count = 0
         while i and count <4:
-            try:
-                # ISSUE 1
-                if i != '0': msgList = self.get_msg()
-                if msgList: self.store_msg(msgList)
-                time.sleep(3)
-                i = self.sync_check()
-                count = 0
-            except:
-                count += 1
-                log.log('Exception%s'%count, False)
-                time.sleep(count*3)
-        # Issue 2
+            # try:
+                # ISSUE 1.2
+            if i != '0': msgList = self.get_msg()
+            if msgList: 
+                msgList = self.produce_msg(msgList)
+                self.store_msg(msgList)
+            time.sleep(3)
+            i = self.sync_check()
+            count = 0
+            # except:
+            #     count += 1
+            #     log.log('Exception%s'%count, False)
+            #     time.sleep(count*3)
         log.log('LOG OUT', False)
         raise Exception('Log out')
     def sync_check(self):
@@ -173,12 +175,75 @@ class WeChatClient:
         self.loginInfo['SyncKey'] = dic['SyncKey']
         if dic['AddMsgCount'] != 0: return dic['AddMsgList']
         return None
+    def produce_msg(self, l):
+        rl = []
+        srl = [51, 53] # 51 messy code, 53 webwxvoipnotifymsg
+        for m in l:
+            if m['MsgType'] == 1:
+                msg = {
+                    'MsgType': 'Text',
+                    'FromUserName': m['FromUserName'],
+                    'Content': m['Content'],}
+            elif m['MsgType'] == 3 or m['MsgType'] == 47:
+                pic_dir = '%s.jpg'%int(time.time())
+                msg = {
+                    'MsgType': 'Picture',
+                    'FromUserName': m['FromUserName'],
+                    'Content': pic_dir,}
+                url = '%s/webwxgetmsgimg'%self.loginInfo['url']
+                payloads = {
+                    'MsgID': m['NewMsgId'],
+                    'skey': self.loginInfo['skey'],}
+                r = self.s.get(url, params = payloads, stream = True)
+                with open(pic_dir, 'wb') as f:
+                    for block in r.iter_content(1024):
+                        f.write(block)
+            elif m['MsgType'] == 42:
+                msg = {
+                    'MsgType': 'Card',
+                    'FromUserName': m['FromUserName'],
+                    'Content': m['RecommendInfo']['NickName'],}
+            elif m['MsgType'] == 49:
+                msg = {
+                    'MsgType': 'Sharing',
+                    'FromUserName': m['FromUserName'],
+                    'Content': m['FileName'],
+                    'Url': m['Url']}
+            elif m['MsgType'] == 62:
+                vid_dir = '%s.mp4'%int(time.time())
+                msg = {
+                    'MsgType': 'Video',
+                    'FromUserName': m['FromUserName'],
+                    'Content': vid_dir,}
+                url = '%s/webwxgetvideo'%self.loginInfo['url']
+                payloads = {
+                    'msgid': m['MsgId'],
+                    'skey': self.loginInfo['skey'],}
+                r = self.s.get(url, params = payloads, stream = True)
+                print r.status_code
+                with open(vid_dir, 'wb') as f: 
+                    for chunk in r.iter_content(chunk_size = 1024):
+                        if chunk:
+                            f.write(chunk)
+                            f.flush()
+                            os.fsync(f.fileno())
+            elif m['MsgType'] == 10000:
+                msg = {
+                    'MsgType': 'Note',
+                    'FromUserName': None,
+                    'Content': m['Content'],}
+            elif m['MsgType'] in srl:
+                continue
+            else:
+                log.log('MsgType Unknown: %s\n%s'%(m['MsgType'], str(m)), False)
+                srl.append(m['MsgType'])
+                continue
+            rl.append(msg)
+        return rl
     def store_msg(self, l):
         for m in l:
-        # Issue 2
             if m['FromUserName'] == self.userName: continue
             self.msgStorage.append(m)
-            # msg = '%s: %s'%(self.find_nickname(m['FromUserName']), m['Content'])
     def send_msg(self, toUserName = None, msg = 'Test Message'):
         if self.find_user(toUserName): toUserName = self.find_user(toUserName) 
         url = '%s/webwxsendmsg'%self.loginInfo['url']

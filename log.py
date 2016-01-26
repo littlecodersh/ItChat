@@ -12,4 +12,4 @@ def OpenLog(fn, *args, **kwargs):
 
 @OpenLog
 def log(f, msg, succeed = True):
-	f.write('[%s]%s: %s'%(('SUCC' if succeed else 'FAIL'), time.ctime(), msg))
+	f.write('[%s]%s: %s\n'%(('SUCC' if succeed else 'FAIL'), time.ctime(), msg))
