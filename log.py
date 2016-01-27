@@ -1,11 +1,11 @@
-import time
+import time, os
 import config
 
 LOG_DIR = config.LOG_DIR
 
 def OpenLog(fn, *args, **kwargs):
 	def wrapped(*args, **kwargs):
-		with open('run.log', 'a') as f:
+		with open(os.path.join(LOG_DIR, 'run.log'), 'a') as f:
 			result = fn(f, *args, **kwargs)
 		return result
 	return wrapped

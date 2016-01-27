@@ -1,14 +1,22 @@
 import sys
-import tools
+import config
 
-def print_msg(m):
-    print m
-def print_line(msg):
-    sys.stdout.write(' '*40 + '\r')
-    sys.stdout.flush()
+def ErrorIgnore(fn, *args, **kwargs):
+    def wrapped(*args, **kwargs):
+        try:
+            result = fn(*args, **kwargs)
+            return result
+        except:
+            print 'Encode Fail'
+        return None
+    return wrapped
+
+@ErrorIgnore
+def print_line(msg, oneLine = False):
+    if oneLine:
+        sys.stdout.write(' '*40 + '\r')
+        sys.stdout.flush()
+    else:
+        sys.stdout.write('\n')
     sys.stdout.write(msg)
     sys.stdout.flush()
-    # if m['FromUserName'] == self.userName: continue
-    # print '%s: %s'%(self.find_nickname(m['FromUserName']), m['Content'])
-    # # only for debug, reply the same msg
-    # self.send_msg(self.find_nickname(m['FromUserName']), 'I received: %s'%m['Content'])

@@ -30,3 +30,6 @@ Command line talks through Wechat
 * **160126:**
     * accept special messages
     * add configurations
+* **160127:**
+    * download attachments
+    * finish storage, tools and out

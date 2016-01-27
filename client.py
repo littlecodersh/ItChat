@@ -2,32 +2,39 @@ import requests, time, re
 import os, sys
 import thread
 import json, xml.dom.minidom
+from urllib import unquote
 import config, storage, out, log
-from QRCode import QRCode
+
+try:
+    from QRCode import QRCode
+    CMD_QRCODE = True
+except:
+    pass
 
 BASE_URL = config.BASE_URL
-CMD_QRCODE = True
 DEBUG = False
 
 class WeChatClient:
     def __init__(self, storageClass = None):
         self.storageClass = storageClass if storageClass else storage.Storage()
-        self.msgStorage = self.storageClass.msgList
-        self.loginInfo = self.storageClass.loginInfo
+        self.userName = self.storageClass.userName
+        self.memberList = self.storageClass.memberList
+        self.msgList = self.storageClass.msgList
+        self.msgStorage = []
+        self.loginInfo = {}
         self.s = requests.Session()
         self.uuid = None
-        self.userName = None
     def login(self):
-        out.print_line('Getting uuid\r')
+        out.print_line('Getting uuid', True)
         while self.get_QRuuid(): time.sleep(1)
-        out.print_line('Getting QR Code\r')
+        out.print_line('Getting QR Code', True)
         self.get_QR()
-        out.print_line('Please scan the QR Code\r')
+        out.print_line('Please scan the QR Code', True)
         while self.check_login(): time.sleep(1)
         self.web_init()
         self.show_mobile_login()
         self.get_contract()
-        out.print_line('Login successfully as %s\n'%self.find_nickname(self.userName))
+        out.print_line('Login successfully as %s\n'%self.storageClass.find_nickname(self.userName))
         thread.start_new_thread(self.maintain_loop, ())
     def get_QRuuid(self):
         url = '%s/jslogin'%BASE_URL
@@ -44,16 +51,17 @@ class WeChatClient:
     def get_QR(self):
         url = '%s/qrcode/%s'%(BASE_URL, self.uuid)
         r = self.s.get(url, stream = True)# params = payloads, headers = HEADER, 
-        with open('QR.jpg', 'wb') as f: f.write(r.content)
+        QR_DIR = os.path.join(config.QR_DIR, 'QR.jpg')
+        with open(QR_DIR, 'wb') as f: f.write(r.content)
         if CMD_QRCODE:
-            q = QRCode('QR.jpg', 37, 3, 'BLACK')
+            q = QRCode(QR_DIR, 37, 3, 'BLACK')
             q.print_qr()
-        elif sys.platform.find('darwin') >= 0:
-            subprocess.call(['open', 'QR.jpg'])
-        elif sys.platform.find('linux') >= 0:
-            subprocess.call(['xdg-open', 'QR.jpg'])
+        elif config.OS:
+            subprocess.call(['open', QR_DIR])
+        elif config.OS:
+            subprocess.call(['xdg-open', QR_DIR])
         else:
-            os.startfile('QR.jpg')
+            os.startfile(QR_DIR)
     def check_login(self):
         url = '%s/cgi-bin/mmwebwx-bin/login'%BASE_URL
         # add tip so that we can get many reply, use string payloads to avoid auto-urlencode
@@ -69,9 +77,9 @@ class WeChatClient:
             self.get_login_info(r.text)
             return False
         if data and data.group(1) == '201':
-            out.print_line(' '*40 + '\rPlease press confirm')
+            out.print_line('Please press confirm', True)
         if data and data.group(1) == '408':
-            out.print_line(' '*40 + '\rReloading QR Code\r')
+            out.print_line('Reloading QR Code\n', True)
             while self.get_QRuuid(): time.sleep(1)
             self.get_QR()
         return True
@@ -104,7 +112,7 @@ class WeChatClient:
             int(time.time()), self.loginInfo['skey'])
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         r = self.s.get(url, headers = headers)
-        self.memberList = json.loads(r.content.decode('utf-8', 'replace'))['MemberList']
+        self.memberList.extend(json.loads(r.content.decode('utf-8', 'replace'))['MemberList'])
         i = 1
         # ISSUE 1.3
         while i != 0:
@@ -128,19 +136,19 @@ class WeChatClient:
         i = self.sync_check()
         count = 0
         while i and count <4:
-            # try:
+            try:
                 # ISSUE 1.2
-            if i != '0': msgList = self.get_msg()
-            if msgList: 
-                msgList = self.produce_msg(msgList)
-                self.store_msg(msgList)
-            time.sleep(3)
-            i = self.sync_check()
-            count = 0
-            # except:
-            #     count += 1
-            #     log.log('Exception%s'%count, False)
-            #     time.sleep(count*3)
+                if i != '0': msgList = self.get_msg()
+                if msgList: 
+                    msgList = self.produce_msg(msgList)
+                    self.store_msg(msgList)
+                time.sleep(3)
+                i = self.sync_check()
+                count = 0
+            except Exception, e:
+                count += 1
+                log.log('Exception %s:\n    %s'%(count, e), False)
+                time.sleep(count*3)
         log.log('LOG OUT', False)
         raise Exception('Log out')
     def sync_check(self):
@@ -180,12 +188,20 @@ class WeChatClient:
         srl = [51, 53] # 51 messy code, 53 webwxvoipnotifymsg
         for m in l:
             if m['MsgType'] == 1:
-                msg = {
-                    'MsgType': 'Text',
-                    'FromUserName': m['FromUserName'],
-                    'Content': m['Content'],}
-            elif m['MsgType'] == 3 or m['MsgType'] == 47:
-                pic_dir = '%s.jpg'%int(time.time())
+                if m['Url']:
+                    regx = r'(.+?\(.+?\))'
+                    data = re.search(regx, m['Content'])
+                    msg = {
+                        'MsgType': 'Map',
+                        'FromUserName': m['FromUserName'],
+                        'Content': data.group(1),}
+                else:
+                    msg = {
+                        'MsgType': 'Text',
+                        'FromUserName': m['FromUserName'],
+                        'Content': m['Content'],}
+            elif m['MsgType'] == 3 or m['MsgType'] == 47: # picture
+                pic_dir = os.path.join(config.PIC_DIR, '%s.jpg'%int(time.time()))
                 msg = {
                     'MsgType': 'Picture',
                     'FromUserName': m['FromUserName'],
@@ -198,19 +214,47 @@ class WeChatClient:
                 with open(pic_dir, 'wb') as f:
                     for block in r.iter_content(1024):
                         f.write(block)
+            elif m['MsgType'] == 34:
+                msg = {
+                    'MsgType': 'Recording',
+                    'FromUserName': m['FromUserName'],
+                    'Content': 'RECORDING',}
             elif m['MsgType'] == 42:
                 msg = {
                     'MsgType': 'Card',
                     'FromUserName': m['FromUserName'],
                     'Content': m['RecommendInfo']['NickName'],}
-            elif m['MsgType'] == 49:
+            elif m['MsgType'] == 49: # sharing
                 msg = {
                     'MsgType': 'Sharing',
                     'FromUserName': m['FromUserName'],
-                    'Content': m['FileName'],
-                    'Url': m['Url']}
-            elif m['MsgType'] == 62:
-                vid_dir = '%s.mp4'%int(time.time())
+                    'Content': m['FileName'],}
+                if m['AppMsgType'] == 2000:
+                    msg['MsgType'] = 'Note'
+                    regx = r'\[CDATA\[(.+?)\].+?\[CDATA\[(.+?)\]'
+                    data = re.search(regx, m['Content'])
+                    msg['Content'] = data.group(2)
+                elif m['AppMsgType'] == 6:
+                    msg['MsgType'] = 'Attachment'
+                    cookiesList = {name:data for name,data in self.s.cookies.items()}
+                    url = 'https://file2.wx.qq.com/cgi-bin/mmwebwx-bin/webwxgetmedia'
+                    payloads = {
+                        'sender': m['FromUserName'],
+                        'mediaid': m['MediaId'],
+                        'filename': m['FileName'],
+                        'fromuser': self.loginInfo['wxuin'],
+                        'pass_ticket': 'undefined',
+                        'webwx_data_ticket': cookiesList['webwx_data_ticket'],}
+                    r = self.s.get(url, params = payloads, stream = True)
+                    att_dir = os.path.join(config.ATT_DIR, '%s-%s'%(int(time.time()), m['FileName'],))
+                    msg['Location'] = att_dir
+                    with open(att_dir, 'wb') as f:
+                        for block in r.iter_content(1024):
+                            f.write(block)
+                else:
+                    pass
+            elif m['MsgType'] == 62: # tiny video
+                vid_dir = os.path.join(config.VID_DIR, '%s.mp4'%int(time.time()))
                 msg = {
                     'MsgType': 'Video',
                     'FromUserName': m['FromUserName'],
@@ -219,8 +263,8 @@ class WeChatClient:
                 payloads = {
                     'msgid': m['MsgId'],
                     'skey': self.loginInfo['skey'],}
-                r = self.s.get(url, params = payloads, stream = True)
-                print r.status_code
+                headers = { 'Range:': 'bytes=0-'}
+                r = self.s.get(url, params = payloads, headers = headers, stream = True)
                 with open(vid_dir, 'wb') as f: 
                     for chunk in r.iter_content(chunk_size = 1024):
                         if chunk:
@@ -230,7 +274,7 @@ class WeChatClient:
             elif m['MsgType'] == 10000:
                 msg = {
                     'MsgType': 'Note',
-                    'FromUserName': None,
+                    'FromUserName': self.userName,
                     'Content': m['Content'],}
             elif m['MsgType'] in srl:
                 continue
@@ -244,8 +288,11 @@ class WeChatClient:
         for m in l:
             if m['FromUserName'] == self.userName: continue
             self.msgStorage.append(m)
+            if self.msgList.has_key(m['FromUserName']):
+                self.msgList[m['FromUserName']] = []
+            self.msgList[m['FromUserName']].append(m)
     def send_msg(self, toUserName = None, msg = 'Test Message'):
-        if self.find_user(toUserName): toUserName = self.find_user(toUserName) 
+        if self.storageClass.find_user(toUserName): toUserName = self.storageClass.find_user(toUserName) 
         url = '%s/webwxsendmsg'%self.loginInfo['url']
         payloads = {
                 'BaseRequest': self.loginInfo['BaseRequest'],
@@ -258,15 +305,7 @@ class WeChatClient:
                     'ClientMsgId': int(time.time()),
                     },
                 }
-        data = json.dumps(payloads, ensure_ascii = False)
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         r = self.s.post(url, data = json.dumps(payloads, ensure_ascii = False), headers = headers)
     def storage(self):
         return self.msgStorage
-    # will be move to tools
-    def find_user(self, n):
-        for i in self.memberList:
-            if i['NickName'] == n: return i['UserName']
-    def find_nickname(self, u):
-        for i in self.memberList:
-            if i['UserName'] == u: return i['NickName']
