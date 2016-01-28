@@ -9,7 +9,7 @@ try:
     from QRCode import QRCode
     CMD_QRCODE = True
 except:
-    pass
+    CMD_QRCODE = False
 
 BASE_URL = config.BASE_URL
 DEBUG = False
@@ -17,10 +17,9 @@ DEBUG = False
 class WeChatClient:
     def __init__(self, storageClass = None):
         self.storageClass = storageClass if storageClass else storage.Storage()
-        self.userName = self.storageClass.userName
         self.memberList = self.storageClass.memberList
-        self.msgList = self.storageClass.msgList
-        self.msgStorage = []
+        self.msgStorage = self.storageClass.msgStorage
+        self.msgList = []
         self.loginInfo = {}
         self.s = requests.Session()
         self.uuid = None
@@ -34,7 +33,7 @@ class WeChatClient:
         self.web_init()
         self.show_mobile_login()
         self.get_contract()
-        out.print_line('Login successfully as %s\n'%self.storageClass.find_nickname(self.userName))
+        out.print_line('Login successfully as %s\n'%self.storageClass.find_nickname(self.storageClass.userName))
         thread.start_new_thread(self.maintain_loop, ())
     def get_QRuuid(self):
         url = '%s/jslogin'%BASE_URL
@@ -102,9 +101,9 @@ class WeChatClient:
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
         dic = json.loads(r.content.decode('utf-8', 'replace'))
-        self.userName = dic['User']['UserName']
+        self.storageClass.userName = dic['User']['UserName']
         if DEBUG:
-            with open('userName.txt', 'w') as f: f.write(self.userName)
+            with open('userName.txt', 'w') as f: f.write(self.storageClass.userName)
         self.loginInfo['SyncKey'] = dic['SyncKey']
         self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val']) for item in dic['SyncKey']['List']])
     def get_contract(self):
@@ -126,8 +125,8 @@ class WeChatClient:
         payloads = {
                 'BaseRequest': self.loginInfo['BaseRequest'],
                 'Code': 3,
-                'FromUserName': self.userName,
-                'ToUserName': self.userName,
+                'FromUserName': self.storageClass.userName,
+                'ToUserName': self.storageClass.userName,
                 'ClientMsgId': int(time.time()),
                 }
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
@@ -136,19 +135,27 @@ class WeChatClient:
         i = self.sync_check()
         count = 0
         while i and count <4:
-            try:
-                # ISSUE 1.2
-                if i != '0': msgList = self.get_msg()
-                if msgList: 
-                    msgList = self.produce_msg(msgList)
-                    self.store_msg(msgList)
-                time.sleep(3)
-                i = self.sync_check()
-                count = 0
-            except Exception, e:
-                count += 1
-                log.log('Exception %s:\n    %s'%(count, e), False)
-                time.sleep(count*3)
+            # ISSUE 1.2
+            if i != '0': msgList = self.get_msg()
+            if msgList: 
+                msgList = self.produce_msg(msgList)
+                self.store_msg(msgList)
+            time.sleep(3)
+            i = self.sync_check()
+            count = 0
+        #    try:
+        #        # ISSUE 1.2
+        #        if i != '0': msgList = self.get_msg()
+        #        if msgList: 
+        #            msgList = self.produce_msg(msgList)
+        #            self.store_msg(msgList)
+        #        time.sleep(3)
+        #        i = self.sync_check()
+        #        count = 0
+        #    except Exception, e:
+        #        count += 1
+        #        log.log('Exception %s:'%count, False, exception = e)
+        #        time.sleep(count*3)
         log.log('LOG OUT', False)
         raise Exception('Log out')
     def sync_check(self):
@@ -274,7 +281,7 @@ class WeChatClient:
             elif m['MsgType'] == 10000:
                 msg = {
                     'MsgType': 'Note',
-                    'FromUserName': self.userName,
+                    'FromUserName': self.storageClass.userName,
                     'Content': m['Content'],}
             elif m['MsgType'] in srl:
                 continue
@@ -286,11 +293,10 @@ class WeChatClient:
         return rl
     def store_msg(self, l):
         for m in l:
-            if m['FromUserName'] == self.userName: continue
-            self.msgStorage.append(m)
-            if self.msgList.has_key(m['FromUserName']):
-                self.msgList[m['FromUserName']] = []
-            self.msgList[m['FromUserName']].append(m)
+            if m['FromUserName'] == self.storageClass.userName: continue
+            if not self.storageClass.find_nickname(m['FromUserName']): continue
+            self.msgList.append('%s: %s'%(self.storageClass.find_nickname(m['FromUserName']), m['Content']))
+            self.storageClass.add_msg(self.storageClass.find_msg_list(m['FromUserName']), m)
     def send_msg(self, toUserName = None, msg = 'Test Message'):
         if self.storageClass.find_user(toUserName): toUserName = self.storageClass.find_user(toUserName) 
         url = '%s/webwxsendmsg'%self.loginInfo['url']
@@ -299,8 +305,8 @@ class WeChatClient:
                 'Msg': {
                     'Type': 1,
                     'Content': msg.encode('utf8') if isinstance(msg, unicode) else msg,
-                    'FromUserName': self.userName.encode('utf8'),
-                    'ToUserName': (toUserName if toUserName else self.userName).encode('utf8'),
+                    'FromUserName': self.storageClass.userName.encode('utf8'),
+                    'ToUserName': (toUserName if toUserName else self.storageClass.userName).encode('utf8'),
                     'LocalID': int(time.time()),
                     'ClientMsgId': int(time.time()),
                     },
@@ -308,4 +314,4 @@ class WeChatClient:
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         r = self.s.post(url, data = json.dumps(payloads, ensure_ascii = False), headers = headers)
     def storage(self):
-        return self.msgStorage
+        return self.msgList

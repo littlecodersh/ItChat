@@ -33,3 +33,5 @@ Command line talks through Wechat
 * **160127:**
     * download attachments
     * finish storage, tools and out
+* **160128:**
+    * demo ItChat finished

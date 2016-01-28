@@ -1,4 +1,5 @@
 import time, os
+import traceback
 import config
 
 LOG_DIR = config.LOG_DIR
@@ -11,5 +12,6 @@ def OpenLog(fn, *args, **kwargs):
 	return wrapped
 
 @OpenLog
-def log(f, msg, succeed = True):
-	f.write('[%s]%s: %s\n'%(('SUCC' if succeed else 'FAIL'), time.ctime(), msg))
+def log(f, msg, succeed = True, exception = None):
+    f.write('[%s]%s: %s\n'%(('SUCC' if succeed else 'FAIL'), time.ctime(), msg))
+    if exception: f.write('    %s\n'%(exception))
