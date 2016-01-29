@@ -135,27 +135,19 @@ class WeChatClient:
         i = self.sync_check()
         count = 0
         while i and count <4:
-            # ISSUE 1.2
-            if i != '0': msgList = self.get_msg()
-            if msgList: 
-                msgList = self.produce_msg(msgList)
-                self.store_msg(msgList)
-            time.sleep(3)
-            i = self.sync_check()
-            count = 0
-        #    try:
-        #        # ISSUE 1.2
-        #        if i != '0': msgList = self.get_msg()
-        #        if msgList: 
-        #            msgList = self.produce_msg(msgList)
-        #            self.store_msg(msgList)
-        #        time.sleep(3)
-        #        i = self.sync_check()
-        #        count = 0
-        #    except Exception, e:
-        #        count += 1
-        #        log.log('Exception %s:'%count, False, exception = e)
-        #        time.sleep(count*3)
+            try:
+                # ISSUE 1.2
+                if i != '0': msgList = self.get_msg()
+                if msgList: 
+                    msgList = self.produce_msg(msgList)
+                    self.store_msg(msgList)
+                time.sleep(3)
+                i = self.sync_check()
+                count = 0
+            except Exception, e:
+                count += 1
+                log.log('Exception %s:'%count, False, exception = e)
+                time.sleep(count*3)
         log.log('LOG OUT', False)
         raise Exception('Log out')
     def sync_check(self):
@@ -194,7 +186,7 @@ class WeChatClient:
         rl = []
         srl = [51, 53] # 51 messy code, 53 webwxvoipnotifymsg
         for m in l:
-            if m['MsgType'] == 1:
+            if m['MsgType'] == 1: # words
                 if m['Url']:
                     regx = r'(.+?\(.+?\))'
                     data = re.search(regx, m['Content'])

@@ -25,7 +25,7 @@ else:
 class ChatLikeCMD():
     def __init__(self, header = 'LittleCoder', symbol = '>', inPip = None, inputMaintain = False):
         self.strBuff = []
-        if not inPip: self.inPip = inPip
+        self.inPip = [] if inPip == None else inPip
         self.outPip = []
         self.isLaunch = False
         self.header = header
@@ -49,6 +49,7 @@ class ChatLikeCMD():
                 sys.stdout.write('\r')
                 sys.stdout.flush()
                 self.reprint_input()
+            time.sleep(0.01)
     def command_thread(self):
         c = None
         while self.isLaunch:
@@ -61,7 +62,7 @@ class ChatLikeCMD():
             elif c == '\b': # Backspace
                 # Chinese \b problems when using input method 
                 if self.strBuff: 
-                    sys.stdout.write('\b \b')
+                    sys.stdout.write('\b \b' if ord(self.strBuff[-1]) < 256 else '\b\b \b')
                     self.strBuff.pop()
             elif c == chr(3): # Ctrl+C
                 self.stop()
@@ -78,6 +79,7 @@ class ChatLikeCMD():
                 sys.stdout.write(c)
                 sys.stdout.flush()
                 self.strBuff.append(c)
+            time.sleep(0.01)
     def start(self):
         self.isLaunch = True
         thread.start_new_thread(self.print_thread, ())
@@ -107,3 +109,4 @@ if __name__ == '__main__':
     while c.isLaunch:
         if s:
             c.print_line(s.pop())
+        time.sleep(0.01)

@@ -10,7 +10,7 @@ def demo(s, msgList): # ONLY FOR DEMO
         if msgList: 
             msg = msgList.pop()
             if s.find_nickname(msg['FromUserName']): deal_with_msg(msg, s)
-            time.sleep(.5)
+        time.sleep(.01)
 def deal_with_msg(msg, s):
     if msg['MsgType'] == 'Text':
         client.send_msg(msg['FromUserName'], 'I received: ' + msg['Content'])
@@ -40,28 +40,7 @@ def deal_with_msg(msg, s):
         out.print_line('Notification: %s'%(msg['Content']))
     else:
         pass#out.print_line(str(msg)
-
-arg = {
-    'talk': {
-        'help': 'talk [name]       :talk to the user, only talk will talks to the default user',
-        },
-    'send': {
-        'help': 'send name message :send message to the user',
-    },
-    'search': {
-        'help': 'search name       :find the full name of the user',
-    },
-}
-if __name__ == '__main__':
-    client_s = storage.Storage()
-    client = WeChatClient(client_s)
-    client.login()
-    msgList = client.storage()
-    # demo(client_s, msgList)
-
-    front = ChatLikeCMD(header = client_s.find_nickname(client_s.userName), symbol = '>', inPip = msgList)
-    cmdList = front.get_command_pip()
-    front.start()
+def startCommandLine(client_s, client, msgList, front, cmdList):
     frontStatus = 0 # 0 for command, 1 for talks
     userTalkingTo = None
     def set_header(header = ''):
@@ -114,7 +93,7 @@ if __name__ == '__main__':
                             if i * 3 + j < len(l): s += (l[i * 3 + j] + '    ')
                     front.print_line(s)
                 else:
-                    front.print_line('Error command, type in 'help' help')
+                    front.print_line('Error command, type in \'help\' for help')
             else:
                 if chr(27) in cmd:
                     frontStatus = 0
@@ -124,3 +103,27 @@ if __name__ == '__main__':
                     client.send_msg(userTalkingTo, cmd)
                     front.print_line('->%s'%cmd)
             cmd = None
+        time.sleep(.01)
+
+arg = {
+    'talk': {
+        'help': 'talk [name]       :talk to the user, only talk will talks to the default user',
+        },
+    'send': {
+        'help': 'send name message :send message to the user',
+    },
+    'search': {
+        'help': 'search name       :find the full name of the user',
+    },
+}
+if __name__ == '__main__':
+    client_s = storage.Storage()
+    client = WeChatClient(client_s)
+    client.login()
+    msgList = client.storage()
+    # demo(client_s, msgList)
+
+    front = ChatLikeCMD(header = client_s.find_nickname(client_s.userName), symbol = '>', inPip = msgList)
+    cmdList = front.get_command_pip()
+    front.start()
+    startCommandLine(client_s, client, msgList, front, cmdList)
