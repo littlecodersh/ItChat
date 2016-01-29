@@ -15,8 +15,9 @@ BASE_URL = config.BASE_URL
 DEBUG = False
 
 class WeChatClient:
-    def __init__(self, storageClass = None):
+    def __init__(self, storageClass = None, robot = False):
         self.storageClass = storageClass if storageClass else storage.Storage()
+        self.robot = robot
         self.memberList = self.storageClass.memberList
         self.msgStorage = self.storageClass.msgStorage
         self.msgList = []
@@ -34,6 +35,7 @@ class WeChatClient:
         self.show_mobile_login()
         self.get_contract()
         out.print_line('Login successfully as %s\n'%self.storageClass.find_nickname(self.storageClass.userName))
+        log.log('SIGN IN', True)
         thread.start_new_thread(self.maintain_loop, ())
     def get_QRuuid(self):
         url = '%s/jslogin'%BASE_URL
@@ -74,8 +76,10 @@ class WeChatClient:
             r = self.s.get(self.loginInfo['url'], allow_redirects=False)
             self.loginInfo['url'] = self.loginInfo['url'][:self.loginInfo['url'].rfind('/')]
             self.get_login_info(r.text)
+            os.system('cls' if config.OS == 'Windows' else 'clear')
             return False
         if data and data.group(1) == '201':
+            os.system('cls' if config.OS == 'Windows' else 'clear')
             out.print_line('Please press confirm', True)
         if data and data.group(1) == '408':
             out.print_line('Reloading QR Code\n', True)
@@ -287,7 +291,7 @@ class WeChatClient:
         for m in l:
             if m['FromUserName'] == self.storageClass.userName: continue
             if not self.storageClass.find_nickname(m['FromUserName']): continue
-            self.msgList.append('%s: %s'%(self.storageClass.find_nickname(m['FromUserName']), m['Content']))
+            self.msgList.append(m if self.robot else '%s: %s'%(self.storageClass.find_nickname(m['FromUserName']), m['Content']))
             self.storageClass.add_msg(self.storageClass.find_msg_list(m['FromUserName']), m)
     def send_msg(self, toUserName = None, msg = 'Test Message'):
         if self.storageClass.find_user(toUserName): toUserName = self.storageClass.find_user(toUserName) 

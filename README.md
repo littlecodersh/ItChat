@@ -35,3 +35,6 @@ Command line talks through Wechat
     * finish storage, tools and out
 * **160128:**
     * demo ItChat finished
+* **160129:**
+    * tuling robot part finished
+    * cpu consuming bug fixed
