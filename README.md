@@ -38,3 +38,10 @@ Command line talks through Wechat
 * **160129:**
     * tuling robot part finished
     * cpu consuming bug fixed
+* **160201:**
+    * auto-adding friends
+    * voice msg download
+* **160203:**
+    * sqlite3 storage added
+    * message sending bug fixed
+    * nickname not found bug fixed

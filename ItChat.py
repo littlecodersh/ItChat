@@ -17,8 +17,8 @@ if __name__ == '__main__':
     client = WeChatClient(client_s)
     client.login()
     msgList = client.storage()
-    # demo_robot(client_s, msgList, client)
 
+    # demo_robot(client_s, msgList, client)
     front = ChatLikeCMD(header = str(client_s.find_nickname(client_s.userName)), symbol = '>', inPip = msgList)
     cmdList = front.get_command_pip()
     front.start()

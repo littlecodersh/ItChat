@@ -1,9 +1,9 @@
 import requests, time, re
 import os, sys
-import thread
+import thread, subprocess
 import json, xml.dom.minidom
 from urllib import unquote
-import config, storage, out, log
+import config, storage, out, log, tools
 
 try:
     from QRCode import QRCode
@@ -19,8 +19,7 @@ class WeChatClient:
         self.storageClass = storageClass if storageClass else storage.Storage()
         self.robot = robot
         self.memberList = self.storageClass.memberList
-        self.msgStorage = self.storageClass.msgStorage
-        self.msgList = []
+        self.msgList = self.storageClass.msgList
         self.loginInfo = {}
         self.s = requests.Session()
         self.uuid = None
@@ -34,7 +33,8 @@ class WeChatClient:
         self.web_init()
         self.show_mobile_login()
         self.get_contract()
-        out.print_line('Login successfully as %s\n'%self.storageClass.find_nickname(self.storageClass.userName))
+        out.print_line('Login successfully as %s\n'%(
+            self.storageClass.find_nickname(self.storageClass.userName)), False)
         log.log('SIGN IN', True)
         thread.start_new_thread(self.maintain_loop, ())
     def get_QRuuid(self):
@@ -76,12 +76,13 @@ class WeChatClient:
             r = self.s.get(self.loginInfo['url'], allow_redirects=False)
             self.loginInfo['url'] = self.loginInfo['url'][:self.loginInfo['url'].rfind('/')]
             self.get_login_info(r.text)
-            os.system('cls' if config.OS == 'Windows' else 'clear')
+            tools.clear_screen()
             return False
         if data and data.group(1) == '201':
-            os.system('cls' if config.OS == 'Windows' else 'clear')
+            tools.clear_screen()
             out.print_line('Please press confirm', True)
         if data and data.group(1) == '408':
+            tools.clear_screen()
             out.print_line('Reloading QR Code\n', True)
             while self.get_QRuuid(): time.sleep(1)
             self.get_QR()
@@ -106,6 +107,7 @@ class WeChatClient:
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
         dic = json.loads(r.content.decode('utf-8', 'replace'))
         self.storageClass.userName = dic['User']['UserName']
+        self.memberList.append(dic['User'])
         if DEBUG:
             with open('userName.txt', 'w') as f: f.write(self.storageClass.userName)
         self.loginInfo['SyncKey'] = dic['SyncKey']
@@ -138,20 +140,32 @@ class WeChatClient:
     def maintain_loop(self):
         i = self.sync_check()
         count = 0
+        pauseTime = 1
         while i and count <4:
-            try:
-                # ISSUE 1.2
-                if i != '0': msgList = self.get_msg()
-                if msgList: 
-                    msgList = self.produce_msg(msgList)
-                    self.store_msg(msgList)
-                time.sleep(3)
-                i = self.sync_check()
-                count = 0
-            except Exception, e:
-                count += 1
-                log.log('Exception %s:'%count, False, exception = e)
-                time.sleep(count*3)
+            if pauseTime < 5: pauseTime += 2
+            if i != '0': msgList = self.get_msg()
+            if msgList: 
+                msgList = self.produce_msg(msgList)
+                self.store_msg(msgList)
+                pauseTime = 1
+            time.sleep(pauseTime)
+            i = self.sync_check()
+            count = 0
+            # try:
+            #     # ISSUE 1.2
+            #     if pauseTime < 5: pauseTime += 2
+            #     if i != '0': msgList = self.get_msg()
+            #     if msgList: 
+            #         msgList = self.produce_msg(msgList)
+            #         self.store_msg(msgList)
+            #         pauseTime = 1
+            #     time.sleep(pauseTime)
+            #     i = self.sync_check()
+            #     count = 0
+            # except Exception, e:
+            #     count += 1
+            #     log.log('Exception %s:'%count, False, exception = e)
+            #     time.sleep(count*3)
         log.log('LOG OUT', False)
         raise Exception('Log out')
     def sync_check(self):
@@ -217,12 +231,25 @@ class WeChatClient:
                 with open(pic_dir, 'wb') as f:
                     for block in r.iter_content(1024):
                         f.write(block)
-            elif m['MsgType'] == 34:
+            elif m['MsgType'] == 34: # voice
+                rec_dir = os.path.join(config.REC_DIR, '%s.mp3'%int(time.time()))
                 msg = {
                     'MsgType': 'Recording',
                     'FromUserName': m['FromUserName'],
-                    'Content': 'RECORDING',}
-            elif m['MsgType'] == 42:
+                    'Content': rec_dir,}
+                url = '%s/webwxgetvoice'%self.loginInfo['url']
+                payloads = {
+                    'msgid': m['NewMsgId'],
+                    'skey': self.loginInfo['skey'],}
+                r = self.s.get(url, params = payloads, stream = True)
+                with open(rec_dir, 'wb') as f:
+                    for block in r.iter_content(1024):
+                        f.write(block)
+            elif m['MsgType'] == 37: # friends
+                self.add_friend(m['Status'], m['RecommendInfo']['UserName'], m['Ticket'])
+                self.get_contract()
+                self.send_msg(m['RecommendInfo']['UserName'], config.WELCOME_WORDS)
+            elif m['MsgType'] == 42: # name card
                 msg = {
                     'MsgType': 'Card',
                     'FromUserName': m['FromUserName'],
@@ -292,7 +319,7 @@ class WeChatClient:
             if m['FromUserName'] == self.storageClass.userName: continue
             if not self.storageClass.find_nickname(m['FromUserName']): continue
             self.msgList.append(m if self.robot else '%s: %s'%(self.storageClass.find_nickname(m['FromUserName']), m['Content']))
-            self.storageClass.add_msg(self.storageClass.find_msg_list(m['FromUserName']), m)
+            self.storageClass.store_msg(m['FromUserName'], m['Content'], 'from')
     def send_msg(self, toUserName = None, msg = 'Test Message'):
         if self.storageClass.find_user(toUserName): toUserName = self.storageClass.find_user(toUserName) 
         url = '%s/webwxsendmsg'%self.loginInfo['url']
@@ -309,5 +336,22 @@ class WeChatClient:
                 }
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         r = self.s.post(url, data = json.dumps(payloads, ensure_ascii = False), headers = headers)
+        self.storageClass.store_msg(toUserName, msg, 'to') #encoding problems
+    def add_friend(self, Status, UserName, Ticket):
+        url = '%s/webwxverifyuser?r=%s&pass_ticket=%s'%(self.loginInfo['url'], int(time.time()), self.loginInfo['pass_ticket'])
+        payloads = {
+            'BaseRequest': self.loginInfo['BaseRequest'],
+            'Opcode': Status,
+            'VerifyUserListSize': 1,
+            'VerifyUserList': [{
+                'Value': UserName,
+                'VerifyUserTicket': Ticket,
+                }],
+            'VerifyContent': '',
+            'SceneListCount': 1,
+            'SceneList': 33,
+            'skey': self.loginInfo['skey'],}
+        headers = { 'ContentType': 'application/json; charset=UTF-8' }
+        r = self.s.post(url, data = json.dumps(payloads), headers = headers)
     def storage(self):
         return self.msgList
