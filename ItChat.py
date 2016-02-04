@@ -4,6 +4,8 @@ import storage, out, argparser, robot
 from client import WeChatClient
 from ChatLikeCMD import ChatLikeCMD
 
+ROBOT = False
+
 def demo_robot(s, msgList, client): # ONLY FOR DEMO
     print 'Start auto-replying'
     while True: 
@@ -13,13 +15,18 @@ def demo_robot(s, msgList, client): # ONLY FOR DEMO
         time.sleep(.1)
 if __name__ == '__main__':
     client_s = storage.Storage()
-    # client = WeChatClient(client_s, robot = True)
-    client = WeChatClient(client_s)
+    if ROBOT:
+        client = WeChatClient(client_s, robot = True)
+    else:
+        client = WeChatClient(client_s)
+
     client.login()
     msgList = client.storage()
 
-    # demo_robot(client_s, msgList, client)
-    front = ChatLikeCMD(header = str(client_s.find_nickname(client_s.userName)), symbol = '>', inPip = msgList)
-    cmdList = front.get_command_pip()
-    front.start()
-    argparser.startCommandLine(client_s, client, msgList, front, cmdList)
+    if ROBOT:
+        demo_robot(client_s, msgList, client)
+    else:
+        front = ChatLikeCMD(header = str(client_s.find_nickname(client_s.userName)), symbol = '>', inPip = msgList)
+        cmdList = front.get_command_pip()
+        front.start()
+        argparser.startCommandLine(client_s, client, msgList, front, cmdList)

@@ -26,7 +26,7 @@ def startCommandLine(client_s, client, msgList, front, cmdList):
     def set_header(header = ''):
         nickName = client_s.find_nickname(client_s.userName)
         front.set_header('%s%s%s'%(nickName if nickName else '', '@' if header else '', header))
-    while front.isLaunch:
+    while front.isLaunch or front.isPause:
         if cmdList:
             cmd = cmdList.pop()
             if frontStatus == 0:

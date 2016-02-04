@@ -11,6 +11,7 @@ try:
 except:
     CMD_QRCODE = False
 
+CMD_QRCODE = False
 BASE_URL = config.BASE_URL
 DEBUG = False
 
@@ -57,9 +58,9 @@ class WeChatClient:
         if CMD_QRCODE:
             q = QRCode(QR_DIR, 37, 3, 'BLACK')
             q.print_qr()
-        elif config.OS:
+        elif config.OS == 'Darwin':
             subprocess.call(['open', QR_DIR])
-        elif config.OS:
+        elif config.OS == 'Linux':
             subprocess.call(['xdg-open', QR_DIR])
         else:
             os.startfile(QR_DIR)
@@ -142,30 +143,21 @@ class WeChatClient:
         count = 0
         pauseTime = 1
         while i and count <4:
-            if pauseTime < 5: pauseTime += 2
-            if i != '0': msgList = self.get_msg()
-            if msgList: 
-                msgList = self.produce_msg(msgList)
-                self.store_msg(msgList)
-                pauseTime = 1
-            time.sleep(pauseTime)
-            i = self.sync_check()
-            count = 0
-            # try:
-            #     # ISSUE 1.2
-            #     if pauseTime < 5: pauseTime += 2
-            #     if i != '0': msgList = self.get_msg()
-            #     if msgList: 
-            #         msgList = self.produce_msg(msgList)
-            #         self.store_msg(msgList)
-            #         pauseTime = 1
-            #     time.sleep(pauseTime)
-            #     i = self.sync_check()
-            #     count = 0
-            # except Exception, e:
-            #     count += 1
-            #     log.log('Exception %s:'%count, False, exception = e)
-            #     time.sleep(count*3)
+            try:
+                # ISSUE 1.2
+                if pauseTime < 5: pauseTime += 2
+                if i != '0': msgList = self.get_msg()
+                if msgList: 
+                    msgList = self.produce_msg(msgList)
+                    self.store_msg(msgList)
+                    pauseTime = 1
+                time.sleep(pauseTime)
+                i = self.sync_check()
+                count = 0
+            except Exception, e:
+                count += 1
+                log.log('Exception %s:'%count, False, exception = e)
+                time.sleep(count*3)
         log.log('LOG OUT', False)
         raise Exception('Log out')
     def sync_check(self):
@@ -249,6 +241,7 @@ class WeChatClient:
                 self.add_friend(m['Status'], m['RecommendInfo']['UserName'], m['Ticket'])
                 self.get_contract()
                 self.send_msg(m['RecommendInfo']['UserName'], config.WELCOME_WORDS)
+                continue
             elif m['MsgType'] == 42: # name card
                 msg = {
                     'MsgType': 'Card',
