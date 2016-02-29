@@ -1,6 +1,6 @@
-import out
+import itchat.out
 try:
-    import tuling
+    import plugin.tuling
     TULING = True
 except:
     TULING = False

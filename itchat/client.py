@@ -6,12 +6,12 @@ from urllib import unquote
 import config, storage, out, log, tools
 
 try:
-    from QRCode import QRCode
+    from plugin.QRCode import QRCode
     CMD_QRCODE = True
 except:
     CMD_QRCODE = False
 
-CMD_QRCODE = False
+# CMD_QRCODE = False
 BASE_URL = config.BASE_URL
 DEBUG = False
 

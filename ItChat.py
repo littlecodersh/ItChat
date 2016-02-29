@@ -1,8 +1,8 @@
 #coding=utf8
 import time
-import storage, out, argparser, robot
-from client import WeChatClient
-from ChatLikeCMD import ChatLikeCMD
+import itchat.storage, itchat.out, itchat.argparser, robot
+from itchat.client import WeChatClient
+from plugin.ChatLikeCMD import ChatLikeCMD
 
 ROBOT = False
 
@@ -14,7 +14,7 @@ def demo_robot(s, msgList, client): # ONLY FOR DEMO
             if s.find_nickname(msg['FromUserName']): robot.deal_with_msg(msg, s, client)
         time.sleep(.1)
 if __name__ == '__main__':
-    client_s = storage.Storage()
+    client_s = itchat.storage.Storage()
     if ROBOT:
         client = WeChatClient(client_s, robot = True)
     else:
@@ -29,4 +29,4 @@ if __name__ == '__main__':
         front = ChatLikeCMD(header = str(client_s.find_nickname(client_s.userName)), symbol = '>', inPip = msgList)
         cmdList = front.get_command_pip()
         front.start()
-        argparser.startCommandLine(client_s, client, msgList, front, cmdList)
+        itchat.argparser.startCommandLine(client_s, client, msgList, front, cmdList)

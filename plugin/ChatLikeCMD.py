@@ -143,10 +143,10 @@ class ChatLikeCMD():
             self.reprint_input()
             self.outPip.append(c)
             time.sleep(0.02)
-            if fitc1 in dir():
+            if 'fitc1' in dir():
                 self.process_char(fitc1)
                 self.cursor += 1
-            if fitc2 in dir():
+            if 'fitc2' in dir():
                 self.process_char(fitc2)
                 self.cursor += 1
         elif ord(c) == 3: # Ctrl+C
