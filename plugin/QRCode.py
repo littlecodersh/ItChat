@@ -1,6 +1,6 @@
 from PIL import Image 
 import sys, os
-import config
+import itchat.config as config
 
 QR_DIR = config.QR_DIR
 OS = config.OS

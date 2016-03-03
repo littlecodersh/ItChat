@@ -11,7 +11,6 @@ try:
 except:
     CMD_QRCODE = False
 
-# CMD_QRCODE = False
 BASE_URL = config.BASE_URL
 DEBUG = False
 
@@ -19,16 +18,16 @@ class WeChatClient:
     def __init__(self, storageClass = None, robot = False):
         self.storageClass = storageClass if storageClass else storage.Storage()
         self.robot = robot
-        self.memberList = self.storageClass.memberList
         self.msgList = self.storageClass.msgList
         self.loginInfo = {}
         self.s = requests.Session()
         self.uuid = None
     def login(self):
-        out.print_line('Getting uuid', True)
-        while self.get_QRuuid(): time.sleep(1)
-        out.print_line('Getting QR Code', True)
-        self.get_QR()
+        while 1:
+            out.print_line('Getting uuid', True)
+            while self.get_QRuuid(): time.sleep(1)
+            out.print_line('Getting QR Code', True)
+            if self.get_QR(): break
         out.print_line('Please scan the QR Code', True)
         while self.check_login(): time.sleep(1)
         self.web_init()
@@ -51,19 +50,23 @@ class WeChatClient:
         if data and data.group(1) == '200': self.uuid = data.group(2);return False
         # continous failing
     def get_QR(self):
-        url = '%s/qrcode/%s'%(BASE_URL, self.uuid)
-        r = self.s.get(url, stream = True)# params = payloads, headers = HEADER, 
-        QR_DIR = os.path.join(config.QR_DIR, 'QR.jpg')
-        with open(QR_DIR, 'wb') as f: f.write(r.content)
-        if CMD_QRCODE:
-            q = QRCode(QR_DIR, 37, 3, 'BLACK')
-            q.print_qr()
-        elif config.OS == 'Darwin':
-            subprocess.call(['open', QR_DIR])
-        elif config.OS == 'Linux':
-            subprocess.call(['xdg-open', QR_DIR])
-        else:
-            os.startfile(QR_DIR)
+        try:
+            url = '%s/qrcode/%s'%(BASE_URL, self.uuid)
+            r = self.s.get(url, stream = True)# params = payloads, headers = HEADER, 
+            QR_DIR = os.path.join(config.QR_DIR, 'QR.jpg')
+            with open(QR_DIR, 'wb') as f: f.write(r.content)
+            if CMD_QRCODE:
+                q = QRCode(QR_DIR, 37, 3, 'BLACK')
+                q.print_qr()
+            elif config.OS == 'Darwin':
+                subprocess.call(['open', QR_DIR])
+            elif config.OS == 'Linux':
+                subprocess.call(['xdg-open', QR_DIR])
+            else:
+                os.startfile(QR_DIR)
+            return True
+        except:
+            return False
     def check_login(self):
         url = '%s/cgi-bin/mmwebwx-bin/login'%BASE_URL
         # add tip so that we can get many reply, use string payloads to avoid auto-urlencode
@@ -85,8 +88,9 @@ class WeChatClient:
         if data and data.group(1) == '408':
             tools.clear_screen()
             out.print_line('Reloading QR Code\n', True)
-            while self.get_QRuuid(): time.sleep(1)
-            self.get_QR()
+            while 1:
+                while self.get_QRuuid(): time.sleep(1)
+                if self.get_QR(): break
         return True
     def get_login_info(self, s):
         self.loginInfo['BaseRequest'] = {}
@@ -108,9 +112,9 @@ class WeChatClient:
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
         dic = json.loads(r.content.decode('utf-8', 'replace'))
         self.storageClass.userName = dic['User']['UserName']
-        self.memberList.append(dic['User'])
-        if DEBUG:
-            with open('userName.txt', 'w') as f: f.write(self.storageClass.userName)
+        self.storageClass.nickName = dic['User']['NickName']
+        self.storageClass.load_sql_storage()
+        self.storageClass.update_user('', dic['User'])
         self.loginInfo['SyncKey'] = dic['SyncKey']
         self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val']) for item in dic['SyncKey']['List']])
     def get_contract(self):
@@ -118,15 +122,23 @@ class WeChatClient:
             int(time.time()), self.loginInfo['skey'])
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         r = self.s.get(url, headers = headers)
-        self.memberList.extend(json.loads(r.content.decode('utf-8', 'replace'))['MemberList'])
+        memberList = json.loads(r.content.decode('utf-8', 'replace'))['MemberList']
         i = 1
         # ISSUE 1.3
         while i != 0:
             i = 0
-            for m in self.memberList:
-                if m['Sex'] == 0 or m['Sex'] == '0': self.memberList.remove(m);i+=1
+            for m in memberList:
+                if m['Sex'] == 0 or m['Sex'] == '0': memberList.remove(m);i+=1
+        # deal with emoji
+        regex = re.compile('^(.*?)(?:<span class="emoji (.*?)"></span>(.*?))+$')
+        for m in memberList: # because m is dict so can be used like this
+            match = re.findall(regex, m['NickName'])
+            if len(match) > 0: m['NickName'] = ''.join(match[0])
+            match = re.findall(regex, m['Signature'])
+            if len(match) > 0: m['Signature'] = ''.join(match[0])
+        for m in memberList: self.storageClass.update_user(m['Alias'], m)
         if DEBUG:
-            with open('MemberList.txt', 'w') as f: f.write(str(self.memberList))
+            with open('MemberList.txt', 'w') as f: f.write(str(memberList))
     def show_mobile_login(self):
         url = '%s/webwxstatusnotify'%self.loginInfo['url']
         payloads = {
@@ -348,3 +360,7 @@ class WeChatClient:
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
     def storage(self):
         return self.msgList
+
+if __name__ == '__main__':
+    wcc = WeChatClient()
+    wcc.login()
