@@ -32,7 +32,14 @@ class WeChatClient:
         while self.check_login(): time.sleep(1)
         self.web_init()
         self.show_mobile_login()
-        self.get_contract()
+        while 1:
+            voidUserList = self.get_contract()
+            if not voidUserList: break
+            for voidUser in voidUserList:
+                out.print_line('This user needs a new RemarkName', False)
+                out.print_line(str(voidUser), False)
+                raw_input('Continue?')
+            out.print_line('Start reload contract list', False)
         out.print_line('Login successfully as %s\n'%(
             self.storageClass.find_nickname(self.storageClass.userName)), False)
         log.log('SIGN IN', True)
@@ -48,7 +55,6 @@ class WeChatClient:
         regx = r'window.QRLogin.code = (\d+); window.QRLogin.uuid = "(\S+?)";'
         data = re.search(regx, r.text)
         if data and data.group(1) == '200': self.uuid = data.group(2);return False
-        # continous failing
     def get_QR(self):
         try:
             url = '%s/qrcode/%s'%(BASE_URL, self.uuid)
@@ -111,10 +117,13 @@ class WeChatClient:
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
         dic = json.loads(r.content.decode('utf-8', 'replace'))
+        # deal with emoji
+        dic['User'] = tools.emoji_dealer([dic['User']])[0]
         self.storageClass.userName = dic['User']['UserName']
         self.storageClass.nickName = dic['User']['NickName']
         self.storageClass.load_sql_storage()
-        self.storageClass.update_user('', dic['User'])
+        self.storageClass.update_user(dic['User']['PYQuanPin'] or dic['User']['NickName'],
+            NickName = dic['User']['NickName'], UserName = dic['User']['UserName'])
         self.loginInfo['SyncKey'] = dic['SyncKey']
         self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val']) for item in dic['SyncKey']['List']])
     def get_contract(self):
@@ -130,13 +139,20 @@ class WeChatClient:
             for m in memberList:
                 if m['Sex'] == 0 or m['Sex'] == '0': memberList.remove(m);i+=1
         # deal with emoji
-        regex = re.compile('^(.*?)(?:<span class="emoji (.*?)"></span>(.*?))+$')
-        for m in memberList: # because m is dict so can be used like this
-            match = re.findall(regex, m['NickName'])
-            if len(match) > 0: m['NickName'] = ''.join(match[0])
-            match = re.findall(regex, m['Signature'])
-            if len(match) > 0: m['Signature'] = ''.join(match[0])
-        for m in memberList: self.storageClass.update_user(m['Alias'], m)
+        memberList = tools.emoji_dealer(memberList)
+        # PYQuanPin & RemarkPYQuanPin is used as identifier
+        voidUserList = []
+        for m in memberList:
+            if m['PYQuanPin'] == '':
+                if m['UserName'] == self.storageClass.userName:
+                    m['PYQuanPin'] = m['NickName']
+                elif m['RemarkPYQuanPin'] == '':
+                    voidUserList.append(m)
+                else:
+                    m['PYQuanPin'] = m['RemarkPYQuanPin']
+            insertResult = self.storageClass.update_user(m['PYQuanPin'], NickName = m['RemarkName'] or m['NickName'],
+                UserName = m['UserName'])
+            if insertResult != True: out.print_line(str(insertResult) + ' need a new RemarkName')
         if DEBUG:
             with open('MemberList.txt', 'w') as f: f.write(str(memberList))
     def show_mobile_login(self):

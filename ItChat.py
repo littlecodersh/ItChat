@@ -4,7 +4,7 @@ import itchat.storage, itchat.out, itchat.argparser, robot
 from itchat.client import WeChatClient
 from plugin.ChatLikeCMD import ChatLikeCMD
 
-ROBOT = False
+ROBOT = True
 
 def demo_robot(s, msgList, client): # ONLY FOR DEMO
     print 'Start auto-replying'

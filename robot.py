@@ -1,15 +1,21 @@
-import itchat.out
+import itchat.out as out
+from plugin.msgdealers.vote import vote
+
 try:
-    import plugin.tuling
+    import plugin.tuling as tuling
     TULING = True
 except:
     TULING = False
 
 def deal_with_msg(msg, s, client):
     if msg['MsgType'] == 'Text':
-        client.send_msg(msg['FromUserName'],
-                '\n'.join(tuling.get_response(msg['Content'], 'ItChat')) if TULING else 'I received: %s'%msg['Content'])
-        out.print_line('%s: %s'%(s.find_nickname(msg['FromUserName']), msg['Content']))
+        v = vote(client.storageClass, msg['FromUserName'], msg['Content'])
+        if v == False:
+            client.send_msg(msg['FromUserName'],
+                    '\n'.join(tuling.get_response(msg['Content'], 'ItChat')) if TULING else 'I received: %s'%msg['Content'])
+            out.print_line('%s: %s'%(s.find_nickname(msg['FromUserName']), msg['Content']))
+        else:
+            client.send_msg(msg['FromUserName'], v)
     elif msg['MsgType'] == 'Map':
         client.send_msg(msg['FromUserName'], 'You are there!')
         out.print_line('%s is at %s'%(s.find_nickname(msg['FromUserName']), msg['Content']))
