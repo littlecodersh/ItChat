@@ -1,0 +1,14 @@
+[
+    {
+        "name":
+            "default",
+        "candidates":
+            ["candidate1", "LittleCoder", "nobody"]
+    },
+    {
+        "name":
+            "another vote",
+        "candidates":
+            ["another candidate1", "only one LittleCoder", "still nobody"]
+    }
+]
