@@ -1,10 +1,10 @@
 #coding=utf8
-import sys
+import sys, os
 import requests, json
 from ChatLikeCMD import ChatLikeCMD
 
 try:
-    with open('tuling.json') as f: key = json.loads(f.read())['key']
+    with open(os.path.join('plugin', 'config', 'tuling.json')) as f: key = json.loads(f.read())['key']
 except:
     raise Exception('You need to have a correct tuling.json file')
 

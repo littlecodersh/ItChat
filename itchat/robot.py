@@ -1,5 +1,6 @@
 import itchat.out as out
 from plugin.msgdealers.vote import vote
+from plugin.msgdealers.autoreply import autoreply
 
 try:
     import plugin.tuling as tuling
@@ -9,13 +10,17 @@ except:
 
 def deal_with_msg(msg, s, client):
     if msg['MsgType'] == 'Text':
-        v = vote(client.storageClass, msg['FromUserName'], msg['Content'])
-        if v == False:
-            client.send_msg(msg['FromUserName'],
-                    '\n'.join(tuling.get_response(msg['Content'], 'ItChat')) if TULING else 'I received: %s'%msg['Content'])
-            out.print_line('%s: %s'%(s.find_nickname(msg['FromUserName']), msg['Content']))
-        else:
-            client.send_msg(msg['FromUserName'], v)
+        content = msg['Content']
+        # test vote first
+        r = vote(client.storageClass, msg['FromUserName'], content)
+        if r != False: client.send_msg(msg['FromUserName'], r); return
+        # test user's autoreply
+        r = autoreply(content)
+        if r != False: client.send_msg(msg['FromUserName'], r); return
+        # no plugin matched
+        client.send_msg(msg['FromUserName'],
+                '\n'.join(tuling.get_response(msg['Content'], 'ItChat')) if TULING else 'I received: %s'%msg['Content'])
+        out.print_line('%s: %s'%(s.find_nickname(msg['FromUserName']), msg['Content']))
     elif msg['MsgType'] == 'Map':
         client.send_msg(msg['FromUserName'], 'You are there!')
         out.print_line('%s is at %s'%(s.find_nickname(msg['FromUserName']), msg['Content']))

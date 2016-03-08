@@ -1,12 +1,12 @@
 #coding=utf8
-import re, json, time
+import re, json, time, os
 from plugin.Sqlite3Client import Sqlite3Client
 
 VOTE_KEYWORD = 'vote'
 
 def load_vote_list():
     try:
-        with open('vote.json') as f: voteList = json.loads(f.read())
+        with open(os.path.join('plugin', 'config', 'vote.json')) as f: voteList = json.loads(f.read())
         if not voteList: raise Exception
         for voteItem in voteList: # test json format
             if not (voteItem.has_key('name') and voteItem.has_key('candidates')): raise Exception
