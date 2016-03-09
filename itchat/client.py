@@ -358,6 +358,55 @@ class WeChatClient:
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         r = self.s.post(url, data = json.dumps(payloads, ensure_ascii = False), headers = headers)
         self.storageClass.store_msg(toUserName, msg, 'to') #encoding problems
+    def send_file(self, fileDir, toUserName = None):
+        # save it on server
+        url = 'https://file2.wx.qq.com/cgi-bin/mmwebwx-bin/webwxuploadmedia?f=json'
+        headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36',}
+        r = requests.post(url, headers = headers)
+        fileSize = str(os.path.getsize(fileDir))
+        cookiesList = {name:data for name,data in self.s.cookies.items()}
+        files = {
+                'id': (None, 'WU_FILE_0'),
+                'name': (None, os.path.basename(fileDir)),
+                'type': (None, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
+                'lastModifiedDate': (None, time.strftime('%a %b %d %Y %H:%M:%S GMT+0800 (CST)')),
+                'size': (None, fileSize),
+                'mediatype': (None, 'doc'),
+                'uploadmediarequest': (None, json.dumps({
+                    'BaseRequest': self.loginInfo['BaseRequest'],
+                    'ClientMediaId': int(time.time()),
+                    'TotalLen': fileSize,
+                    'StartPos': 0,
+                    'DataLen': fileSize,
+                    'MediaType': 4,
+                    }, separators = (',', ':'))),
+                'webwx_data_ticket': (None, cookiesList['webwx_data_ticket']),
+                'pass_ticket': (None, 'undefined'),
+                'filename' : (os.path.basename(fileDir), open(fileDir, 'rb'),
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
+                }
+        headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36',}
+        r = self.s.post(url, files = files, headers = headers)
+        mediaId = json.loads(r.text)['MediaId']
+        print mediaId
+        # send message
+        url = '%s/webwxsendappmsg?fun=async&f=json'%self.loginInfo['url']
+        payloads = {
+                'BaseRequest': self.loginInfo['BaseRequest'],
+                'Msg': {
+                    'Type': 6,
+                    'Content': ("<appmsg appid='wxeb7ec651dd0aefa9' sdkver=''><title>%s</title>"%os.path.basename(fileDir) +
+                        "<des></des><action></action><type>6</type><content></content><url></url><lowurl></lowurl>" +
+                        "<appattach><totallen>%s</totallen><attachid>%s</attachid>"%(str(os.path.getsize(fileDir)), mediaId) +
+                        "<fileext>%s</fileext></appattach><extinfo></extinfo></appmsg>"%'xlsx').encode('utf8'),
+                    'FromUserName': self.storageClass.userName.encode('utf8'),
+                    'ToUserName': toUserName.encode('utf8'),
+                    'LocalID': str(time.time() * 1e7),
+                    'ClientMsgId': str(time.time() * 1e7),
+                    },
+                }
+        headers = { 'Content-Type': 'application/json;charset=UTF-8', }
+        r = self.s.post(url, data = json.dumps(payloads, ensure_ascii = False), headers = headers)
     def add_friend(self, Status, UserName, Ticket):
         url = '%s/webwxverifyuser?r=%s&pass_ticket=%s'%(self.loginInfo['url'], int(time.time()), self.loginInfo['pass_ticket'])
         payloads = {
