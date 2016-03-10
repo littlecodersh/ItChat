@@ -4,18 +4,21 @@ import traceback
 from plugin.Sqlite3Client import Sqlite3Client
 
 def compileRegex(tableName, regexList):
+    regex = ''
     try:
         with Sqlite3Client(os.path.join('plugin', 'config', 'autoreply.db')) as s3c:
             for qa in s3c.data_source('select * from %s'%tableName):
+                regex = qa[0]
                 regexList.append((re.compile(qa[0]), qa[1]))
     except:
-        print 'Error occured when loading regex table %s'%tableName
-        traceback.print_exc()
+        raise Exception('Error occured when loading regex table %s: %s is not a correct regex'%(
+            tableName, regex))
 
 def getreply():
     regexAnsList = []
     tableNameList = ['default_reply']
-    for tableName in tableNameList: compileRegex(tableName, regexAnsList)
+    for tableName in tableNameList:
+        compileRegex(tableName, regexAnsList)
     while 1:
         msg = (yield)
         r = False

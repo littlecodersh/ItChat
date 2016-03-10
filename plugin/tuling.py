@@ -6,7 +6,7 @@ from ChatLikeCMD import ChatLikeCMD
 try:
     with open(os.path.join('plugin', 'config', 'tuling.json')) as f: key = json.loads(f.read())['key']
 except:
-    raise Exception('You need to have a correct tuling.json file')
+    raise Exception('There is something wrong with the format of you plugin/config/tuling.json')
 
 def get_response(msg, userid):
     url = 'http://www.tuling123.com/openapi/api'
