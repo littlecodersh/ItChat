@@ -63,6 +63,21 @@ if 'msgdealers.vote' in pluginList:
         sys_print('WARN', 'Vote plugin loaded failed, this is strange, you need to contact me')
         traceback.print_exc()
 
+def send_msg(msg):
+    if len(msg) > 5:
+        if msg[:5] == '@fil@':
+            try:
+                with open(msg[5:]): pass
+                print msg[5:]
+            except:
+                pass
+        elif msg[:5] == '@msg@':
+            print msg[5:]
+        else:
+            print msg
+    else:
+        print msg[5:]
+
 if __name__ == '__main__':
     try:
         print plugin_load_succeed()
@@ -74,7 +89,7 @@ if __name__ == '__main__':
                 r = r or '\n'.join(tuling.get_response(msg, 'ItChat'))
             if not r: r = 'No plugin matched'
 
-            print r
+            send_msg(r)
     except:
         print 'Exit'
         traceback.print_exc()

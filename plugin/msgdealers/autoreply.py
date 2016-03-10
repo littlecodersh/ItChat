@@ -3,10 +3,13 @@ import re, json, time, os
 import traceback
 from plugin.Sqlite3Client import Sqlite3Client
 
+SQLITE_DIR = os.path.join('plugin', 'config')
+FILE_DIR = os.path.join('storage', 'upload')
+
 def compileRegex(tableName, regexList):
     regex = ''
     try:
-        with Sqlite3Client(os.path.join('plugin', 'config', 'autoreply.db')) as s3c:
+        with Sqlite3Client(os.path.join(SQLITE_DIR, 'autoreply.db')) as s3c:
             for qa in s3c.data_source('select * from %s'%tableName):
                 regex = qa[0]
                 regexList.append((re.compile(qa[0]), qa[1]))
@@ -14,10 +17,25 @@ def compileRegex(tableName, regexList):
         raise Exception('Error occured when loading regex table %s: %s is not a correct regex'%(
             tableName, regex))
 
+def detectFiles(tableName):
+    if not os.path.exists(FILE_DIR): os.makedirs(FILE_DIR)
+    fileName = ''
+    try:
+        with Sqlite3Client(os.path.join(SQLITE_DIR, 'autoreply.db')) as s3c:
+            for qa in s3c.data_source('select * from %s'%tableName):
+                if qa[:5] == '@fil@':
+                    fileName = qa[5:]
+                    with open(os.join(FILE_DIR, fileName)): pass
+    except:
+        traceback.print_exc()
+        raise Exception('Error occured when loading %s in table %s, it should be in storage/upload'%(
+            fileName, tableName))
+
 def getreply():
     regexAnsList = []
     tableNameList = ['default_reply']
     for tableName in tableNameList:
+        detectFiles(tableName)
         compileRegex(tableName, regexAnsList)
     while 1:
         msg = (yield)
@@ -27,7 +45,10 @@ def getreply():
         yield r
 
 getreplyiter = getreply()
+getreplyiter.next()
 
 def autoreply(msg):
+    r = getreplyiter.send(msg)
+    if r and r[:5] == '@fil@': r = '@fil@%s'%(os.path.join(FILE_DIR, r[5:]))
     getreplyiter.next()
-    return getreplyiter.send(msg)
+    return r

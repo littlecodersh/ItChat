@@ -9,15 +9,30 @@ try:
 except:
     TULING = False
 
+def send_msg(client, toUserName, msg):
+    if len(msg) > 5:
+        if msg[:5] == '@fil@':
+            try:
+                with open(msg[5:]): pass
+                client.send_file(msg[5:], toUserName)
+            except:
+                pass
+        elif msg[:5] == '@msg@':
+            client.send_msg(toUserName, msg[:5])
+        else:
+            client.send_msg(toUserName, msg)
+    else:
+        client.send_msg(toUserName, msg)
+
 def deal_with_msg(msg, s, client):
     if msg['MsgType'] == 'Text':
         content = msg['Content']
         # test vote first
         r = vote(client.storageClass, msg['FromUserName'], content)
-        if r != False: client.send_msg(msg['FromUserName'], r); return
+        if r: send_msg(client, msg['FromUserName'], r); return
         # test user's autoreply
         r = autoreply(content)
-        if r != False: client.send_msg(msg['FromUserName'], r); return
+        if r: send_msg(client, msg['FromUserName'], r); return
         # no plugin matched
         client.send_msg(msg['FromUserName'],
                 '\n'.join(tuling.get_response(msg['Content'], 'ItChat')) if TULING else 'I received: %s'%msg['Content'])
