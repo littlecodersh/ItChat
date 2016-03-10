@@ -1,3 +1,4 @@
+#coding=utf8
 import itchat.out as out
 from plugin.msgdealers.vote import vote
 from plugin.msgdealers.autoreply import autoreply

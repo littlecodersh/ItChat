@@ -9,6 +9,7 @@ Command line talks through Wechat
         Python 2.7.10 (with requests, Image)
     Attention:
         More information, contact me!
+        To upload file in a right way, I have to change requests slightly
     目的：
         完成命令行使用微信的各种方法
         通过命令行与微信好友交流
@@ -17,6 +18,7 @@ Command line talks through Wechat
         Python 2.7.10 （安装了requests, Image）
     注意事项：
         有什么问题都可以联系我哟~
+        为了成功上传中文文件，我不得不修改了一下requests包
 ###Log
 * **160121:**
     * sending and getting plain text
