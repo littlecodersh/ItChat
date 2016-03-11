@@ -1,4 +1,6 @@
 # ItChat 160121
+
+[![Join the chat at https://gitter.im/littlecodersh/ItChat](https://badges.gitter.im/littlecodersh/ItChat.svg)](https://gitter.im/littlecodersh/ItChat?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 Command line talks through Wechat
 ###Description
     Aimed at:
