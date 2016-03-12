@@ -1,49 +1,41 @@
 # ItChat 160121
-Command line talks through Wechat
-###Description
-    Aimed at:
-        Create functions to use WeChat through command line
-        Talks with friends on WeChat through command line
-    Environment:
-        Windows 8.1 - 64
-        Python 2.7.10 (with requests, Image)
-    Attention:
-        More information, contact me!
-        To upload file in a right way, I have to change requests slightly
-    目的：
-        完成命令行使用微信的各种方法
-        通过命令行与微信好友交流
-    环境：
-        Windows 8.1 - 64
-        Python 2.7.10 （安装了requests, Image）
-    注意事项：
-        有什么问题都可以联系我哟~
-        为了成功上传中文文件，我不得不修改了一下requests包
-###Log
-* **160121:**
-    * sending and getting plain text
-    * for demo, it will return what it gets
-* **160122:**
-    * fixed Chinese input and output
-    * set up structure
-* **160124:**
-    * existance test
-    * show QRCode through command line
-* **160126:**
-    * accept special messages
-    * add configurations
-* **160127:**
-    * download attachments
-    * finish storage, tools and out
-* **160128:**
-    * demo ItChat finished
-* **160129:**
-    * tuling robot part finished
-    * cpu consuming bug fixed
-* **160201:**
-    * auto-adding friends
-    * voice msg download
-* **160203:**
-    * sqlite3 storage added
-    * message sending bug fixed
-    * nickname not found bug fixed
+
+ItChat是一个个人微信号的机器人，他实现了一个机器人需要实现的绝大部分功能。自动加好友、认人、发送图片、发送文件、简单的外部接口都可以轻松的完成。ItChat各模块与插件有着明确的模块化，易于扩展功能编写自己的插件。ItChat配置及其方便，甚至不需要图形界面就可以完成安装。
+
+顺带的，如果把ItChat.py文件中的ROBOT改为False，该程序也可以当命令行的微信聊天软件使用。
+
+##Have a try
+
+我将我的微信号挂上了这个小机器人，百闻不如一见，有兴趣可以尝试一下。
+
+![QRCode](http://7xrip4.com1.z0.glb.clouddn.com/ItChat%2FQRCode.jpg)
+
+##Screenshot
+
+![Demo](http://7xrip4.com1.z0.glb.clouddn.com/ItChat%2FDemo.jpg)
+
+你可以在[wiki](https://github.com/littlecodersh/ItChat/wiki)看到更多的功能截图
+
+##Installation
+
+可以通过本命令安装依赖库：
+
+`pip install requests Image`
+
+将本项目clone到本地安装依赖库后即可直接运行：
+
+`python ItChat.py`
+
+##Plugins
+
+本项目默认开启投票插件与自定义回复插件
+
+若需要开启其他插件，可以参照[wiki](https://github.com/littlecodersh/ItChat/wiki)，或者运行`python PluginTest.py`一键检测插件
+
+若需要支持中文文件传输，需要将plugin/config/fields.py文件放入requests包的packages\urllib3下，否则上传的文件将无法下载
+
+##Comments
+
+如果有什么问题或者建议都可以在这个[Issue](https://github.com/littlecodersh/ItChat/issues/1)和我讨论
+
+或者也可以在gitter上交流：[![Gitter](https://badges.gitter.im/littlecodersh/ItChat.svg)](https://gitter.im/littlecodersh/ItChat?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)

@@ -5,6 +5,7 @@ from plugin.msgdealers.autoreply import autoreply
 
 try:
     import plugin.tuling as tuling
+    tuling.get_response('Hi', 'LittleCoder')
     TULING = True
 except:
     TULING = False
