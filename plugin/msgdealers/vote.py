@@ -2,7 +2,7 @@
 import re, json, time, os
 from plugin.Sqlite3Client import Sqlite3Client
 
-VOTE_KEYWORD = 'vote'
+VOTE_KEYWORD = u'投票'
 
 def load_vote_list():
     try:
@@ -34,12 +34,12 @@ def vote(storageClass, userName, msg):
     for voteItem in voteList:
         if not voteItem['name'] in msg: continue
         if status.has_key('vote@' + voteItem['name']) and status['vote@' + voteItem['name']] == '-1':
-            return 'You have voted in ' + voteItem['name']
+            return u'你已经在“%s”中投过票了'%voteItem['name']
         candidate = None
         for c in voteItem['candidates']:
             # bug will occur if one candidates's name contains another's
             if c in msg: candidate = c;break
-        if candidate is None: return 'Candidates contains: ' + ', '.join(voteItem['candidates'])
+        if candidate is None: return u'投票选项包括: ' + ', '.join(voteItem['candidates'])
         # update vote database
         with Sqlite3Client(storageClass.sqlDir) as s3c:
             s3c.execute('create table if not exists vote (name text, candidate text, PYQuanPin text, time text)')
@@ -48,6 +48,6 @@ def vote(storageClass, userName, msg):
         # update user status
         status['vote@' + voteItem['name']] = '-1'
         store_status(storageClass, userName, status)
-        return 'Vote for %s successfully'%candidate
+        return u'已经成功投票给“%s”'%candidate
         break
-    return 'There are votes going on: ' + ', '.join([voteItem['name'] for voteItem in voteList])
+    return u'目前进行的投票有: ' + ', '.join([voteItem['name'] for voteItem in voteList])
