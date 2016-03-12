@@ -30,7 +30,7 @@ if 'tuling' in pluginList:
             pluginList.append('tuling')
             sys_print('SUCC', 'Tuling')
         except:
-            sys_print('WARN', 'Your key for tuling robot can\'t be used now, change one in plugin/config/tuling.json')
+            sys_print('INFO', 'Your key for tuling robot can\'t be used now, change one in plugin/config/tuling.json')
             sys_print('~~~~', 'You can get it from http://www.tuling123.com/')
     except:
         sys_print('WARN', 'There is something wrong with the format of your plugin/config/tuling.json')
@@ -51,7 +51,7 @@ if 'msgdealers.autoreply' in pluginList:
         pluginList.append('msgdealers.autoreply')
         sys_print('SUCC', 'msgdealers.autoreply')
     except Exception, e:
-        sys_print('WARN', str(e))
+        sys_print('WARN', e.message)
 
 # Test msgdealers.vote
 if 'msgdealers.vote' in pluginList:
@@ -80,9 +80,10 @@ def send_msg(msg):
 
 if __name__ == '__main__':
     try:
-        print plugin_load_succeed()
+        print 'Loading %s'%('successfully' if plugin_load_succeed() else 'failed')
         while True:
             msg = raw_input('>').decode(sys.stdin.encoding)
+            if not msg: continue
             if 'msgdealers.autoreply' in pluginList:
                 r = autoreply(msg)
             if 'tuling' in pluginList:

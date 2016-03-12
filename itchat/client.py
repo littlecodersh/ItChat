@@ -35,10 +35,11 @@ class WeChatClient:
         while 1:
             voidUserList = self.get_contract()
             if not voidUserList: break
-            for voidUser in voidUserList:
-                out.print_line('This user needs a new RemarkName', False)
-                out.print_line(str(voidUser), False)
-                raw_input('Continue?')
+            out.print_line('These uses need new RemarkNames and are added to a group', True)
+            chatRoomName = self.create_chatroom(voidUserList, 'RemarkNames')
+            self.delete_member(chatRoomName, [voidUserList[0]])
+            self.add_member(chatRoomName, [voidUserList[0]])
+            while raw_input('Enter "ready" after you rename all of them and DELETE the group: ') != 'ready': pass
             out.print_line('Start reload contract list', False)
         out.print_line('Login successfully as %s\n'%(
             self.storageClass.find_nickname(self.storageClass.userName)), False)
@@ -140,21 +141,25 @@ class WeChatClient:
                 if m['Sex'] == 0 or m['Sex'] == '0': memberList.remove(m);i+=1
         # deal with emoji
         memberList = tools.emoji_dealer(memberList)
-        # PYQuanPin & RemarkPYQuanPin is used as identifier
+        # RemarkPYQuanPin & PYQuanPin is used as identifier
         voidUserList = []
+        validUserList = []
         for m in memberList:
-            if m['PYQuanPin'] == '':
-                if m['UserName'] == self.storageClass.userName:
-                    m['PYQuanPin'] = m['NickName']
-                elif m['RemarkPYQuanPin'] == '':
-                    voidUserList.append(m)
-                else:
-                    m['PYQuanPin'] = m['RemarkPYQuanPin']
+            if m['RemarkPYQuanPin'] != '': m['PYQuanPin'] = m['RemarkPYQuanPin']
+            if m['UserName'] == self.storageClass.userName:
+                m['PYQuanPin'] = m['NickName']
+            elif m['PYQuanPin'] == '':
+                voidUserList.append(m)
+                continue
             insertResult = self.storageClass.update_user(m['PYQuanPin'], NickName = m['RemarkName'] or m['NickName'],
                 UserName = m['UserName'])
-            if insertResult != True: out.print_line(str(insertResult) + ' need a new RemarkName')
+            if insertResult and not m['PYQuanPin'] in validUserList:
+                validUserList.append(m['PYQuanPin'])
+            else:
+                voidUserList.append(m)
         if DEBUG:
             with open('MemberList.txt', 'w') as f: f.write(str(memberList))
+        return voidUserList
     def show_mobile_login(self):
         url = '%s/webwxstatusnotify'%self.loginInfo['url']
         payloads = {
@@ -423,6 +428,39 @@ class WeChatClient:
             'skey': self.loginInfo['skey'],}
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
+    def create_chatroom(self, memberList, topic = ''):
+        url = ('%s/webwxcreatechatroom?pass_ticket=%s&r=%s'%(
+                self.loginInfo['url'], self.loginInfo['pass_ticket'], int(time.time())))
+        params = {
+            'BaseRequest': self.loginInfo['BaseRequest'],
+            'MemberCount': len(memberList),
+            'MemberList': [{'UserName': member['UserName']} for member in memberList],
+            'Topic': topic, }
+        headers = {'content-type': 'application/json; charset=UTF-8'}
+
+        r = self.s.post(url, data=json.dumps(params),headers=headers)
+        dic = json.loads(r.content.decode('utf8', 'replace'))
+        return dic['ChatRoomName']
+    def delete_member(self, chatRoomName, memberList):
+        url = ('%s/webwxupdatechatroom?fun=delmember&pass_ticket=%s'%(
+            self.loginInfo['url'], self.loginInfo['pass_ticket']))
+        params = {
+            'BaseRequest': self.loginInfo['BaseRequest'],
+            'ChatRoomName': chatRoomName,
+            'DelMemberList': ','.join([member['UserName'] for member in memberList]),}
+        headers = {'content-type': 'application/json; charset=UTF-8'}
+        r = self.s.post(url, data=json.dumps(params),headers=headers)
+        print r.content.decode('utf8','replace')
+    def add_member(self, chatRoomName, memberList):
+        url = ('%s/webwxupdatechatroom?fun=addmember&pass_ticket=%s'%(
+            self.loginInfo['url'], self.loginInfo['pass_ticket']))
+        params = {
+            'BaseRequest': self.loginInfo['BaseRequest'],
+            'ChatRoomName': chatRoomName,
+            'AddMemberList': ','.join([member['UserName'] for member in memberList]),}
+        headers = {'content-type': 'application/json; charset=UTF-8'}
+        r = self.s.post(url, data=json.dumps(params),headers=headers)
+        print r.content.decode('utf8','replace')
     def storage(self):
         return self.msgList
 

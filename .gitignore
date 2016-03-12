@@ -1,5 +1,6 @@
-*.pyc
-*.swp
+plugin/config/tuling.json
 log/*
 storage/*
-plugin/config/tuling.json
+!storage/upload/*
+*.pyc
+*.swp

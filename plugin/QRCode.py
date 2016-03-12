@@ -1,10 +1,7 @@
 from PIL import Image 
-import sys, os
-import itchat.config as config
+import sys, os, platform
 
-QR_DIR = config.QR_DIR
-OS = config.OS
-BLOCK = '\xA1\xF6' if OS == 'Windows' else 'MM'
+BLOCK = '\xA1\xF6' if platform.system() == 'Windows' else 'MM'
 
 class QRCode():
     def __init__(self, fileName, size, padding = 0, background = 'BLACK'):
@@ -29,5 +26,5 @@ class QRCode():
         print self.white * (self.size + 2)
 
 if __name__ == '__main__':
-    q = QRCode(os.path.join(QR_DIR, 'QR.jpg'), 37, 3, 'BLACK')
+    q = QRCode(os.path.join(os.path.pardir, 'log', 'QR.jpg'), 37, 3, 'BLACK')
     q.print_qr()

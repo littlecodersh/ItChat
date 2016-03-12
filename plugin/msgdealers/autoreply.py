@@ -23,12 +23,11 @@ def detectFiles(tableName):
     try:
         with Sqlite3Client(os.path.join(SQLITE_DIR, 'autoreply.db')) as s3c:
             for qa in s3c.data_source('select * from %s'%tableName):
-                if qa[:5] == '@fil@':
-                    fileName = qa[5:]
-                    with open(os.join(FILE_DIR, fileName)): pass
+                if qa[1][:5] == '@fil@':
+                    fileName = qa[1][5:]
+                    with open(os.path.join(FILE_DIR, fileName)): pass
     except:
-        traceback.print_exc()
-        raise Exception('Error occured when loading %s in table %s, it should be in storage/upload'%(
+        raise Exception('Error occured when loading "%s" in table %s, it should be in storage/upload'%(
             fileName, tableName))
 
 def getreply():
