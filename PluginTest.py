@@ -10,7 +10,7 @@ def plugin_load_succeed():
 def sys_print(level, msg):
     if level == 'SUCC': msg += ' plugin loaded'
     if level == 'WARN': global succeed; succeed = False
-    print '[%s] %s'%(level, msg)
+    print '[%s] %s'%(level[:4], msg)
 
 # load plugin list
 try:
@@ -83,15 +83,16 @@ def send_msg(msg):
 if __name__ == '__main__':
     try:
         print 'Loading %s'%('successfully' if plugin_load_succeed() else 'failed')
+        pluginOrder = [('autoreply', autoreply), ('tuling', tuling.get_response)]
         while True:
             msg = raw_input('>').decode(sys.stdin.encoding)
             if not msg: continue
-            r = ''
-            if 'autoreply' in pluginList['msgdealers']:
-                r = autoreply(msg)
-            if 'tuling' in pluginList['systemmodules']:
-                r = r or '\n'.join(tuling.get_response(msg, 'ItChat'))
-            if not r: r = 'No plugin matched'
+            res = ''
+            for plugin in pluginOrder:
+                if plugin[0] in (pluginList['msgdealers'] + pluginList['systemmodules']):
+                    r = plugin[1](content, None, None)
+                    if r: res = r;break
+            if not res: r = 'No plugin matched'
 
             send_msg(r)
     except:

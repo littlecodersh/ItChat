@@ -9,6 +9,8 @@
         "name":
             "another vote",
         "candidates":
-            ["another candidate1", "only one LittleCoder", "still nobody"]
+            ["another candidate1", "only one LittleCoder", "still nobody"],
+        "maxvote":
+            3
     }
 ]

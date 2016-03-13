@@ -1,9 +1,9 @@
 #coding=utf8
 import itchat.out as out
 import itchat.log as log
+import PluginTest
 from plugin.msgdealers.vote import vote
 from plugin.msgdealers.autoreply import autoreply
-import PluginTest
 
 try:
     import plugin.tuling as tuling
@@ -30,17 +30,19 @@ def send_msg(client, toUserName, msg):
 def deal_with_msg(msg, s, client):
     if msg['MsgType'] == 'Text':
         content = msg['Content']
-        # test vote first
-        if 'vote' in PluginTest.pluginList['msgdealers']:
-            r = vote(content, client.storageClass, msg['FromUserName'])
-            if r: send_msg(client, msg['FromUserName'], r); return
-        # test user's autoreply
-        if 'autoreply' in PluginTest.pluginList['msgdealers']:
-            r = autoreply(content)
-            if r: send_msg(client, msg['FromUserName'], r); return
-        # no plugin matched
-        client.send_msg(msg['FromUserName'],
-                '\n'.join(tuling.get_response(msg['Content'], 'ItChat')) if TULING else 'I received: %s'%msg['Content'])
+        # Plugins should be added in order as ('name', function)
+        pluginOrder = [('vote', vote), ('autoreply', autoreply)]
+        getReply = False
+        for plugin in pluginOrder:
+            if plugin[0] in PluginTest.pluginList['msgdealers']:
+                r = plugin[1](content, client.storageClass, msg['FromUserName'])
+                if r:
+                    send_msg(client, msg['FromUserName'], r)
+                    getReply = True
+                    break
+        if not getReply:
+            client.send_msg(msg['FromUserName'],
+                    '\n'.join(tuling.get_response(msg['Content'])) if TULING else 'I received: %s'%msg['Content'])
         out.print_line('%s: %s'%(s.find_nickname(msg['FromUserName']), msg['Content']))
     elif msg['MsgType'] == 'Map':
         client.send_msg(msg['FromUserName'], 'You are there!')

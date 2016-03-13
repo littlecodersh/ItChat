@@ -8,7 +8,7 @@ try:
 except:
     raise Exception('There is something wrong with the format of you plugin/config/tuling.json')
 
-def get_response(msg, userid):
+def get_response(msg, storageClass = None, userName = None, userid = 'ItChat'):
     url = 'http://www.tuling123.com/openapi/api'
     payloads = {
         'key': key,
