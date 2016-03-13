@@ -133,12 +133,15 @@ class WeChatClient:
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         r = self.s.get(url, headers = headers)
         memberList = json.loads(r.content.decode('utf-8', 'replace'))['MemberList']
-        i = 1
-        # ISSUE 1.3
-        while i != 0:
+        while 1:
             i = 0
             for m in memberList:
-                if m['Sex'] == 0 or m['Sex'] == '0': memberList.remove(m);i+=1
+                if m['Sex'] != 0: continue
+                if (m['VerifyFlag'] & 8 == 0 and '@' in m['UserName'] and not '@@' in m['UserName'] and
+                    any([n in m['UserName'] for n in range(10)]) and any([chr(n) in m['UserName'] for n in (
+                        range(ord('a'), ord('z') + 1) + range(ord('A'), ord('Z') + 1))])): continue
+                memberList.remove(m);i+=1
+            if i == 0: break
         # deal with emoji
         memberList = tools.emoji_dealer(memberList)
         # RemarkPYQuanPin & PYQuanPin is used as identifier
@@ -159,7 +162,12 @@ class WeChatClient:
                 voidUserList.append(m)
         if DEBUG:
             with open('MemberList.txt', 'w') as f: f.write(str(memberList))
-        return voidUserList
+        if len(voidUserList) == 1:
+            m = voidUserList[0]
+            self.storageClass.update_user('', NickName = m['RemarkName'] or m['NickName'], UserName = m['UserName'])
+            return []
+        else:
+            return voidUserList
     def show_mobile_login(self):
         url = '%s/webwxstatusnotify'%self.loginInfo['url']
         payloads = {
@@ -177,7 +185,6 @@ class WeChatClient:
         pauseTime = 1
         while i and count <4:
             try:
-                # ISSUE 1.2
                 if pauseTime < 5: pauseTime += 2
                 if i != '0': msgList = self.get_msg()
                 if msgList: 
@@ -192,7 +199,6 @@ class WeChatClient:
                 log.log('Exception %s:'%count, False, exception = e)
                 time.sleep(count*3)
         log.log('LOG OUT', False)
-        raise Exception('Log out')
     def sync_check(self):
         url = '%s/synccheck'%self.loginInfo['url']
         payloads = {
@@ -450,7 +456,6 @@ class WeChatClient:
             'DelMemberList': ','.join([member['UserName'] for member in memberList]),}
         headers = {'content-type': 'application/json; charset=UTF-8'}
         r = self.s.post(url, data=json.dumps(params),headers=headers)
-        print r.content.decode('utf8','replace')
     def add_member(self, chatRoomName, memberList):
         url = ('%s/webwxupdatechatroom?fun=addmember&pass_ticket=%s'%(
             self.loginInfo['url'], self.loginInfo['pass_ticket']))
@@ -460,7 +465,6 @@ class WeChatClient:
             'AddMemberList': ','.join([member['UserName'] for member in memberList]),}
         headers = {'content-type': 'application/json; charset=UTF-8'}
         r = self.s.post(url, data=json.dumps(params),headers=headers)
-        print r.content.decode('utf8','replace')
     def storage(self):
         return self.msgList
 

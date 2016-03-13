@@ -8,7 +8,7 @@ ROBOT = True
 
 def demo_robot(s, msgList, client): # ONLY FOR DEMO
     print 'Start auto-replying'
-    while True: 
+    while 1: 
         if msgList: 
             msg = msgList.pop()
             if s.find_nickname(msg['FromUserName']): itchat.robot.deal_with_msg(msg, s, client)

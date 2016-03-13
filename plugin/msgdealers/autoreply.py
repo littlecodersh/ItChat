@@ -46,7 +46,7 @@ def getreply():
 getreplyiter = getreply()
 getreplyiter.next()
 
-def autoreply(msg):
+def autoreply(msg, storageClass = None, userName = None):
     r = getreplyiter.send(msg)
     if r and r[:5] == '@fil@': r = '@fil@%s'%(os.path.join(FILE_DIR, r[5:]))
     getreplyiter.next()

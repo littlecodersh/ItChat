@@ -1,6 +1,10 @@
-[
-    "QRCode",
-    "tuling",
-    "msgdealers.autoreply",
-    "msgdealers.vote"
-]
+{
+    "systemmodules": [
+        "QRCode",
+        "tuling"
+    ],
+    "msgdealers": [
+        "autoreply",
+        "vote"
+    ] 
+}

@@ -1,7 +1,9 @@
 #coding=utf8
 import itchat.out as out
+import itchat.log as log
 from plugin.msgdealers.vote import vote
 from plugin.msgdealers.autoreply import autoreply
+import PluginTest
 
 try:
     import plugin.tuling as tuling
@@ -17,7 +19,7 @@ def send_msg(client, toUserName, msg):
                 with open(msg[5:]): pass
                 client.send_file(msg[5:], toUserName)
             except:
-                pass
+                log.log('Send %s failed'%msg[5:], False)
         elif msg[:5] == '@msg@':
             client.send_msg(toUserName, msg[:5])
         else:
@@ -29,11 +31,13 @@ def deal_with_msg(msg, s, client):
     if msg['MsgType'] == 'Text':
         content = msg['Content']
         # test vote first
-        r = vote(client.storageClass, msg['FromUserName'], content)
-        if r: send_msg(client, msg['FromUserName'], r); return
+        if 'vote' in PluginTest.pluginList['msgdealers']:
+            r = vote(content, client.storageClass, msg['FromUserName'])
+            if r: send_msg(client, msg['FromUserName'], r); return
         # test user's autoreply
-        r = autoreply(content)
-        if r: send_msg(client, msg['FromUserName'], r); return
+        if 'autoreply' in PluginTest.pluginList['msgdealers']:
+            r = autoreply(content)
+            if r: send_msg(client, msg['FromUserName'], r); return
         # no plugin matched
         client.send_msg(msg['FromUserName'],
                 '\n'.join(tuling.get_response(msg['Content'], 'ItChat')) if TULING else 'I received: %s'%msg['Content'])

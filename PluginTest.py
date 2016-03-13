@@ -17,17 +17,17 @@ try:
     pluginListDir = 'pluginlist.json'
     with open(pluginListDir) as f: pluginList = json.loads(f.read())
 except:
-    pluginList = []
+    pluginList = {}
     sys_print('WARN', 'There is something wrong with the format of your pluginlist.json')
 
 # Test tuling.py
-if 'tuling' in pluginList:
+if 'tuling' in pluginList['systemmodules']:
     try:
-        pluginList.remove('tuling')
+        pluginList['systemmodules'].remove('tuling')
         import plugin.tuling as tuling
         try:
             tuling.get_response('Hi', 'LittleCoder')
-            pluginList.append('tuling')
+            pluginList['systemmodules'].append('tuling')
             sys_print('SUCC', 'Tuling')
         except:
             sys_print('INFO', 'Your key for tuling robot can\'t be used now, change one in plugin/config/tuling.json')
@@ -36,7 +36,7 @@ if 'tuling' in pluginList:
         sys_print('WARN', 'There is something wrong with the format of your plugin/config/tuling.json')
 
 # Test QRCode.py
-if 'QRCode' in pluginList:
+if 'QRCode' in pluginList['systemmodules']:
     try:
         import plugin.QRCode as QRCode
         sys_print('SUCC', 'Command line QRCode')
@@ -44,19 +44,21 @@ if 'QRCode' in pluginList:
         sys_print('INFO', 'Command line QRCode loaded failed, if you want to use this, you need to run `pip install Image`')
 
 # Test msgdealers.autoreply
-if 'msgdealers.autoreply' in pluginList:
+if 'autoreply' in pluginList['msgdealers']:
     try:
-        pluginList.remove('msgdealers.autoreply')
+        pluginList['msgdealers'].remove('autoreply')
         from plugin.msgdealers.autoreply import autoreply
-        pluginList.append('msgdealers.autoreply')
+        pluginList['msgdealers'].append('autoreply')
         sys_print('SUCC', 'msgdealers.autoreply')
     except Exception, e:
         sys_print('WARN', e.message)
 
 # Test msgdealers.vote
-if 'msgdealers.vote' in pluginList:
+if 'vote' in pluginList['msgdealers']:
     try:
+        pluginList['msgdealers'].remove('vote')
         from plugin.msgdealers.vote import vote 
+        pluginList['msgdealers'].append('vote')
         sys_print('SUCC', 'msgdealers.vote')
         sys_print('INFO', 'But whether it can be properly used need to be tested online')
     except:
@@ -84,9 +86,10 @@ if __name__ == '__main__':
         while True:
             msg = raw_input('>').decode(sys.stdin.encoding)
             if not msg: continue
-            if 'msgdealers.autoreply' in pluginList:
+            r = ''
+            if 'autoreply' in pluginList['msgdealers']:
                 r = autoreply(msg)
-            if 'tuling' in pluginList:
+            if 'tuling' in pluginList['systemmodules']:
                 r = r or '\n'.join(tuling.get_response(msg, 'ItChat'))
             if not r: r = 'No plugin matched'
 

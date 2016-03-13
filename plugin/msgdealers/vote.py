@@ -23,7 +23,7 @@ def store_status(storageClass, userName, other):
     PYQuanPin = storageClass.find_PYQuanPin(userName)
     storageClass.update_user(PYQuanPin, Other = storageClass.get_str_of_other(other))
 
-def vote(storageClass, userName, msg):
+def vote(msg, storageClass, userName):
     if not VOTE_KEYWORD in msg: return False
     # key in sqlite3->other: vote
     # value in sqlite3->other: -1 for voted, 0 for waiting for vote, 1 for not voted
