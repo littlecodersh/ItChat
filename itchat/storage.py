@@ -15,8 +15,8 @@ class Storage:
             s3c.execute('create table if not exists memberList (PYQuanPin text, NickName text, UserName text, Other text)')
     def find_msg_list(self, userName, count):
         with Sqlite3Client(self.sqlDir) as s3c:
-            r = s3c.query('select * from message where nickname=\'%s\' order by time desc limit %s'
-                %(self.find_nickname(userName), count))
+            r = s3c.query('select * from message where nickname=? order by time desc limit ?',
+                (self.find_nickname(userName), count))
         return r
     def store_msg(self, userName, msg, fromto):
         with Sqlite3Client(self.sqlDir) as s3c:
@@ -25,13 +25,13 @@ class Storage:
         if fromto == 'from': self.lastInputUserName = userName
     def update_user(self, PYQuanPin, **kwargs):
         with Sqlite3Client(self.sqlDir) as s3c:
-            dataInStorage = s3c.query('select count(*) from memberList where PYQuanPin = "%s"'%PYQuanPin)[0][0]
+            dataInStorage = s3c.query('select count(*) from memberList where PYQuanPin = ?', (PYQuanPin,))[0][0]
             if dataInStorage == 0:
                 dataDict = {'NickName': '', 'UserName': '', 'Other': ''}
             else:
-                dataTuple = s3c.query('select * from memberList where PYQuanPin = "%s"'%PYQuanPin)[0]
+                dataTuple = s3c.query('select * from memberList where PYQuanPin = ?', (PYQuanPin,))[0]
                 dataDict = {'NickName': dataTuple[1], 'UserName': dataTuple[2], 'Other': dataTuple[3]}
-                s3c.execute('delete from memberList where PYQuanPin = "%s"'%PYQuanPin)
+                s3c.execute('delete from memberList where PYQuanPin = ?', (PYQuanPin,))
             for key, value in kwargs.items(): dataDict[key] = value
             try:
                 s3c.insert_data('memberList', items = [PYQuanPin, dataDict['NickName'], dataDict['UserName'], dataDict['Other']])
@@ -40,25 +40,25 @@ class Storage:
         return True
     def find_PYQuanPin(self, userName):
         with Sqlite3Client(self.sqlDir) as s3c:
-            members = s3c.query('select * from memberList where UserName = "%s"'%userName)
+            members = s3c.query('select * from memberList where UserName = ?', (userName,))
             for member in members: return member[0]
     def find_user(self, n):
         with Sqlite3Client(self.sqlDir) as s3c:
-            members = s3c.query('select * from memberList where NickName = "%s"'%n)
+            members = s3c.query('select * from memberList where NickName = ?', (n,))
             for member in members: return member[2]
     def find_nickname(self, u):
         with Sqlite3Client(self.sqlDir) as s3c:
-            members = s3c.query('select * from memberList where UserName = "%s"'%u)
+            members = s3c.query('select * from memberList where UserName = ?', (u,))
             for member in members: return member[1]
     def search_nickname(self, n):
         r = []
         with Sqlite3Client(self.sqlDir) as s3c:
-            members = s3c.data_source('select * from memberList where NickName like "%s%s%s"'%('%', n, '%'))
+            members = s3c.query('select * from memberList where NickName like ?', ('%' + n + '%',))
             for member in members: r.append(member[1])
         return r
     def get_other(self, userName):
         with Sqlite3Client(self.sqlDir) as s3c:
-            members = s3c.query('select * from memberList where UserName = "%s"'%userName)
+            members = s3c.query('select * from memberList where UserName = ?', (userName,))
             for member in members: return member[3]
     def get_dict_of_other(self, s):
         d = {}
@@ -67,4 +67,3 @@ class Storage:
         return d
     def get_str_of_other(self, d):
         return ';'.join(['%s,%s'%(key, value) for key, value in d.items()])
-

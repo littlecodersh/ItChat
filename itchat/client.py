@@ -23,11 +23,15 @@ class WeChatClient:
         self.s = requests.Session()
         self.uuid = None
     def login(self):
-        while 1:
+        for get_count in range(10):
             out.print_line('Getting uuid', True)
             while self.get_QRuuid(): time.sleep(1)
             out.print_line('Getting QR Code', True)
-            if self.get_QR(): break
+            if self.get_QR():
+                break
+            elif get_count >= 9:
+                out.print_line('Failed to get QR Code, please restart the program')
+                sys.exit()
         out.print_line('Please scan the QR Code', True)
         while self.check_login(): time.sleep(1)
         self.web_init()
@@ -149,6 +153,7 @@ class WeChatClient:
         validUserList = []
         for m in memberList:
             if m['RemarkPYQuanPin'] != '': m['PYQuanPin'] = m['RemarkPYQuanPin']
+            if m['PYQuanPin'] == '' and m['Alias'] != '': m['PYQuanPin'] == m['Alias']
             if m['UserName'] == self.storageClass.userName:
                 m['PYQuanPin'] = m['NickName']
             elif m['PYQuanPin'] == '':
