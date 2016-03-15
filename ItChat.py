@@ -1,5 +1,6 @@
 #coding=utf8
 import time, sys
+if sys.version[:3] != '2.7': print('This project should be run with python2.7');sys.exit()
 import itchat.storage, itchat.out, itchat.argparser, itchat.robot
 from itchat.client import WeChatClient
 from plugin.ChatLikeCMD import ChatLikeCMD
@@ -8,7 +9,7 @@ from plugin.ChatLikeCMD import ChatLikeCMD
 ROBOT = True # change to False if you need to use command line wechat
 
 def demo_robot(s, msgList, client): # ONLY FOR DEMO
-    print 'Start auto-replying'
+    print('Start auto-replying')
     while 1: 
         if msgList: 
             msg = msgList.pop()
@@ -16,7 +17,7 @@ def demo_robot(s, msgList, client): # ONLY FOR DEMO
         time.sleep(.1)
 if __name__ == '__main__':
     from PluginTest import plugin_load_succeed
-    if not plugin_load_succeed(): print 'Try to fix the plugins and test them with PluginTest.py';sys.exit()
+    if not plugin_load_succeed(): print('Try to fix the plugins and test them with PluginTest.py');sys.exit()
 
     client_s = itchat.storage.Storage()
     if ROBOT:

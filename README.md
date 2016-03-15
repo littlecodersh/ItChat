@@ -26,6 +26,8 @@ ItChat是一个个人微信号的机器人，他实现了一个机器人需要�
 
 `python ItChat.py`
 
+本项目基于python 2.7.11开发，使用python 3可能发生异常。
+
 ##Plugins
 
 本项目默认开启投票插件与自定义回复插件

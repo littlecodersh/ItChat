@@ -1,5 +1,5 @@
-import requests, time, re
 import os, sys
+import requests, time, re
 import thread, subprocess
 import json, xml.dom.minidom, mimetypes
 from urllib import unquote
@@ -138,7 +138,7 @@ class WeChatClient:
             for m in memberList:
                 if m['Sex'] != 0: continue
                 if (m['VerifyFlag'] & 8 == 0 and '@' in m['UserName'] and not '@@' in m['UserName'] and
-                    any([n in m['UserName'] for n in range(10)]) and any([chr(n) in m['UserName'] for n in (
+                    any([str(n) in m['UserName'] for n in range(10)]) and any([chr(n) in m['UserName'] for n in (
                         range(ord('a'), ord('z') + 1) + range(ord('A'), ord('Z') + 1))])): continue
                 memberList.remove(m);i+=1
             if i == 0: break

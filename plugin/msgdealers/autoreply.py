@@ -27,8 +27,7 @@ def detectFiles(tableName):
                     fileName = qa[1][5:]
                     with open(os.path.join(FILE_DIR, fileName)): pass
     except:
-        raise Exception('Error occured when loading "%s" in table %s, it should be in storage/upload'%(
-            fileName, tableName))
+        raise Exception('Error occured when loading "%s" in table %s, it should be in storage/upload'%(fileName, tableName))
 
 def getreply():
     regexAnsList = []

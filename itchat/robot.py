@@ -1,9 +1,7 @@
 #coding=utf8
 import itchat.out as out
 import itchat.log as log
-import PluginTest
-from plugin.msgdealers.vote import vote
-from plugin.msgdealers.autoreply import autoreply
+from PluginTest import *
 
 try:
     import plugin.tuling as tuling
@@ -34,7 +32,7 @@ def deal_with_msg(msg, s, client):
         pluginOrder = [('vote', vote), ('autoreply', autoreply)]
         getReply = False
         for plugin in pluginOrder:
-            if plugin[0] in PluginTest.pluginList['msgdealers']:
+            if plugin[0] in pluginList['msgdealers']:
                 r = plugin[1](content, client.storageClass, msg['FromUserName'])
                 if r:
                     send_msg(client, msg['FromUserName'], r)

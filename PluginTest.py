@@ -63,7 +63,7 @@ if 'vote' in pluginList['msgdealers']:
         sys_print('INFO', 'But whether it can be properly used need to be tested online')
     except:
         sys_print('WARN', 'Vote plugin loaded failed, this is strange, you need to contact me')
-        traceback.print_exc()
+        # traceback.print_exc()
 
 def send_msg(msg):
     if len(msg) > 5:
@@ -97,7 +97,7 @@ if __name__ == '__main__':
             send_msg(r)
     except:
         print 'Exit'
-        traceback.print_exc()
+        # traceback.print_exc()
 else:
     sys_print('INFO', 'Plugin loading finished')
 
