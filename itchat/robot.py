@@ -17,7 +17,13 @@ def send_msg(client, toUserName, msg):
                 with open(msg[5:]): pass
                 client.send_file(msg[5:], toUserName)
             except:
-                log.log('Send %s failed'%msg[5:], False)
+                log.log('Send file %s failed'%msg[5:], False)
+        elif msg[:5] == '@img@':
+            try:
+                with open(msg[5:]): pass
+                client.send_image(msg[5:], toUserName)
+            except:
+                log.log('Send image %s failed'%msg[5:], False)
         elif msg[:5] == '@msg@':
             client.send_msg(toUserName, msg[:5])
         else:

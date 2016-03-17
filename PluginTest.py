@@ -70,7 +70,13 @@ def send_msg(msg):
         if msg[:5] == '@fil@':
             try:
                 with open(msg[5:]): pass
-                print msg[5:]
+                print 'File: %s'%msg[5:]
+            except:
+                pass
+        if msg[:5] == '@img@':
+            try:
+                with open(msg[5:]): pass
+                print 'Picture: %s'%msg[5:]
             except:
                 pass
         elif msg[:5] == '@msg@':

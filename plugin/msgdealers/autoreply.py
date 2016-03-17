@@ -24,8 +24,9 @@ def detectFiles(tableName):
         with Sqlite3Client(os.path.join(SQLITE_DIR, 'autoreply.db')) as s3c:
             for qa in s3c.data_source('select * from %s'%tableName):
                 if qa[1][:5] == '@fil@':
-                    fileName = qa[1][5:]
-                    with open(os.path.join(FILE_DIR, fileName)): pass
+                    with open(os.path.join(FILE_DIR, qa[1][5:])): pass
+                elif qa[1][:5] == '@img@':
+                    with open(os.path.join(FILE_DIR, qa[1][5:])): pass
     except:
         raise Exception('Error occured when loading "%s" in table %s, it should be in storage/upload'%(fileName, tableName))
 
@@ -47,6 +48,6 @@ getreplyiter.next()
 
 def autoreply(msg, storageClass = None, userName = None):
     r = getreplyiter.send(msg)
-    if r and r[:5] == '@fil@': r = '@fil@%s'%(os.path.join(FILE_DIR, r[5:]))
+    if r and r[:5] in ('@fil@', '@img@'): r = '%s%s'%(r[:5], os.path.join(FILE_DIR, r[5:]))
     getreplyiter.next()
     return r

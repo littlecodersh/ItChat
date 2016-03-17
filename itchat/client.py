@@ -374,7 +374,7 @@ class WeChatClient:
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         r = self.s.post(url, data = json.dumps(payloads, ensure_ascii = False), headers = headers)
         self.storageClass.store_msg(toUserName, msg, 'to') #encoding problems
-    def send_file(self, fileDir, toUserName = None):
+    def upload_file(self, fileDir, isPicture = False):
         url = 'https://file%s.wx.qq.com/cgi-bin/mmwebwx-bin/webwxuploadmedia?f=json'%('2' if '2' in self.loginInfo['url'] else '')
         # save it on server
         fileSize = str(os.path.getsize(fileDir))
@@ -386,7 +386,7 @@ class WeChatClient:
                 'type': (None, fileType),
                 'lastModifiedDate': (None, time.strftime('%a %b %d %Y %H:%M:%S GMT+0800 (CST)')),
                 'size': (None, fileSize),
-                'mediatype': (None, 'doc'),
+                'mediatype': (None, 'pic' if isPicture else 'doc'),
                 'uploadmediarequest': (None, json.dumps({
                     'BaseRequest': self.loginInfo['BaseRequest'],
                     'ClientMediaId': int(time.time()),
@@ -401,8 +401,9 @@ class WeChatClient:
                 }
         headers = { 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36', }
         r = self.s.post(url, files = files, headers = headers)
-        mediaId = json.loads(r.text)['MediaId']
-        # send message
+        return json.loads(r.text)['MediaId']
+    def send_file(self, fileDir, toUserName):
+        mediaId = self.upload_file(fileDir)
         url = '%s/webwxsendappmsg?fun=async&f=json'%self.loginInfo['url']
         payloads = {
                 'BaseRequest': self.loginInfo['BaseRequest'],
@@ -416,9 +417,27 @@ class WeChatClient:
                     'FromUserName': self.storageClass.userName.encode('utf8'),
                     'ToUserName': toUserName.encode('utf8'),
                     'LocalID': str(time.time() * 1e7),
-                    'ClientMsgId': str(time.time() * 1e7),
-                    },
-                }
+                    'ClientMsgId': str(time.time() * 1e7), }, }
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36',
+            'Content-Type': 'application/json;charset=UTF-8', }
+        r = self.s.post(url, data = json.dumps(payloads, ensure_ascii = False), headers = headers)
+    def send_image(self, fileDir, toUserName):
+        mediaId = self.upload_file(fileDir, isPicture = not fileDir[-4:] == '.gif')
+        url = '%s/webwxsendmsgimg?fun=async&f=json'%self.loginInfo['url']
+        payloads = {
+                'BaseRequest': self.loginInfo['BaseRequest'],
+                'Msg': {
+                    'Type': 3,
+                    'MediaId': mediaId,
+                    'FromUserName': self.storageClass.userName.encode('utf8'),
+                    'ToUserName': toUserName.encode('utf8'),
+                    'LocalID': str(time.time() * 1e7),
+                    'ClientMsgId': str(time.time() * 1e7), }, }
+        if fileDir[-4:] == '.gif':
+            url = '%s/webwxsendemoticon?fun=sys'%self.loginInfo['url']
+            payloads['Msg']['Type'] = 47
+            payloads['Msg']['EmojiFlag'] = 2
         headers = {
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36',
             'Content-Type': 'application/json;charset=UTF-8', }
