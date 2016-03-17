@@ -10,6 +10,8 @@ try:
 except:
     TULING = False
 
+PRINT_ON_CMD = True
+
 def send_msg(client, toUserName, msg):
     if len(msg) > 5:
         if msg[:5] == '@fil@':
@@ -31,45 +33,65 @@ def send_msg(client, toUserName, msg):
     else:
         client.send_msg(toUserName, msg)
 
-def deal_with_msg(msg, s, client):
+def get_reply(msg, s, client, isGroupChat = False, cmdPrint = PRINT_ON_CMD):
+    reply = ''
     if msg['MsgType'] == 'Text':
+        if not isGroupChat and cmdPrint:
+            out.print_line('%s: %s'%(s.find_nickname(msg['FromUserName']), msg['Content']))
         content = msg['Content']
         # Plugins should be added in order as ('name', function)
-        pluginOrder = [('vote', vote), ('autoreply', autoreply)]
+        pluginOrder = [('vote', vote), ('autoreply', autoreply), ('tuling', tuling.get_response)]
+        if isGroupChat: pluginOrder = [('autoreply', autoreply), ('tuling', tuling.get_response)]
         getReply = False
         for plugin in pluginOrder:
-            if plugin[0] in pluginList['msgdealers']:
+            if plugin[0] in (pluginList['msgdealers'] + pluginList['systemmodules']):
                 r = plugin[1](content, client.storageClass, msg['FromUserName'])
                 if r:
-                    send_msg(client, msg['FromUserName'], r)
+                    reply = r
                     getReply = True
                     break
-        if not getReply:
-            client.send_msg(msg['FromUserName'],
-                    '\n'.join(tuling.get_response(msg['Content'])) if TULING else 'I received: %s'%msg['Content'])
-        out.print_line('%s: %s'%(s.find_nickname(msg['FromUserName']), msg['Content']))
+        if not getReply: reply = 'I received: %s'%content
     elif msg['MsgType'] == 'Map':
-        client.send_msg(msg['FromUserName'], 'You are there!')
-        out.print_line('%s is at %s'%(s.find_nickname(msg['FromUserName']), msg['Content']))
+        return 'You are there!'
+        if not isGroupChat and cmdPrint: 
+            out.print_line('%s is at %s'%(s.find_nickname(msg['FromUserName']), msg['Content']))
     elif msg['MsgType'] == 'Picture':
-        client.send_msg(msg['FromUserName'], 'Picture received')
-        out.print_line('%s sent a picture [%s]'%(s.find_nickname(msg['FromUserName']), msg['Content']))
+        return 'Picture received!'
+        if not isGroupChat and cmdPrint: 
+            out.print_line('%s sent a picture [%s]'%(s.find_nickname(msg['FromUserName']), msg['Content']))
     elif msg['MsgType'] == 'Recording':
-        client.send_msg(msg['FromUserName'], 'Nice Voice!')
-        out.print_line('%s sent a recording'%(s.find_nickname(msg['FromUserName'])))
+        return 'Nice Voice!'
+        if not isGroupChat and cmdPrint: 
+            out.print_line('%s sent a recording'%(s.find_nickname(msg['FromUserName'])))
     elif msg['MsgType'] == 'Card':
-        client.send_msg(msg['FromUserName'], 'Greeting, %s!'%msg['Content'])
-        out.print_line('%s sent a business card of [%s]'%(s.find_nickname(msg['FromUserName']), msg['Content']))
+        return 'Greeting, %s!'%msg['Content']
+        if not isGroupChat and cmdPrint: 
+            out.print_line('%s sent a business card of [%s]'%(s.find_nickname(msg['FromUserName']), msg['Content']))
     elif msg['MsgType'] == 'Sharing':
-        client.send_msg(msg['FromUserName'], '"%s" is good!'%msg['Content'])
-        out.print_line('%s sent a web about [%s]'%(s.find_nickname(msg['FromUserName']), msg['Content']))
+        return '"%s" is good!'%msg['Content']
+        if not isGroupChat and cmdPrint: 
+            out.print_line('%s sent a web about [%s]'%(s.find_nickname(msg['FromUserName']), msg['Content']))
     elif msg['MsgType'] == 'Attachment':
-        client.send_msg(msg['FromUserName'], '"%s" received'%msg['Content'])
-        out.print_line('%s sent an attachment: [%s]'%(s.find_nickname(msg['FromUserName']), msg['Location']))
+        return '"%s" received!'%msg['Content']
+        if not isGroupChat and cmdPrint: 
+            out.print_line('%s sent an attachment: [%s]'%(s.find_nickname(msg['FromUserName']), msg['Location']))
     elif msg['MsgType'] == 'Video':
-        client.send_msg(msg['FromUserName'], 'I received a video')
-        out.print_line('%s sent a video [%s]'%(s.find_nickname(msg['FromUserName']), msg['Content']))
+        return 'I received a video'
+        if not isGroupChat and cmdPrint: 
+            out.print_line('%s sent a video [%s]'%(s.find_nickname(msg['FromUserName']), msg['Content']))
     elif msg['MsgType'] == 'Note':
-        out.print_line('Notification: %s'%(msg['Content']))
+        if not isGroupChat and cmdPrint: out.print_line('Notification: %s'%(msg['Content']))
     else:
-        pass#out.print_line(str(msg)
+        pass#out.print_line(str(msg))
+    return reply
+
+def deal_with_msg(msg, s, client):
+    if msg.has_key('FromUserName') and msg['FromUserName'][:2] == '@@':
+        try:
+            r = grouptalking(msg, s, client, get_reply)
+            send_msg(client, msg['FromUserName'], r)
+        except:
+            log.log('Send group chat failed', False)
+    else:
+        r = get_reply(msg, s, client)
+        send_msg(client, msg['FromUserName'], r)

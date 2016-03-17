@@ -1,7 +1,8 @@
 {
     "systemmodules": [
         "QRCode",
-        "tuling"
+        "tuling",
+        "grouptalking"
     ],
     "msgdealers": [
         "autoreply",

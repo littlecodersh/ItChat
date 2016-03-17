@@ -131,6 +131,17 @@ class WeChatClient:
             NickName = dic['User']['NickName'], UserName = dic['User']['UserName'])
         self.loginInfo['SyncKey'] = dic['SyncKey']
         self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val']) for item in dic['SyncKey']['List']])
+    def get_batch_contract(self, userName):
+        url = '%s/webwxbatchgetcontact?type=ex&r=%s' % (self.loginInfo['url'], int(time.time()))
+        headers = { 'ContentType': 'application/json; charset=UTF-8' }
+        payloads = {
+            'BaseRequest': self.loginInfo['BaseRequest'],
+            'Count': 1,
+            'List': [{
+                'UserName': userName,
+                'ChatRoomId': '', }], }
+        r = self.s.post(url, data = json.dumps(payloads), headers = headers)
+        return json.loads(r.content.decode('utf-8', 'replace'))['ContactList'][0]['MemberList']
     def get_contract(self):
         url = '%s/webwxgetcontact?r=%s&seq=0&skey=%s' % (self.loginInfo['url'],
             int(time.time()), self.loginInfo['skey'])
@@ -140,8 +151,7 @@ class WeChatClient:
         while 1:
             i = 0
             for m in memberList:
-                if m['Sex'] != 0: continue
-                if (m['VerifyFlag'] & 8 == 0 and '@' in m['UserName'] and not '@@' in m['UserName'] and
+                if m['Sex'] != 0 or (m['VerifyFlag'] & 8 == 0 and '@' in m['UserName'] and not '@@' in m['UserName'] and
                     any([str(n) in m['UserName'] for n in range(10)]) and any([chr(n) in m['UserName'] for n in (
                         range(ord('a'), ord('z') + 1) + range(ord('A'), ord('Z') + 1))])): continue
                 memberList.remove(m);i+=1
@@ -151,6 +161,7 @@ class WeChatClient:
         # RemarkPYQuanPin & PYQuanPin is used as identifier
         voidUserList = []
         validUserList = []
+        unknownCount = 0
         for m in memberList:
             if m['RemarkPYQuanPin'] != '': m['PYQuanPin'] = m['RemarkPYQuanPin']
             if m['PYQuanPin'] == '' and m['Alias'] != '': m['PYQuanPin'] == m['Alias']
@@ -158,13 +169,17 @@ class WeChatClient:
                 m['PYQuanPin'] = m['NickName']
             elif m['PYQuanPin'] == '':
                 voidUserList.append(m)
-                continue
-            insertResult = self.storageClass.update_user(m['PYQuanPin'], NickName = m['RemarkName'] or m['NickName'],
-                UserName = m['UserName'])
-            if insertResult and not m['PYQuanPin'] in validUserList:
-                validUserList.append(m['PYQuanPin'])
-            else:
-                voidUserList.append(m)
+                m['PYQuanPin'] = '@Unknown%s'%unknownCount
+                unknownCount += 1
+            while 1:
+                insertResult = self.storageClass.update_user(m['PYQuanPin'], NickName = m['RemarkName'] or m['NickName'],
+                    UserName = m['UserName'])
+                if insertResult and not m['PYQuanPin'] in validUserList:
+                    validUserList.append(m['PYQuanPin']);break
+                else:
+                    voidUserList.append(m)
+                    m['PYQuanPin'] = '@Unknown%s'%unknownCount
+                    unknownCount += 1
         if DEBUG:
             with open('MemberList.txt', 'w') as f: f.write(str(memberList))
         if len(voidUserList) == 1:
@@ -227,15 +242,13 @@ class WeChatClient:
         payloads = {
             'BaseRequest': self.loginInfo['BaseRequest'],
             'SyncKey': self.loginInfo['SyncKey'],
-            'rr': int(time.time())
-            }
+            'rr': int(time.time()), }
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
 
         dic = json.loads(r.content.decode('utf-8', 'replace'))
         self.loginInfo['SyncKey'] = dic['SyncKey']
         if dic['AddMsgCount'] != 0: return dic['AddMsgList']
-        return None
     def produce_msg(self, l):
         rl = []
         srl = [51, 53] # 51 messy code, 53 webwxvoipnotifymsg
@@ -247,17 +260,20 @@ class WeChatClient:
                     msg = {
                         'MsgType': 'Map',
                         'FromUserName': m['FromUserName'],
+                        'ToUserName': m['ToUserName'],
                         'Content': data.group(1),}
                 else:
                     msg = {
                         'MsgType': 'Text',
                         'FromUserName': m['FromUserName'],
+                        'ToUserName': m['ToUserName'],
                         'Content': m['Content'],}
             elif m['MsgType'] == 3 or m['MsgType'] == 47: # picture
                 pic_dir = os.path.join(config.PIC_DIR, '%s.jpg'%int(time.time()))
                 msg = {
                     'MsgType': 'Picture',
                     'FromUserName': m['FromUserName'],
+                    'ToUserName': m['ToUserName'],
                     'Content': pic_dir,}
                 url = '%s/webwxgetmsgimg'%self.loginInfo['url']
                 payloads = {
@@ -272,6 +288,7 @@ class WeChatClient:
                 msg = {
                     'MsgType': 'Recording',
                     'FromUserName': m['FromUserName'],
+                    'ToUserName': m['ToUserName'],
                     'Content': rec_dir,}
                 url = '%s/webwxgetvoice'%self.loginInfo['url']
                 payloads = {
@@ -290,11 +307,13 @@ class WeChatClient:
                 msg = {
                     'MsgType': 'Card',
                     'FromUserName': m['FromUserName'],
+                    'ToUserName': m['ToUserName'],
                     'Content': m['RecommendInfo']['NickName'],}
             elif m['MsgType'] == 49: # sharing
                 msg = {
                     'MsgType': 'Sharing',
                     'FromUserName': m['FromUserName'],
+                    'ToUserName': m['ToUserName'],
                     'Content': m['FileName'],}
                 if m['AppMsgType'] == 2000:
                     msg['MsgType'] = 'Note'
@@ -325,6 +344,7 @@ class WeChatClient:
                 msg = {
                     'MsgType': 'Video',
                     'FromUserName': m['FromUserName'],
+                    'ToUserName': m['ToUserName'],
                     'Content': vid_dir,}
                 url = '%s/webwxgetvideo'%self.loginInfo['url']
                 payloads = {
@@ -354,9 +374,12 @@ class WeChatClient:
     def store_msg(self, l):
         for m in l:
             if m['FromUserName'] == self.storageClass.userName: continue
-            if not self.storageClass.find_nickname(m['FromUserName']): continue
-            self.msgList.append(m if self.robot else '%s: %s'%(self.storageClass.find_nickname(m['FromUserName']), m['Content']))
-            self.storageClass.store_msg(m['FromUserName'], m['Content'], 'from')
+            if '@@' in m['FromUserName']:
+                if not self.robot: break
+                self.msgList.append(m)
+            elif self.storageClass.find_nickname(m['FromUserName']):
+                self.msgList.append(m if self.robot else '%s: %s'%(self.storageClass.find_nickname(m['FromUserName']), m['Content']))
+                self.storageClass.store_msg(m['FromUserName'], m['Content'], 'from')
     def send_msg(self, toUserName = None, msg = 'Test Message'):
         if self.storageClass.find_user(toUserName): toUserName = self.storageClass.find_user(toUserName) 
         url = '%s/webwxsendmsg'%self.loginInfo['url']

@@ -20,21 +20,21 @@ def get_response(msg, storageClass = None, userName = None, userid = 'ItChat'):
         if r['code'] == 400004: return None
         raise Exception('code: %s'%r['code'])
     elif r['code'] == 100000: # 文本类
-        return [r['text'].replace('<br>','\n')]
+        return '\n'.join([r['text'].replace('<br>','\n')])
     elif r['code'] == 200000: # 链接类
-        return [r['text'].replace('<br>','\n'), r['url']]
+        return '\n'.join([r['text'].replace('<br>','\n'), r['url']])
     elif r['code'] == 302000: # 新闻类
         l = [r['text'].replace('<br>','\n')]
         for n in r['list']: l.append('%s - %s'%(n['article'], n['detailurl']))
-        return l
+        return '\n'.join(l)
     elif r['code'] == 308000: # 菜谱类
         l = [r['text'].replace('<br>','\n')]
         for n in r['list']: l.append('%s - %s'%(n['name'], n['detailurl']))
-        return l
+        return '\n'.join(l)
     elif r['code'] == 313000: # 儿歌类
-        return [r['text'].replace('<br>','\n')]
+        return '\n'.join([r['text'].replace('<br>','\n')])
     elif r['code'] == 314000: # 诗词类
-        return [r['text'].replace('<br>','\n')]
+        return '\n'.join([r['text'].replace('<br>','\n')])
 
 if __name__ == '__main__':
     while True:

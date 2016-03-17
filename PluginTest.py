@@ -20,6 +20,15 @@ except:
     pluginList = {}
     sys_print('WARN', 'There is something wrong with the format of your pluginlist.json')
 
+# Test grouptalking.py
+if 'grouptalking' in pluginList['systemmodules']:
+    try:
+        from plugin.msgdealers.grouptalking import grouptalking
+        sys_print('INFO', 'Group talking plugin is open now, please be careful about it.')
+    except:
+        sys_print('WARN', 'There is something wrong with the grouptalking plugin')
+        traceback.print_exc()
+
 # Test tuling.py
 if 'tuling' in pluginList['systemmodules']:
     try:
@@ -96,14 +105,14 @@ if __name__ == '__main__':
             res = ''
             for plugin in pluginOrder:
                 if plugin[0] in (pluginList['msgdealers'] + pluginList['systemmodules']):
-                    r = plugin[1](content, None, None)
+                    r = plugin[1](msg, None, None)
                     if r: res = r;break
             if not res: r = 'No plugin matched'
 
             send_msg(r)
     except:
         print 'Exit'
-        # traceback.print_exc()
+        traceback.print_exc()
 else:
     sys_print('INFO', 'Plugin loading finished')
 

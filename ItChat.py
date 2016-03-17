@@ -13,7 +13,7 @@ def demo_robot(s, msgList, client): # ONLY FOR DEMO
     while 1: 
         if msgList: 
             msg = msgList.pop()
-            if s.find_nickname(msg['FromUserName']): itchat.robot.deal_with_msg(msg, s, client)
+            itchat.robot.deal_with_msg(msg, s, client)
         time.sleep(.1)
 if __name__ == '__main__':
     from PluginTest import plugin_load_succeed
