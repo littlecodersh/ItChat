@@ -2,22 +2,13 @@ import os, sys
 import requests, time, re
 import thread, subprocess
 import json, xml.dom.minidom, mimetypes
-from urllib import unquote
-import config, storage, out, log, tools
-
-try:
-    from plugin.QRCode import QRCode
-    CMD_QRCODE = True
-except:
-    CMD_QRCODE = False
+import config, storage, out, tools
 
 BASE_URL = config.BASE_URL
-DEBUG = False
 
-class WeChatClient:
-    def __init__(self, storageClass = None, robot = False):
+class itchat:
+    def __init__(self, storageClass = None):
         self.storageClass = storageClass if storageClass else storage.Storage()
-        self.robot = robot
         self.msgList = self.storageClass.msgList
         self.loginInfo = {}
         self.s = requests.Session()
@@ -27,8 +18,7 @@ class WeChatClient:
             out.print_line('Getting uuid', True)
             while self.get_QRuuid(): time.sleep(1)
             out.print_line('Getting QR Code', True)
-            if self.get_QR():
-                break
+            if self.get_QR(): break
             elif get_count >= 9:
                 out.print_line('Failed to get QR Code, please restart the program')
                 sys.exit()
@@ -36,18 +26,9 @@ class WeChatClient:
         while self.check_login(): time.sleep(1)
         self.web_init()
         self.show_mobile_login()
-        while 1:
-            voidUserList = self.get_contract()
-            if not voidUserList: break
-            out.print_line('These uses need new RemarkNames and are added to a group', True)
-            chatRoomName = self.create_chatroom(voidUserList, 'RemarkNames')
-            self.delete_member(chatRoomName, [voidUserList[0]])
-            self.add_member(chatRoomName, [voidUserList[0]])
-            while raw_input('Enter "ready" after you rename all of them and DELETE the group: ') != 'ready': pass
-            out.print_line('Start reload contract list', False)
+        self.get_contract()
         out.print_line('Login successfully as %s\n'%(
             self.storageClass.find_nickname(self.storageClass.userName)), False)
-        log.log('SIGN IN', True)
         thread.start_new_thread(self.maintain_loop, ())
     def get_QRuuid(self):
         url = '%s/jslogin'%BASE_URL
@@ -63,13 +44,10 @@ class WeChatClient:
     def get_QR(self):
         try:
             url = '%s/qrcode/%s'%(BASE_URL, self.uuid)
-            r = self.s.get(url, stream = True)# params = payloads, headers = HEADER, 
-            QR_DIR = os.path.join(config.QR_DIR, 'QR.jpg')
+            r = self.s.get(url, stream = True)
+            QR_DIR = 'QR.jpg'
             with open(QR_DIR, 'wb') as f: f.write(r.content)
-            if CMD_QRCODE:
-                q = QRCode(QR_DIR, 37, 3, 'BLACK')
-                q.print_qr()
-            elif config.OS == 'Darwin':
+            if config.OS == 'Darwin':
                 subprocess.call(['open', QR_DIR])
             elif config.OS == 'Linux':
                 subprocess.call(['xdg-open', QR_DIR])
@@ -80,7 +58,6 @@ class WeChatClient:
             return False
     def check_login(self):
         url = '%s/cgi-bin/mmwebwx-bin/login'%BASE_URL
-        # add tip so that we can get many reply, use string payloads to avoid auto-urlencode
         payloads = 'tip=1&uuid=%s&_=%s'%(self.uuid, int(time.time()))
         r = self.s.get(url, params = payloads)
         regx = r'window.code=(\d+)'
@@ -159,35 +136,7 @@ class WeChatClient:
         # deal with emoji
         memberList = tools.emoji_dealer(memberList)
         # RemarkPYQuanPin & PYQuanPin is used as identifier
-        voidUserList = []
-        validUserList = []
-        unknownCount = 0
-        for m in memberList:
-            if m['RemarkPYQuanPin'] != '': m['PYQuanPin'] = m['RemarkPYQuanPin']
-            if m['PYQuanPin'] == '' and m['Alias'] != '': m['PYQuanPin'] == m['Alias']
-            if m['UserName'] == self.storageClass.userName:
-                m['PYQuanPin'] = m['NickName']
-            elif m['PYQuanPin'] == '':
-                voidUserList.append(m)
-                m['PYQuanPin'] = '@Unknown%s'%unknownCount
-                unknownCount += 1
-            while 1:
-                insertResult = self.storageClass.update_user(m['PYQuanPin'], NickName = m['RemarkName'] or m['NickName'],
-                    UserName = m['UserName'])
-                if insertResult and not m['PYQuanPin'] in validUserList:
-                    validUserList.append(m['PYQuanPin']);break
-                else:
-                    voidUserList.append(m)
-                    m['PYQuanPin'] = '@Unknown%s'%unknownCount
-                    unknownCount += 1
-        if DEBUG:
-            with open('MemberList.txt', 'w') as f: f.write(str(memberList))
-        if len(voidUserList) == 1:
-            m = voidUserList[0]
-            self.storageClass.update_user('', NickName = m['RemarkName'] or m['NickName'], UserName = m['UserName'])
-            return []
-        else:
-            return voidUserList
+        self.storageClass.updateMemberList(memberList)
     def show_mobile_login(self):
         url = '%s/webwxstatusnotify'%self.loginInfo['url']
         payloads = {
@@ -216,9 +165,8 @@ class WeChatClient:
                 count = 0
             except Exception, e:
                 count += 1
-                log.log('Exception %s:'%count, False, exception = e)
                 time.sleep(count*3)
-        log.log('LOG OUT', False)
+        out.print_line('LOG OUT', False)
     def sync_check(self):
         url = '%s/synccheck'%self.loginInfo['url']
         payloads = {
@@ -366,7 +314,7 @@ class WeChatClient:
             elif m['MsgType'] in srl:
                 continue
             else:
-                log.log('MsgType Unknown: %s\n%s'%(m['MsgType'], str(m)), False)
+                out.print_line('MsgType Unknown: %s\n%s'%(m['MsgType'], str(m)), False)
                 srl.append(m['MsgType'])
                 continue
             rl.append(msg)
