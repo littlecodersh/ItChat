@@ -11,3 +11,9 @@ def emoji_dealer(l):
         match = re.findall(regex, m['NickName'])
         if len(match) > 0: m['NickName'] = ''.join(match[0])
     return l
+def check_file(fileDir):
+    try:
+        with open(fileDir): pass
+        return True
+    except:
+        return False

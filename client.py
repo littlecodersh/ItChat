@@ -6,17 +6,18 @@ import config, storage, out, tools
 
 BASE_URL = config.BASE_URL
 
-class itchat:
-    def __init__(self, storageClass = None):
-        self.storageClass = storageClass if storageClass else storage.Storage()
+class client:
+    def __init__(self):
+        self.storageClass = storage.Storage()
+        self.memberList = self.storageClass.memberList
         self.msgList = self.storageClass.msgList
         self.loginInfo = {}
         self.s = requests.Session()
         self.uuid = None
-    def login(self):
+    def auto_login(self):
         for get_count in range(10):
             out.print_line('Getting uuid', True)
-            while self.get_QRuuid(): time.sleep(1)
+            while not self.get_QRuuid(): time.sleep(1)
             out.print_line('Getting QR Code', True)
             if self.get_QR(): break
             elif get_count >= 9:
@@ -26,10 +27,11 @@ class itchat:
         while self.check_login(): time.sleep(1)
         self.web_init()
         self.show_mobile_login()
+        tools.clear_screen()
         self.get_contract()
         out.print_line('Login successfully as %s\n'%(
             self.storageClass.find_nickname(self.storageClass.userName)), False)
-        thread.start_new_thread(self.maintain_loop, ())
+        self.start_receiving()
     def get_QRuuid(self):
         url = '%s/jslogin'%BASE_URL
         payloads = {
@@ -40,7 +42,9 @@ class itchat:
 
         regx = r'window.QRLogin.code = (\d+); window.QRLogin.uuid = "(\S+?)";'
         data = re.search(regx, r.text)
-        if data and data.group(1) == '200': self.uuid = data.group(2);return False
+        if data and data.group(1) == '200': 
+            self.uuid = data.group(2)
+            return self.uuid
     def get_QR(self):
         try:
             url = '%s/qrcode/%s'%(BASE_URL, self.uuid)
@@ -63,34 +67,30 @@ class itchat:
         regx = r'window.code=(\d+)'
         data = re.search(regx, r.text)
         if data and data.group(1) == '200':
+            os.remove('QR.jpg')
             regx = r'window.redirect_uri="(\S+)";'
             self.loginInfo['url'] = re.search(regx, r.text).group(1)
             r = self.s.get(self.loginInfo['url'], allow_redirects=False)
             self.loginInfo['url'] = self.loginInfo['url'][:self.loginInfo['url'].rfind('/')]
-            self.get_login_info(r.text)
-            tools.clear_screen()
+            self.loginInfo['BaseRequest'] = {}
+            for node in xml.dom.minidom.parseString(r.text).documentElement.childNodes:
+                if node.nodeName == 'skey':
+                    self.loginInfo['skey'] = self.loginInfo['BaseRequest']['Skey'] = node.childNodes[0].data.encode('utf8')
+                elif node.nodeName == 'wxsid':
+                    self.loginInfo['wxsid'] = self.loginInfo['BaseRequest']['Sid'] = node.childNodes[0].data.encode('utf8')
+                elif node.nodeName == 'wxuin':
+                    self.loginInfo['wxuin'] = self.loginInfo['BaseRequest']['Uin'] = node.childNodes[0].data.encode('utf8')
+                elif node.nodeName == 'pass_ticket':
+                    self.loginInfo['pass_ticket'] = self.loginInfo['BaseRequest']['DeviceID'] = node.childNodes[0].data.encode('utf8')
             return False
         if data and data.group(1) == '201':
-            tools.clear_screen()
             out.print_line('Please press confirm', True)
         if data and data.group(1) == '408':
-            tools.clear_screen()
             out.print_line('Reloading QR Code\n', True)
             while 1:
                 while self.get_QRuuid(): time.sleep(1)
                 if self.get_QR(): break
         return True
-    def get_login_info(self, s):
-        self.loginInfo['BaseRequest'] = {}
-        for node in xml.dom.minidom.parseString(s).documentElement.childNodes:
-            if node.nodeName == 'skey':
-                self.loginInfo['skey'] = self.loginInfo['BaseRequest']['Skey'] = node.childNodes[0].data.encode('utf8')
-            elif node.nodeName == 'wxsid':
-                self.loginInfo['wxsid'] = self.loginInfo['BaseRequest']['Sid'] = node.childNodes[0].data.encode('utf8')
-            elif node.nodeName == 'wxuin':
-                self.loginInfo['wxuin'] = self.loginInfo['BaseRequest']['Uin'] = node.childNodes[0].data.encode('utf8')
-            elif node.nodeName == 'pass_ticket':
-                self.loginInfo['pass_ticket'] = self.loginInfo['BaseRequest']['DeviceID'] = node.childNodes[0].data.encode('utf8')
     def web_init(self):
         url = '%s/webwxinit?r=%s' % (self.loginInfo['url'], int(time.time()))
         payloads = {
@@ -103,9 +103,7 @@ class itchat:
         dic['User'] = tools.emoji_dealer([dic['User']])[0]
         self.storageClass.userName = dic['User']['UserName']
         self.storageClass.nickName = dic['User']['NickName']
-        self.storageClass.load_sql_storage()
-        self.storageClass.update_user(dic['User']['PYQuanPin'] or dic['User']['NickName'],
-            NickName = dic['User']['NickName'], UserName = dic['User']['UserName'])
+        self.storageClass.memberList.append(dic['User'])
         self.loginInfo['SyncKey'] = dic['SyncKey']
         self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val']) for item in dic['SyncKey']['List']])
     def get_batch_contract(self, userName):
@@ -135,8 +133,6 @@ class itchat:
             if i == 0: break
         # deal with emoji
         memberList = tools.emoji_dealer(memberList)
-        # RemarkPYQuanPin & PYQuanPin is used as identifier
-        self.storageClass.updateMemberList(memberList)
     def show_mobile_login(self):
         url = '%s/webwxstatusnotify'%self.loginInfo['url']
         payloads = {
@@ -148,26 +144,28 @@ class itchat:
                 }
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
-    def maintain_loop(self):
-        i = self.sync_check()
-        count = 0
-        pauseTime = 1
-        while i and count <4:
-            try:
-                if pauseTime < 5: pauseTime += 2
-                if i != '0': msgList = self.get_msg()
-                if msgList: 
-                    msgList = self.produce_msg(msgList)
-                    self.store_msg(msgList)
-                    pauseTime = 1
-                time.sleep(pauseTime)
-                i = self.sync_check()
-                count = 0
-            except Exception, e:
-                count += 1
-                time.sleep(count*3)
-        out.print_line('LOG OUT', False)
-    def sync_check(self):
+    def start_receiving(self):
+        def maintain_loop():
+            i = self.__sync_check()
+            count = 0
+            pauseTime = 1
+            while i and count <4:
+                try:
+                    if pauseTime < 5: pauseTime += 2
+                    if i != '0': msgList = self.__get_msg()
+                    if msgList: 
+                        msgList = self.__produce_msg(msgList)
+                        for msg in msgList: self.msgList.insert(0, msg)
+                        pauseTime = 1
+                    time.sleep(pauseTime)
+                    i = self.__sync_check()
+                    count = 0
+                except Exception, e:
+                    count += 1
+                    time.sleep(count*3)
+            out.print_line('LOG OUT', False)
+        thread.start_new_thread(maintain_loop, ())
+    def __sync_check(self):
         url = '%s/synccheck'%self.loginInfo['url']
         payloads = {
                 'r': int(time.time()),
@@ -184,7 +182,7 @@ class itchat:
 
         if pm.group(1) != '0' : return None
         return pm.group(2)
-    def get_msg(self):
+    def __get_msg(self):
         url = '%s/webwxsync?sid=%s&skey=%s'%(
             self.loginInfo['url'], self.loginInfo['wxsid'], self.loginInfo['skey'])
         payloads = {
@@ -197,7 +195,7 @@ class itchat:
         dic = json.loads(r.content.decode('utf-8', 'replace'))
         self.loginInfo['SyncKey'] = dic['SyncKey']
         if dic['AddMsgCount'] != 0: return dic['AddMsgList']
-    def produce_msg(self, l):
+    def __produce_msg(self, l):
         rl = []
         srl = [51, 53] # 51 messy code, 53 webwxvoipnotifymsg
         for m in l:
@@ -217,20 +215,21 @@ class itchat:
                         'ToUserName': m['ToUserName'],
                         'Content': m['Content'],}
             elif m['MsgType'] == 3 or m['MsgType'] == 47: # picture
-                pic_dir = os.path.join(config.PIC_DIR, '%s.jpg'%int(time.time()))
+                def download_picture(picDir):
+                    print('Other downloads should also be changed')
+                    url = '%s/webwxgetmsgimg'%self.loginInfo['url']
+                    payloads = {
+                        'MsgID': m['NewMsgId'],
+                        'skey': self.loginInfo['skey'],}
+                    r = self.s.get(url, params = payloads, stream = True)
+                    with open(picDir, 'wb') as f:
+                        for block in r.iter_content(1024):
+                            f.write(block)
                 msg = {
                     'MsgType': 'Picture',
                     'FromUserName': m['FromUserName'],
                     'ToUserName': m['ToUserName'],
-                    'Content': pic_dir,}
-                url = '%s/webwxgetmsgimg'%self.loginInfo['url']
-                payloads = {
-                    'MsgID': m['NewMsgId'],
-                    'skey': self.loginInfo['skey'],}
-                r = self.s.get(url, params = payloads, stream = True)
-                with open(pic_dir, 'wb') as f:
-                    for block in r.iter_content(1024):
-                        f.write(block)
+                    'DownloadFunction': download_picture,}
             elif m['MsgType'] == 34: # voice
                 rec_dir = os.path.join(config.REC_DIR, '%s.mp3'%int(time.time()))
                 msg = {
@@ -247,10 +246,13 @@ class itchat:
                     for block in r.iter_content(1024):
                         f.write(block)
             elif m['MsgType'] == 37: # friends
-                self.add_friend(m['Status'], m['RecommendInfo']['UserName'], m['Ticket'])
-                self.get_contract()
-                self.send_msg(m['RecommendInfo']['UserName'], config.WELCOME_WORDS)
-                continue
+                msg = {
+                    'Status': m['Status'],
+                    'UserName': m['UserName'],
+                    'Ticket': m['Ticket'], }
+                # self.add_friend(m['Status'], m['RecommendInfo']['UserName'], m['Ticket'])
+                # self.get_contract()
+                # self.send_msg(m['RecommendInfo']['UserName'], config.WELCOME_WORDS)
             elif m['MsgType'] == 42: # name card
                 msg = {
                     'MsgType': 'Card',
@@ -312,24 +314,14 @@ class itchat:
                     'FromUserName': self.storageClass.userName,
                     'Content': m['Content'],}
             elif m['MsgType'] in srl:
-                continue
+                pass
             else:
                 out.print_line('MsgType Unknown: %s\n%s'%(m['MsgType'], str(m)), False)
                 srl.append(m['MsgType'])
-                continue
-            rl.append(msg)
+            m['SimpleMsg'] = msg
+            rl.append(m)
         return rl
-    def store_msg(self, l):
-        for m in l:
-            if m['FromUserName'] == self.storageClass.userName: continue
-            if '@@' in m['FromUserName']:
-                if not self.robot: break
-                self.msgList.append(m)
-            elif self.storageClass.find_nickname(m['FromUserName']):
-                self.msgList.append(m if self.robot else '%s: %s'%(self.storageClass.find_nickname(m['FromUserName']), m['Content']))
-                self.storageClass.store_msg(m['FromUserName'], m['Content'], 'from')
     def send_msg(self, toUserName = None, msg = 'Test Message'):
-        if self.storageClass.find_user(toUserName): toUserName = self.storageClass.find_user(toUserName) 
         url = '%s/webwxsendmsg'%self.loginInfo['url']
         payloads = {
                 'BaseRequest': self.loginInfo['BaseRequest'],
@@ -344,8 +336,8 @@ class itchat:
                 }
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         r = self.s.post(url, data = json.dumps(payloads, ensure_ascii = False), headers = headers)
-        self.storageClass.store_msg(toUserName, msg, 'to') #encoding problems
-    def upload_file(self, fileDir, isPicture = False):
+    def __upload_file(self, fileDir, isPicture = False):
+        if not tools.check_file(fileDir): return
         url = 'https://file%s.wx.qq.com/cgi-bin/mmwebwx-bin/webwxuploadmedia?f=json'%('2' if '2' in self.loginInfo['url'] else '')
         # save it on server
         fileSize = str(os.path.getsize(fileDir))
@@ -373,8 +365,10 @@ class itchat:
         headers = { 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36', }
         r = self.s.post(url, files = files, headers = headers)
         return json.loads(r.text)['MediaId']
-    def send_file(self, fileDir, toUserName):
-        mediaId = self.upload_file(fileDir)
+    def send_file(self, fileDir, toUserName = None):
+        if toUserName is None: toUserName = self.storageClass.userName
+        mediaId = self.__upload_file(fileDir)
+        if mediaId is None: return False
         url = '%s/webwxsendappmsg?fun=async&f=json'%self.loginInfo['url']
         payloads = {
                 'BaseRequest': self.loginInfo['BaseRequest'],
@@ -393,8 +387,11 @@ class itchat:
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36',
             'Content-Type': 'application/json;charset=UTF-8', }
         r = self.s.post(url, data = json.dumps(payloads, ensure_ascii = False), headers = headers)
-    def send_image(self, fileDir, toUserName):
-        mediaId = self.upload_file(fileDir, isPicture = not fileDir[-4:] == '.gif')
+        return True
+    def send_image(self, fileDir, toUserName = None):
+        if toUserName is None: toUserName = self.storageClass.userName
+        mediaId = self.__upload_file(fileDir, isPicture = not fileDir[-4:] == '.gif')
+        if mediaId is None: return False
         url = '%s/webwxsendmsgimg?fun=async&f=json'%self.loginInfo['url']
         payloads = {
                 'BaseRequest': self.loginInfo['BaseRequest'],
@@ -413,6 +410,7 @@ class itchat:
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36',
             'Content-Type': 'application/json;charset=UTF-8', }
         r = self.s.post(url, data = json.dumps(payloads, ensure_ascii = False), headers = headers)
+        return True
     def add_friend(self, Status, UserName, Ticket):
         url = '%s/webwxverifyuser?r=%s&pass_ticket=%s'%(self.loginInfo['url'], int(time.time()), self.loginInfo['pass_ticket'])
         payloads = {
@@ -442,7 +440,7 @@ class itchat:
         r = self.s.post(url, data=json.dumps(params),headers=headers)
         dic = json.loads(r.content.decode('utf8', 'replace'))
         return dic['ChatRoomName']
-    def delete_member(self, chatRoomName, memberList):
+    def delete_member_from_chatroom(self, chatRoomName, memberList):
         url = ('%s/webwxupdatechatroom?fun=delmember&pass_ticket=%s'%(
             self.loginInfo['url'], self.loginInfo['pass_ticket']))
         params = {
@@ -451,7 +449,7 @@ class itchat:
             'DelMemberList': ','.join([member['UserName'] for member in memberList]),}
         headers = {'content-type': 'application/json; charset=UTF-8'}
         r = self.s.post(url, data=json.dumps(params),headers=headers)
-    def add_member(self, chatRoomName, memberList):
+    def add_member_into_chatroom(self, chatRoomName, memberList):
         url = ('%s/webwxupdatechatroom?fun=addmember&pass_ticket=%s'%(
             self.loginInfo['url'], self.loginInfo['pass_ticket']))
         params = {
@@ -460,8 +458,6 @@ class itchat:
             'AddMemberList': ','.join([member['UserName'] for member in memberList]),}
         headers = {'content-type': 'application/json; charset=UTF-8'}
         r = self.s.post(url, data=json.dumps(params),headers=headers)
-    def storage(self):
-        return self.msgList
 
 if __name__ == '__main__':
     wcc = WeChatClient()
