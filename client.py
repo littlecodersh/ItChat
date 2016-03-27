@@ -204,19 +204,14 @@ class client:
                     regx = r'(.+?\(.+?\))'
                     data = re.search(regx, m['Content'])
                     msg = {
-                        'MsgType': 'Map',
-                        'FromUserName': m['FromUserName'],
-                        'ToUserName': m['ToUserName'],
-                        'Content': data.group(1),}
+                        'Type': 'Map',
+                        'Text': data.group(1),}
                 else:
                     msg = {
-                        'MsgType': 'Text',
-                        'FromUserName': m['FromUserName'],
-                        'ToUserName': m['ToUserName'],
-                        'Content': m['Content'],}
+                        'Type': 'Text',
+                        'Text': m['Content'],}
             elif m['MsgType'] == 3 or m['MsgType'] == 47: # picture
                 def download_picture(picDir):
-                    print('Other downloads should also be changed')
                     url = '%s/webwxgetmsgimg'%self.loginInfo['url']
                     payloads = {
                         'MsgID': m['NewMsgId'],
@@ -226,99 +221,97 @@ class client:
                         for block in r.iter_content(1024):
                             f.write(block)
                 msg = {
-                    'MsgType': 'Picture',
-                    'FromUserName': m['FromUserName'],
-                    'ToUserName': m['ToUserName'],
-                    'DownloadFunction': download_picture,}
+                    'Type': 'Picture',
+                    'Text': download_picture,}
             elif m['MsgType'] == 34: # voice
-                rec_dir = os.path.join(config.REC_DIR, '%s.mp3'%int(time.time()))
+                def download_voice(voiceDir):
+                    url = '%s/webwxgetvoice'%self.loginInfo['url']
+                    payloads = {
+                        'msgid': m['NewMsgId'],
+                        'skey': self.loginInfo['skey'],}
+                    r = self.s.get(url, params = payloads, stream = True)
+                    with open(voiceDir, 'wb') as f:
+                        for block in r.iter_content(1024):
+                            f.write(block)
                 msg = {
-                    'MsgType': 'Recording',
-                    'FromUserName': m['FromUserName'],
-                    'ToUserName': m['ToUserName'],
-                    'Content': rec_dir,}
-                url = '%s/webwxgetvoice'%self.loginInfo['url']
-                payloads = {
-                    'msgid': m['NewMsgId'],
-                    'skey': self.loginInfo['skey'],}
-                r = self.s.get(url, params = payloads, stream = True)
-                with open(rec_dir, 'wb') as f:
-                    for block in r.iter_content(1024):
-                        f.write(block)
+                    'Type': 'Recording',
+                    'Text': download_voice,}
             elif m['MsgType'] == 37: # friends
                 msg = {
-                    'Status': m['Status'],
-                    'UserName': m['UserName'],
-                    'Ticket': m['Ticket'], }
+                    'Type': 'Friends',
+                    'Text': {
+                        'Status': m['Status'],
+                        'UserName': m['UserName'],
+                        'Ticket': m['Ticket'], }, }
                 # self.add_friend(m['Status'], m['RecommendInfo']['UserName'], m['Ticket'])
                 # self.get_contract()
                 # self.send_msg(m['RecommendInfo']['UserName'], config.WELCOME_WORDS)
             elif m['MsgType'] == 42: # name card
                 msg = {
-                    'MsgType': 'Card',
-                    'FromUserName': m['FromUserName'],
-                    'ToUserName': m['ToUserName'],
-                    'Content': m['RecommendInfo']['NickName'],}
+                    'Type': 'Card',
+                    'Text': m['RecommendInfo'], }
             elif m['MsgType'] == 49: # sharing
-                msg = {
-                    'MsgType': 'Sharing',
-                    'FromUserName': m['FromUserName'],
-                    'ToUserName': m['ToUserName'],
-                    'Content': m['FileName'],}
                 if m['AppMsgType'] == 2000:
-                    msg['MsgType'] = 'Note'
                     regx = r'\[CDATA\[(.+?)\].+?\[CDATA\[(.+?)\]'
                     data = re.search(regx, m['Content'])
-                    msg['Content'] = data.group(2)
+                    msg = {
+                        'Type': 'Note',
+                        'Text': data.group(2), }
                 elif m['AppMsgType'] == 6:
-                    msg['MsgType'] = 'Attachment'
-                    cookiesList = {name:data for name,data in self.s.cookies.items()}
-                    url = 'https://file2.wx.qq.com/cgi-bin/mmwebwx-bin/webwxgetmedia'
-                    payloads = {
-                        'sender': m['FromUserName'],
-                        'mediaid': m['MediaId'],
-                        'filename': m['FileName'],
-                        'fromuser': self.loginInfo['wxuin'],
-                        'pass_ticket': 'undefined',
-                        'webwx_data_ticket': cookiesList['webwx_data_ticket'],}
-                    r = self.s.get(url, params = payloads, stream = True)
-                    att_dir = os.path.join(config.ATT_DIR, '%s-%s'%(int(time.time()), m['FileName'],))
-                    msg['Location'] = att_dir
-                    with open(att_dir, 'wb') as f:
-                        for block in r.iter_content(1024):
-                            f.write(block)
+                    def download_atta(attaDir):
+                        cookiesList = {name:data for name,data in self.s.cookies.items()}
+                        url = 'https://file2.wx.qq.com/cgi-bin/mmwebwx-bin/webwxgetmedia'
+                        payloads = {
+                            'sender': m['FromUserName'],
+                            'mediaid': m['MediaId'],
+                            'filename': m['FileName'],
+                            'fromuser': self.loginInfo['wxuin'],
+                            'pass_ticket': 'undefined',
+                            'webwx_data_ticket': cookiesList['webwx_data_ticket'],}
+                        r = self.s.get(url, params = payloads, stream = True)
+                        with open(attaDir, 'wb') as f:
+                            for block in r.iter_content(1024):
+                                f.write(block)
+                    msg = {
+                        'Type': 'Attachment',
+                        # 'FileName': m['FileName'],
+                        'Text': download_atta, }
                 else:
-                    pass
+                    msg = {
+                        'Type': 'Sharing',
+                        'Text': m['FileName'], }
             elif m['MsgType'] == 62: # tiny video
-                vid_dir = os.path.join(config.VID_DIR, '%s.mp4'%int(time.time()))
+                def download_video(videoDir):
+                    url = '%s/webwxgetvideo'%self.loginInfo['url']
+                    payloads = {
+                        'msgid': m['MsgId'],
+                        'skey': self.loginInfo['skey'],}
+                    headers = { 'Range:': 'bytes=0-'}
+                    r = self.s.get(url, params = payloads, headers = headers, stream = True)
+                    with open(videoDir, 'wb') as f: 
+                        for chunk in r.iter_content(chunk_size = 1024):
+                            if chunk:
+                                f.write(chunk)
+                                f.flush()
+                                os.fsync(f.fileno())
                 msg = {
-                    'MsgType': 'Video',
-                    'FromUserName': m['FromUserName'],
-                    'ToUserName': m['ToUserName'],
-                    'Content': vid_dir,}
-                url = '%s/webwxgetvideo'%self.loginInfo['url']
-                payloads = {
-                    'msgid': m['MsgId'],
-                    'skey': self.loginInfo['skey'],}
-                headers = { 'Range:': 'bytes=0-'}
-                r = self.s.get(url, params = payloads, headers = headers, stream = True)
-                with open(vid_dir, 'wb') as f: 
-                    for chunk in r.iter_content(chunk_size = 1024):
-                        if chunk:
-                            f.write(chunk)
-                            f.flush()
-                            os.fsync(f.fileno())
+                    'Type': 'Video',
+                    'Text': download_video, }
             elif m['MsgType'] == 10000:
                 msg = {
-                    'MsgType': 'Note',
-                    'FromUserName': self.storageClass.userName,
-                    'Content': m['Content'],}
+                    'Type': 'Note',
+                    'Text': m['Content'],}
             elif m['MsgType'] in srl:
-                pass
+                msg = {
+                    'Type': 'UselessMsg',
+                    'Text': 'UselessMsg', }
             else:
                 out.print_line('MsgType Unknown: %s\n%s'%(m['MsgType'], str(m)), False)
                 srl.append(m['MsgType'])
-            m['SimpleMsg'] = msg
+                msg = {
+                    'Type': 'UselessMsg',
+                    'Text': 'UselessMsg', }
+            m = dict(m, **msg)
             rl.append(m)
         return rl
     def send_msg(self, toUserName = None, msg = 'Test Message'):
