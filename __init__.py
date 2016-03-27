@@ -1,6 +1,8 @@
+import time, thread
+from client import client
+
 __version__ = '0.1b'
 
-from client import client
 __client = client()
 def auto_login(): return __client.auto_login()
 # The following method are all included in auto_login >>>
@@ -32,11 +34,43 @@ def send(msg = 'Test Message', toUserName = None):
         return __client.send_msg(toUserName, msg)
 
 # decorations
-def msg_dealer(fn, *args, **kwargs):
-    def wrapped(*args, **kwargs):
-        try:
-            msg = __client.storageClass.msgList.pop()
-        except:
-            msg = None
-        return send(fn(msg, *args, **kwargs), None if msg is None else msg.get('FromUserName', None))
-    return wrapped
+__functionDict = {}
+def configured_reply():
+    try:
+        msg = __client.storageClass.msgList.pop()
+        if msg.get('GroupUserName') is None:
+            __functionDict[msg['Type']](msg)
+        else:
+            __functionDict['GroupChat'][msg['Type']](msg)
+    except:
+        pass
+
+def msg_dealer(_type = None, *args, **kwargs):
+    if hasattr(_type, '__call__'):
+        fn = _type
+        def _msg_dealer(*args, **kwargs):
+            try:
+                msg = __client.storageClass.msgList.pop()
+                send(fn(msg, *args, **kwargs), None if msg is None else msg.get('FromUserName', None))
+            except:
+                pass
+        print('Reply function has been set, call %s to reply one message'%fn.__name__)
+        return _msg_dealer
+    elif _type is None:
+        return configured_reply
+    else:
+        def _msg_dealer(fn, *args, **kwargs):
+            if kwargs.get('isGroupChat', False):
+                __functionDict['GroupChat'][_type] = fn
+            else:
+                __functionDict[_type] = fn
+            return fn
+        return _msg_dealer
+
+# in-build run
+def run():
+    print('Start auto replying')
+    while 1:
+        configured_reply()
+        time.sleep(.3)
+

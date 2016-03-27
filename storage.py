@@ -7,14 +7,8 @@ class Storage:
         self.nickName = None
         self.memberList = []
         self.msgList = []
+        self.groupDict = {}
         self.lastInputUserName = None
-    def find_msg_list(self, userName, count):
-        r = []
-        for msg in self.historyMsg:
-            if msg['UserName'] == userName:
-                r.append(msg)
-            if len(r) >= count: break
-        return r
     def find_username(self, n):
         r = []
         for member in self.memberList:
