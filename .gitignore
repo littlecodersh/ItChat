@@ -1,2 +1,4 @@
+dist/*
+itchat.egg-info/*
 *.pyc
 *.swp

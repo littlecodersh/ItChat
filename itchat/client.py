@@ -244,11 +244,8 @@ class client:
                     'Type': 'Friends',
                     'Text': {
                         'Status': m['Status'],
-                        'UserName': m['UserName'],
+                        'UserName': m['RecommendInfo']['UserName'],
                         'Ticket': m['Ticket'], }, }
-                # self.add_friend(m['Status'], m['RecommendInfo']['UserName'], m['Ticket'])
-                # self.get_contract()
-                # self.send_msg(m['RecommendInfo']['UserName'], config.WELCOME_WORDS)
             elif m['MsgType'] == 42: # name card
                 msg = {
                     'Type': 'Card',

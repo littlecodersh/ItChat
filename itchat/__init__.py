@@ -1,6 +1,8 @@
 import time, thread
 from client import client
 
+import traceback
+
 __version__ = '0.1b'
 
 __client = client()
@@ -34,7 +36,7 @@ def send(msg = 'Test Message', toUserName = None):
         return __client.send_msg(toUserName, msg)
 
 # decorations
-__functionDict = {}
+__functionDict = {'GroupChat': {}}
 def configured_reply():
     try:
         msg = __client.storageClass.msgList.pop()
@@ -59,12 +61,13 @@ def msg_dealer(_type = None, *args, **kwargs):
     elif _type is None:
         return configured_reply
     else:
-        def _msg_dealer(fn, *args, **kwargs):
-            if kwargs.get('isGroupChat', False):
-                __functionDict['GroupChat'][_type] = fn
-            else:
-                __functionDict[_type] = fn
-            return fn
+        if not isinstance(_type, list): _type = [_type]
+        def _msg_dealer(fn, *_args, **_kwargs):
+            for msgType in _type:
+                if kwargs.get('isGroupChat', False):
+                    __functionDict['GroupChat'][msgType] = fn
+                else:
+                    __functionDict[msgType] = fn
         return _msg_dealer
 
 # in-build run
