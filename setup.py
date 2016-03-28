@@ -13,7 +13,7 @@ here = path.abspath(path.dirname(__file__))
 setup(
     name='itchat',
 
-    version='1.0.1',
+    version='1.0.2',
 
     description='A complete wechat personal account api',
 

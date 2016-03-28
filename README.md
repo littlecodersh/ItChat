@@ -1,12 +1,14 @@
-# ItChat [![Gitter](https://badges.gitter.im/littlecodersh/ItChat.svg)](https://gitter.im/littlecodersh/ItChat?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge) ![python](https://img.shields.io/badge/python-2.7-ff69b4.svg)
+# itchat [![Gitter](https://badges.gitter.im/littlecodersh/ItChat.svg)](https://gitter.im/littlecodersh/ItChat?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge) ![python](https://img.shields.io/badge/python-2.7-ff69b4.svg)
 
-ItChat是一个个人微信号的机器人，他实现了一个机器人需要实现的绝大部分功能。自动加好友、认人、发送图片、发送文件、简单的外部接口都可以轻松的完成。ItChat各模块与插件有着明确的模块化，易于扩展功能编写自己的插件。ItChat配置及其方便，甚至不需要图形界面就可以完成安装。
+itchat是一个开源的微信个人号接口，使用他你可以轻松的通过命令行使用个人微信号。
 
-顺带的，如果把ItChat.py文件中的ROBOT改为False，该程序也可以当命令行的微信聊天软件使用。
+使用不到三十行的代码，你就可以完成一个能够处理所有信息的微信机器人。
+
+如今微信已经成为了个人社交的很大一部分，希望这个项目能够帮助你扩展你的个人的微信号、方便自己的生活。
 
 ##Have a try
 
-我将我的微信号挂上了这个小机器人，百闻不如一见，有兴趣可以尝试一下。
+这是一个基于这一项目的小机器人，百闻不如一见，有兴趣可以尝试一下。
 
 ![QRCode](http://7xrip4.com1.z0.glb.clouddn.com/ItChat%2FQRCode2.jpg?imageView/2/w/400/)
 
@@ -18,23 +20,48 @@ ItChat是一个个人微信号的机器人，他实现了一个机器人需要�
 
 ##Installation
 
-可以通过本命令安装依赖库：
+可以通过本命令安装该项目：
 
-`pip install requests Image`
+`pip install itchat`
 
-将本项目clone到本地安装依赖库后即可直接运行：
+##Simple uses
 
-`python ItChat.py`
+通过如下代码，微信已经可以就日常的各种信息进行获取与回复。
 
-本项目基于python 2.7.11开发，使用python 3可能发生异常。
+```python
+import itchat, time
 
-##Plugins
+itchat.auto_login()
 
-本项目默认开启投票插件与自定义回复插件
+@itchat.msg_dealer(['Text', 'Map', 'Card', 'Note', 'Sharing'])
+def text_reply(msg):
+    itchat.send('%s: %s'%(msg['Type'], msg['Text']), msg['FromUserName'])
 
-若需要开启其他插件，可以参照[wiki](https://github.com/littlecodersh/ItChat/wiki/Plugin)，或者运行`python PluginTest.py`一键检测插件
+@itchat.msg_dealer(['Picture', 'Recording', 'Attachment', 'Video'])
+def download_files(msg):
+    fileDir = '%s%s'%(msg['Type'], int(time.time()))
+    msg['Text'](fileDir)
+    itchat.send('%s received'%msg['Type'], msg['FromUserName'])
+    itchat.send('@%s@%s'%('img' if msg['Type'] == 'Picture' else 'fil', fileDir), msg['FromUserName'])
 
-若需要支持中文文件传输，需要将plugin/config/fields.py文件放入requests包的packages/urllib3下，否则上传的文件将无法下载
+@itchat.msg_dealer('Friends')
+def add_friend(msg):
+    itchat.add_friend(**msg['Text'])
+    itchat.get_contract()
+    itchat.send_msg(msg['RecommendInfo']['UserName'], 'Nice to meet you!')
+
+@itchat.msg_dealer('Text', isGroupChat = True)
+def text_reply(msg):
+    itchat.send(u'@%s\u2005I received: %s'%(msg['ActualNickName'], msg['Content']), msg['FromUserName'])
+
+itchat.run()
+```
+
+##FAQ
+
+Q: 为什么中文的文件没有办法上传？
+
+A: 这是由于`requests`的编码问题导致的。若需要支持中文文件传输，将[fields.py](https://github.com/littlecodersh/ItChat/blob/robot/plugin/config/fields.py)文件放入requests包的packages/urllib3下即可
 
 ##Comments
 

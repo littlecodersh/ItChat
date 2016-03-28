@@ -2,7 +2,9 @@ itchat
 ======
 
 itchat is a open souce wechat api project for personal account.
+
 It enables you to access your personal wechat account through command line.
+
 So enjoy:)
 
 **Try:**
@@ -12,6 +14,7 @@ You may have a try of the robot based on this project first:
 |QRCodeOfRobot|
 
 Here are some screenshots of this robot:
+
 You may visit `Screenshots <https://github.com/littlecodersh/ItChat/wiki/Screenshots>`__ for more demos.
 
 |Demo|
@@ -57,7 +60,7 @@ You may visit `Screenshots <https://github.com/littlecodersh/ItChat/wiki/Screens
 
 Why I can't send files whose name is encoded in utf8?
 
-That's because of the upload setting of requests, you can put `this file <https://github.com/littlecodersh/ItChat/blob/master/plugin/config/fields.py>`__ 
+That's because of the upload setting of requests, you can put `this file <https://github.com/littlecodersh/ItChat/blob/robot/plugin/config/fields.py>`__ 
 into packages/urllib3 of requests package.
 
 **Comments**
