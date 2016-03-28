@@ -1,0 +1,11 @@
+{
+    "systemmodules": [
+        "QRCode",
+        "tuling",
+        "grouptalking"
+    ],
+    "msgdealers": [
+        "autoreply",
+        "vote"
+    ] 
+}

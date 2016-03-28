@@ -1,0 +1,16 @@
+[
+    {
+        "name":
+            "默认投票",
+        "candidates":
+            ["candidate1", "LittleCoder", "nobody"]
+    },
+    {
+        "name":
+            "能投三票的投票",
+        "candidates":
+            ["another candidate1", "only one LittleCoder", "still nobody"],
+        "maxvote":
+            3
+    }
+]
