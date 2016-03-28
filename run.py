@@ -28,7 +28,6 @@ def complex_reply():
 
     @itchat.msg_dealer('Friends')
     def add_friend(msg):
-        print msg['Text']
         itchat.add_friend(**msg['Text'])
         itchat.get_contract()
         itchat.send_msg(msg['RecommendInfo']['UserName'], 'Nice to meet you!')
