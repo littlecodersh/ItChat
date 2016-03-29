@@ -17,16 +17,26 @@ class client:
         self.s = requests.Session()
         self.uuid = None
     def auto_login(self):
-        for get_count in range(10):
-            out.print_line('Getting uuid', True)
-            while not self.get_QRuuid(): time.sleep(1)
-            out.print_line('Getting QR Code', True)
-            if self.get_QR(): break
-            elif get_count >= 9:
-                out.print_line('Failed to get QR Code, please restart the program')
-                sys.exit()
-        out.print_line('Please scan the QR Code', True)
-        while self.check_login(): time.sleep(1)
+        def open_QR():
+            for get_count in range(10):
+                out.print_line('Getting uuid', True)
+                while not self.get_QRuuid(): time.sleep(1)
+                out.print_line('Getting QR Code', True)
+                if self.get_QR(): break
+                elif get_count >= 9:
+                    out.print_line('Failed to get QR Code, please restart the program')
+                    sys.exit()
+            out.print_line('Please scan the QR Code', True)
+        open_QR()
+        while 1:
+            status = self.check_login()
+            if status == '200':
+                break
+            elif status == '201':
+                out.print_line('Please press confirm', True)
+            elif status == '408':
+                out.print_line('Reloading QR Code\n', True)
+                open_QR()
         self.web_init()
         self.show_mobile_login()
         tools.clear_screen()
@@ -47,9 +57,10 @@ class client:
         if data and data.group(1) == '200': 
             self.uuid = data.group(2)
             return self.uuid
-    def get_QR(self):
+    def get_QR(self, uuid = None):
         try:
-            url = '%s/qrcode/%s'%(BASE_URL, self.uuid)
+            if uuid == None: uuid = self.uuid
+            url = '%s/qrcode/%s'%(BASE_URL, uuid)
             r = self.s.get(url, stream = True)
             QR_DIR = 'QR.jpg'
             with open(QR_DIR, 'wb') as f: f.write(r.content)
@@ -62,9 +73,10 @@ class client:
             return True
         except:
             return False
-    def check_login(self):
+    def check_login(self, uuid = None):
+        if uuid is None: uuid = self.uuid
         url = '%s/cgi-bin/mmwebwx-bin/login'%BASE_URL
-        payloads = 'tip=1&uuid=%s&_=%s'%(self.uuid, int(time.time()))
+        payloads = 'tip=1&uuid=%s&_=%s'%(uuid, int(time.time()))
         r = self.s.get(url, params = payloads)
         regx = r'window.code=(\d+)'
         data = re.search(regx, r.text)
@@ -84,15 +96,13 @@ class client:
                     self.loginInfo['wxuin'] = self.loginInfo['BaseRequest']['Uin'] = node.childNodes[0].data.encode('utf8')
                 elif node.nodeName == 'pass_ticket':
                     self.loginInfo['pass_ticket'] = self.loginInfo['BaseRequest']['DeviceID'] = node.childNodes[0].data.encode('utf8')
-            return False
-        if data and data.group(1) == '201':
-            out.print_line('Please press confirm', True)
-        if data and data.group(1) == '408':
-            out.print_line('Reloading QR Code\n', True)
-            while 1:
-                while self.get_QRuuid(): time.sleep(1)
-                if self.get_QR(): break
-        return True
+            return '200'
+        elif data and data.group(1) == '201':
+            return '201'
+        elif data and data.group(1) == '408':
+            return '408'
+        else:
+            return '0'
     def web_init(self):
         url = '%s/webwxinit?r=%s' % (self.loginInfo['url'], int(time.time()))
         payloads = {
@@ -108,6 +118,7 @@ class client:
         self.storageClass.memberList.append(dic['User'])
         self.loginInfo['SyncKey'] = dic['SyncKey']
         self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val']) for item in dic['SyncKey']['List']])
+        return dic['User']
     def get_batch_contract(self, userName):
         url = '%s/webwxbatchgetcontact?type=ex&r=%s' % (self.loginInfo['url'], int(time.time()))
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
@@ -135,6 +146,7 @@ class client:
             if i == 0: break
         # deal with emoji
         memberList = tools.emoji_dealer(memberList)
+        return memberList
     def show_mobile_login(self):
         url = '%s/webwxstatusnotify'%self.loginInfo['url']
         payloads = {
@@ -303,13 +315,13 @@ class client:
                     'Text': m['Content'],}
             elif m['MsgType'] in srl:
                 msg = {
-                    'Type': 'UselessMsg',
+                    'Type': 'Useless',
                     'Text': 'UselessMsg', }
             else:
                 out.print_line('MsgType Unknown: %s\n%s'%(m['MsgType'], str(m)), False)
                 srl.append(m['MsgType'])
                 msg = {
-                    'Type': 'UselessMsg',
+                    'Type': 'Useless',
                     'Text': 'UselessMsg', }
             m = dict(m, **msg)
             rl.append(m)
@@ -336,7 +348,7 @@ class client:
             'ActualNickName': ActualNickName,
             'Content': Content, }
         return dict(msg, **additionalItems)
-    def send_msg(self, toUserName = None, msg = 'Test Message'):
+    def send_msg(self, msg = 'Test Message', toUserName = None):
         url = '%s/webwxsendmsg'%self.loginInfo['url']
         payloads = {
                 'BaseRequest': self.loginInfo['BaseRequest'],

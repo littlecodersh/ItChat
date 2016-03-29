@@ -6,21 +6,19 @@ itchat是一个开源的微信个人号接口，使用他你可以轻松的通�
 
 如今微信已经成为了个人社交的很大一部分，希望这个项目能够帮助你扩展你的个人的微信号、方便自己的生活。
 
+##Documents
+
+你可以在[这里](https://itchat.readthedocs.org/zh/latest/)获取api的使用帮助。
+
 ##Have a try
 
-这是一个基于这一项目的小机器人，百闻不如一见，有兴趣可以尝试一下。
+这是一个基于这一项目的[开源小机器人](https://github.com/littlecodersh/ItChat/tree/robot)，百闻不如一见，有兴趣可以尝试一下。
 
 ![QRCode](http://7xrip4.com1.z0.glb.clouddn.com/ItChat%2FQRCode2.jpg?imageView/2/w/400/)
 
-##Screenshot
-
-![Demo](http://7xrip4.com1.z0.glb.clouddn.com/ItChat%2FDemo2.png?imageView/2/w/300/)
-
-你可以在[wiki](https://github.com/littlecodersh/ItChat/wiki/Screenshots)看到更多的功能截图
-
 ##Installation
 
-可以通过本命令安装该项目：
+可以通过本命令安装itchat：
 
 `pip install itchat`
 
