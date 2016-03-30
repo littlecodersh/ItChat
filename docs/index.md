@@ -1,4 +1,4 @@
-# itchat [![Gitter](https://badges.gitter.im/littlecodersh/ItChat.svg)](https://gitter.im/littlecodersh/ItChat?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge) ![python](https://img.shields.io/badge/python-2.7-ff69b4.svg)
+# itchat 
 
 itchat是一个开源的微信个人号接口，使用他你可以轻松的通过命令行使用个人微信号。
 
@@ -7,12 +7,6 @@ itchat是一个开源的微信个人号接口，使用他你可以轻松的通�
 如今微信已经成为了个人社交的很大一部分，希望这个项目能够帮助你扩展你的个人的微信号、方便自己的生活。
 
 你可以在这里获取[源代码](https://github.com/littlecodersh/ItChat)。
-
-##Have a try
-
-这是一个基于这一项目的小机器人，百闻不如一见，有兴趣可以尝试一下。
-
-![QRCode](http://7xrip4.com1.z0.glb.clouddn.com/ItChat%2FQRCode2.jpg?imageView/2/w/200/)
 
 ##Installation
 
@@ -30,6 +24,12 @@ itchat是一个开源的微信个人号接口，使用他你可以轻松的通�
 * [FAQ](https://itchat.readthedocs.org/zh/latest/7.FAQ/)
 * [机器人](https://itchat.readthedocs.org/zh/latest/Robot/Home/)
 * [教程](https://itchat.readthedocs.org/zh/latest/Tutorial/Tutorial1/)
+
+##Have a try
+
+这是一个基于这一项目的小机器人，百闻不如一见，有兴趣可以尝试一下。
+
+![QRCode](http://7xrip4.com1.z0.glb.clouddn.com/ItChat%2FQRCode2.jpg?imageView/2/w/200/)
 
 ##Comments
 

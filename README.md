@@ -10,17 +10,13 @@ itchat是一个开源的微信个人号接口，使用他你可以轻松的通�
 
 你可以在[这里](https://itchat.readthedocs.org/zh/latest/)获取api的使用帮助。
 
-##Have a try
-
-这是一个基于这一项目的[开源小机器人](https://github.com/littlecodersh/ItChat/tree/robot)，百闻不如一见，有兴趣可以尝试一下。
-
-![QRCode](http://7xrip4.com1.z0.glb.clouddn.com/ItChat%2FQRCode2.jpg?imageView/2/w/400/)
-
 ##Installation
 
 可以通过本命令安装itchat：
 
-`pip install itchat`
+```python
+pip install itchat
+```
 
 ##Simple uses
 
@@ -54,6 +50,12 @@ def text_reply(msg):
 
 itchat.run()
 ```
+
+##Have a try
+
+这是一个基于这一项目的[开源小机器人](https://github.com/littlecodersh/ItChat/tree/robot)，百闻不如一见，有兴趣可以尝试一下。
+
+![QRCode](http://7xrip4.com1.z0.glb.clouddn.com/ItChat%2FQRCode2.jpg?imageView/2/w/400/)
 
 ##FAQ
 

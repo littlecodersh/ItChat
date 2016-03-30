@@ -5,6 +5,8 @@ itchat is a open souce wechat api project for personal account.
 
 It enables you to access your personal wechat account through command line.
 
+Here is the `document <https://itchat.readthedocs.org/zh/latest/>`__.
+
 So enjoy:)
 
 **Try:**
@@ -13,11 +15,7 @@ You may have a try of the robot based on this project first:
 
 |QRCodeOfRobot|
 
-Here are some screenshots of this robot:
-
-You may visit `Screenshots <https://github.com/littlecodersh/ItChat/wiki/Screenshots>`__ for more demos.
-
-|Demo|
+Here is the `code <https://github.com/littlecodersh/ItChat/tree/robot>`__.
 
 **Installation**
 
@@ -48,7 +46,7 @@ You may visit `Screenshots <https://github.com/littlecodersh/ItChat/wiki/Screens
     def add_friend(msg):
         itchat.add_friend(**msg['Text'])
         itchat.get_contract()
-        itchat.send_msg(msg['RecommendInfo']['UserName'], 'Nice to meet you!')
+        itchat.send('Nice to meet you!', msg['RecommendInfo']['UserName'])
 
     @itchat.msg_dealer('Text', isGroupChat = True)
     def text_reply(msg):
@@ -69,5 +67,4 @@ If you have any problems or suggestions, you can talk to me in this `issue <http
 
 Or on `gitter <https://badges.gitter.im/littlecodersh/ItChat.svg>`__.
 
-.. |QRCodeOfRobot| image:: http://7xrip4.com1.z0.glb.clouddn.com/ItChat%2FQRCode2.jpg?imageView/2/w/400/
-.. |Demo| image:: http://7xrip4.com1.z0.glb.clouddn.com/ItChat%2FDemo2.png?imageView/2/w/300/
+.. |QRCodeOfRobot| image:: http://7xrip4.com1.z0.glb.clouddn.com/ItChat%2FQRCode2.jpg?imageView/2/w/200/
