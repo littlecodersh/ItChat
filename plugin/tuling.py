@@ -1,7 +1,6 @@
 #coding=utf8
 import sys, os
 import requests, json
-from ChatLikeCMD import ChatLikeCMD
 
 try:
     with open(os.path.join('plugin', 'config', 'tuling.json')) as f: key = json.loads(f.read())['key']
@@ -15,11 +14,12 @@ def get_response(msg, storageClass = None, userName = None, userid = 'ItChat'):
         'info': msg,
         'userid': userid,
     }
-    r = json.loads(requests.post(url, data = payloads).text)
-    if not r['code'] in (100000, 200000, 302000, 308000, 313000, 314000):
-        if r['code'] == 400004: return None
-        raise Exception('code: %s'%r['code'])
-    elif r['code'] == 100000: # 文本类
+    try:
+        r = json.loads(requests.post(url, data = payloads).text)
+    except:
+        return
+    if not r['code'] in (100000, 200000, 302000, 308000, 313000, 314000): return
+    if r['code'] == 100000: # 文本类
         return '\n'.join([r['text'].replace('<br>','\n')])
     elif r['code'] == 200000: # 链接类
         return '\n'.join([r['text'].replace('<br>','\n'), r['url']])
@@ -39,4 +39,4 @@ def get_response(msg, storageClass = None, userName = None, userid = 'ItChat'):
 if __name__ == '__main__':
     while True:
         a = raw_input('>').decode(sys.stdin.encoding).encode('utf8')
-        for m in get_response(a, 'ItChat'): print m
+        print(get_response(a, 'ItChat'))
