@@ -263,13 +263,7 @@ class client:
                     'Type': 'Card',
                     'Text': m['RecommendInfo'], }
             elif m['MsgType'] == 49: # sharing
-                if m['AppMsgType'] == 2000:
-                    regx = r'\[CDATA\[(.+?)\].+?\[CDATA\[(.+?)\]'
-                    data = re.search(regx, m['Content'])
-                    msg = {
-                        'Type': 'Note',
-                        'Text': data.group(2), }
-                elif m['AppMsgType'] == 6:
+                if m['AppMsgType'] == 6:
                     def download_atta(attaDir):
                         cookiesList = {name:data for name,data in self.s.cookies.items()}
                         url = 'https://file2.wx.qq.com/cgi-bin/mmwebwx-bin/webwxgetmedia'
@@ -288,10 +282,24 @@ class client:
                         'Type': 'Attachment',
                         # 'FileName': m['FileName'],
                         'Text': download_atta, }
+                elif m['AppMsgType'] == 17:
+                    msg = {
+                        'Type': 'Note',
+                        'Text': m['FileName'], }
+                elif m['AppMsgType'] == 2000:
+                    regx = r'\[CDATA\[(.+?)\].+?\[CDATA\[(.+?)\]'
+                    data = re.search(regx, m['Content'])
+                    msg = {
+                        'Type': 'Note',
+                        'Text': data.group(2), }
                 else:
                     msg = {
                         'Type': 'Sharing',
                         'Text': m['FileName'], }
+            elif m['MsgType'] == 51: # phone init
+                msg = {
+                    'Type': 'Init',
+                    'Text': m['ToUserName'], }
             elif m['MsgType'] == 62: # tiny video
                 def download_video(videoDir):
                     url = '%s/webwxgetvideo'%self.loginInfo['url']
@@ -313,6 +321,12 @@ class client:
                 msg = {
                     'Type': 'Note',
                     'Text': m['Content'],}
+            elif m['MsgType'] == 10002:
+                regx = r'[CDATA[(.+?)]]'
+                data = re.search(regx, m['Content'])
+                msg = {
+                    'Type': 'Note',
+                    'Text': data.group(1).replace('\\', ''), }
             elif m['MsgType'] in srl:
                 msg = {
                     'Type': 'Useless',
