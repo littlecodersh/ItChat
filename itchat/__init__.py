@@ -41,11 +41,11 @@ __functionDict = {'GroupChat': {}, 'GeneralReply': None}
 def configured_reply():
     try:
         msg = __client.storageClass.msgList.pop()
-        if msg.get('GroupUserName') is None:
-            replyFn = __functionDict.get(msg['Type'], __functionDict['GeneralReply'])
+        if '@@' in msg.get('FromUserName'):
+            replyFn = __functionDict['GroupChat'].get(msg['Type'], __functionDict['GeneralReply'])
             send(replyFn(msg), msg.get('FromUserName'))
         else:
-            replyFn = __functionDict['GroupChat'].get(msg['Type'], __functionDict['GeneralReply'])
+            replyFn = __functionDict.get(msg['Type'], __functionDict['GeneralReply'])
             send(replyFn(msg), msg.get('FromUserName'))
     except:
         pass

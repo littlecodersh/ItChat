@@ -16,7 +16,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 setup(
     name='itchat',
 
-    version='1.0.5',
+    version='1.0.6',
 
     description='A complete wechat personal account api',
     long_description=long_description,
