@@ -12,9 +12,27 @@ ItChat是一个个人微信号的机器人，他实现了一个机器人需要�
 
 ##Screenshot
 
+###WeChat robot
+
 ![Demo](http://7xrip4.com1.z0.glb.clouddn.com/ItChat%2FDemo2.png?imageView/2/w/300/)
 
 你可以在[wiki](https://github.com/littlecodersh/ItChat/wiki/Screenshots)看到更多的功能截图
+
+###Command Line wechat
+
+![cmd_wechat_chat](http://7xrip4.com1.z0.glb.clouddn.com/ItChat%2FScreenshots%2F%E5%91%BD%E4%BB%A4%E8%A1%8C%E8%81%8A%E5%A4%A9%E7%AA%97%E5%8F%A3.jpg)
+
+命令行微信的输入操作经过特殊的处理，显示输出的同时**不会影响**正在进行的输入，而且**三平台**支持。
+
+![change_to_cmd_wechat](http://7xrip4.com1.z0.glb.clouddn.com/ItChat%2FScreenshots%2F%E5%88%87%E6%8D%A2%E5%88%B0%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%BE%AE%E4%BF%A1.jpg)
+
+通过修改`ItChat.py`中第七行的True为False，可以登入命令行微信。
+
+###Login Page
+
+![login_page](http://7xrip4.com1.z0.glb.clouddn.com/ItChat%2FScreenshots%2F%E7%99%BB%E5%BD%95%E7%95%8C%E9%9D%A2%E6%88%AA%E5%9B%BE.jpg?imageView/2/w/300/)
+
+和登陆网页端微信一样，扫码即可登录。
 
 ##Installation
 
