@@ -4,8 +4,6 @@ import thread, subprocess
 import json, xml.dom.minidom, mimetypes
 import config, storage, out, tools
 
-import traceback
-
 BASE_URL = config.BASE_URL
 
 class client:
@@ -211,7 +209,8 @@ class client:
         if dic['AddMsgCount'] != 0: return dic['AddMsgList']
     def __produce_msg(self, l):
         rl = []
-        srl = [51, 53] # 51 messy code, 53 webwxvoipnotifymsg
+        srl = [40, 50, 52, 53, 9999]
+        # 40 msg, 50 VOIPMSG, 52 voipnotifymsg, 53 webwxvoipnotifymsg, 9999 sysnotice
         for m in l:
             if '@@' in m['FromUserName']: m = self.__produce_group_chat(m)
             if m['MsgType'] == 1: # words
