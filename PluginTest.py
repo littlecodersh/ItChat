@@ -27,7 +27,7 @@ if 'grouptalking' in pluginList['systemmodules']:
         sys_print('INFO', 'Group talking plugin is open now, please be careful about it.')
     except:
         sys_print('WARN', 'There is something wrong with the grouptalking plugin')
-        traceback.print_exc()
+        # traceback.print_exc()
 
 # Test tuling.py
 if 'tuling' in pluginList['systemmodules']:
@@ -112,7 +112,7 @@ if __name__ == '__main__':
             send_msg(r)
     except:
         print 'Exit'
-        traceback.print_exc()
+        # traceback.print_exc()
 else:
     sys_print('INFO', 'Plugin loading finished')
 

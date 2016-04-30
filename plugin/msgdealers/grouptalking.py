@@ -1,5 +1,4 @@
 import os, re, time
-from chardet import detect
 from plugin.Sqlite3Client import Sqlite3Client
 
 SQL_DIR = os.path.join('storage', 'grouptalk')

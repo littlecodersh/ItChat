@@ -5,7 +5,7 @@ import requests, json
 try:
     with open(os.path.join('plugin', 'config', 'tuling.json')) as f: key = json.loads(f.read())['key']
 except:
-    raise Exception('There is something wrong with the format of you plugin/config/tuling.json')
+    key = ''
 
 def get_response(msg, storageClass = None, userName = None, userid = 'ItChat'):
     url = 'http://www.tuling123.com/openapi/api'
