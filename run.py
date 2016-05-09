@@ -36,4 +36,5 @@ def complex_reply():
     itchat.run()
 
 if __name__ == '__main__':
+    # simple_reply()
     complex_reply()

@@ -6,6 +6,7 @@ class Storage:
         self.userName = None
         self.nickName = None
         self.memberList = []
+        self.chatroomList = []
         self.msgList = []
         self.groupDict = {}
         self.lastInputUserName = None

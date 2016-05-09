@@ -10,6 +10,7 @@ class client:
     def __init__(self):
         self.storageClass = storage.Storage()
         self.memberList = self.storageClass.memberList
+        self.chatroomList = self.storageClass.chatroomList
         self.msgList = self.storageClass.msgList
         self.loginInfo = {}
         self.s = requests.Session()
@@ -128,14 +129,21 @@ class client:
                 'ChatRoomId': '', }], }
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
         return json.loads(r.content.decode('utf-8', 'replace'))['ContactList'][0]['MemberList']
-    def get_contract(self):
+    def get_contract(self, update = False):
+        if 1 < len(self.memberList) and not update: return self.memberList
         url = '%s/webwxgetcontact?r=%s&seq=0&skey=%s' % (self.loginInfo['url'],
             int(time.time()), self.loginInfo['skey'])
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         r = self.s.get(url, headers = headers)
         memberList = json.loads(r.content.decode('utf-8', 'replace'))['MemberList']
+        chatroomList = memberList[:]
         while 1:
             i = 0
+            for m in chatroomList:
+                if ('@@' in m['UserName'] and any([str(n) in m['UserName'] for n in range(10)]) and
+                    any([chr(n) in m['UserName'] for n in (range(ord('a'), ord('z') + 1) + range(ord('A'), ord('Z') + 1))])):
+                    continue
+                chatroomList.remove(m);i+=1
             for m in memberList:
                 if m['Sex'] != 0 or (m['VerifyFlag'] & 8 == 0 and '@' in m['UserName'] and not '@@' in m['UserName'] and
                     any([str(n) in m['UserName'] for n in range(10)]) and any([chr(n) in m['UserName'] for n in (
@@ -143,8 +151,12 @@ class client:
                 memberList.remove(m);i+=1
             if i == 0: break
         # deal with emoji
-        memberList = tools.emoji_dealer(memberList)
+        self.memberList = tools.emoji_dealer(memberList)
+        self.chatroomList = chatroomList
         return memberList
+    def get_chatrooms(self, update = False):
+        if update: self.get_contract(update = True)
+        return self.chatroomList
     def show_mobile_login(self):
         url = '%s/webwxstatusnotify'%self.loginInfo['url']
         payloads = {
