@@ -8,11 +8,11 @@ itchat是一个开源的微信个人号接口，使用他你可以轻松的通�
 
 如今微信已经成为了个人社交的很大一部分，希望这个项目能够帮助你扩展你的个人的微信号、方便自己的生活。
 
-##Documents
+## Documents
 
 你可以在[这里](https://itchat.readthedocs.org/zh/latest/)获取api的使用帮助。
 
-##Installation
+## Installation
 
 可以通过本命令安装itchat：
 
@@ -20,7 +20,7 @@ itchat是一个开源的微信个人号接口，使用他你可以轻松的通�
 pip install itchat
 ```
 
-##Simple uses
+## Simple uses
 
 通过如下代码，微信已经可以就日常的各种信息进行获取与回复。
 
@@ -53,19 +53,29 @@ def text_reply(msg):
 itchat.run()
 ```
 
-##Have a try
+## Have a try
 
 这是一个基于这一项目的[开源小机器人](https://github.com/littlecodersh/ItChat/tree/robot)，百闻不如一见，有兴趣可以尝试一下。
 
 ![QRCode](http://7xrip4.com1.z0.glb.clouddn.com/ItChat%2FQRCode2.jpg?imageView/2/w/400/)
 
-##FAQ
+## Screenshots
+
+![file_autoreply](http://7xrip4.com1.z0.glb.clouddn.com/ItChat%2FScreenshots%2F%E5%BE%AE%E4%BF%A1%E8%8E%B7%E5%8F%96%E6%96%87%E4%BB%B6%E5%9B%BE%E7%89%87.png?imageView/2/w/300/) ![login_page](http://7xrip4.com1.z0.glb.clouddn.com/ItChat%2FScreenshots%2F%E7%99%BB%E5%BD%95%E7%95%8C%E9%9D%A2%E6%88%AA%E5%9B%BE.jpg?imageView/2/w/450/)
+
+## FAQ
 
 Q: 为什么中文的文件没有办法上传？
 
 A: 这是由于`requests`的编码问题导致的。若需要支持中文文件传输，将[fields.py](https://github.com/littlecodersh/ItChat/blob/robot/plugin/config/fields.py)文件放入requests包的packages/urllib3下即可
 
-##Comments
+## See also
+
+[liuwons/wxBot](https://github.com/liuwons/wxBot): 类似的基于Python的微信机器人
+
+[zixia/wechaty](https://github.com/zixia/wechaty): 基于JS(ES6)的微信个人账号机器人框架/库
+
+## Comments
 
 如果有什么问题或者建议都可以在这个[Issue](https://github.com/littlecodersh/ItChat/issues/1)和我讨论
 
