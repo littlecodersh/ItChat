@@ -73,7 +73,7 @@ A: 这是由于`requests`的编码问题导致的。若需要支持中文文件�
 
 [liuwons/wxBot](https://github.com/liuwons/wxBot): 类似的基于Python的微信机器人
 
-[zixia/wechaty](https://github.com/zixia/wechaty): 基于JS(ES6)的微信个人账号机器人框架/库
+[zixia/wechaty](https://github.com/zixia/wechaty): 基于Javascript(ES6)的微信个人账号机器人NodeJS框架/库
 
 ## Comments
 
