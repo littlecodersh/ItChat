@@ -1,7 +1,7 @@
 import time
 import itchat
 
-itchat.auto_login()
+
 
 def simple_reply():
     @itchat.msg_register
@@ -36,5 +36,6 @@ def complex_reply():
     itchat.run()
 
 if __name__ == '__main__':
+    itchat.auto_login()
     # simple_reply()
     complex_reply()

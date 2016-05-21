@@ -1,10 +1,37 @@
 import os, sys
 import requests, time, re
-import thread, subprocess
+import threading, subprocess
 import json, xml.dom.minidom, mimetypes
-import config, storage, out, tools
+from . import config, storage, out, tools
 
 BASE_URL = config.BASE_URL
+import pickle
+
+class PythonObjectEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (list, dict, str, bytes, int, float, bool, type(None))):
+            return json.JSONEncoder.default(self, obj)
+        return {'_python_object': pickle.dumps(obj)}
+
+def BytesDecode(b):
+    """Python3 bytes 解码为str
+    Github@Chyroc
+    """
+    if isinstance(b, dict):
+        dictnew = dict()
+        for k,v in b.items():
+            dictnew[BytesDecode(k)] = BytesDecode(v)
+        return dictnew
+    elif isinstance(b, list):
+        listnew = list()
+        for bsingle in s:
+            listnew.append(BytesDecode(bsingle))
+        return listnew
+    elif isinstance(b, bytes):
+        return b.decode()
+    else:
+        return b
+
 
 class client:
     def __init__(self):
@@ -15,11 +42,25 @@ class client:
         self.loginInfo = {}
         self.s = requests.Session()
         self.uuid = None
+
+    def __get(self, url, data=None, params=None, headers=None, stream=None, allow_redirects=True):
+        """
+        封装requests.get, 需要处理data
+        Github@Chyroc"""
+        return self.s.get(BytesDecode(url), data=BytesDecode(data), params=BytesDecode(params), headers=headers, stream=stream, allow_redirects=allow_redirects)
+    def __post(self, url, data=None, params=None, headers=None, stream=None, allow_redirects=True):
+        """
+        封装requests.post, 需要处理data,params的bytes
+        Github@Chyroc"""
+        return self.s.get(BytesDecode(url), data=BytesDecode(data), params=BytesDecode(params), headers=headers,
+                          stream=stream, allow_redirects=allow_redirects)
+
     def auto_login(self):
         def open_QR():
             for get_count in range(10):
                 out.print_line('Getting uuid', True)
-                while not self.get_QRuuid(): time.sleep(1)
+                while not self.get_QRuuid():
+                    time.sleep(1)
                 out.print_line('Getting QR Code', True)
                 if self.get_QR(): break
                 elif get_count >= 9:
@@ -49,7 +90,8 @@ class client:
             'appid': 'wx782c26e4c19acffb',
             'fun': 'new',
         }
-        r = self.s.get(url, params = payloads)
+        # r = self.s.get(url, params = payloads)
+        r = self.s.get(url, params=payloads)
 
         regx = r'window.QRLogin.code = (\d+); window.QRLogin.uuid = "(\S+?)";'
         data = re.search(regx, r.text)
@@ -60,6 +102,7 @@ class client:
         try:
             if uuid == None: uuid = self.uuid
             url = '%s/qrcode/%s'%(BASE_URL, uuid)
+            # r = self.s.get(url, stream = True)
             r = self.s.get(url, stream = True)
             QR_DIR = 'QR.jpg'
             with open(QR_DIR, 'wb') as f: f.write(r.content)
@@ -76,13 +119,15 @@ class client:
         if uuid is None: uuid = self.uuid
         url = '%s/cgi-bin/mmwebwx-bin/login'%BASE_URL
         payloads = 'tip=1&uuid=%s&_=%s'%(uuid, int(time.time()))
-        r = self.s.get(url, params = payloads)
+        # r = self.s.get(url, params = payloads)
+        r = self.s.get(url, params=payloads)
         regx = r'window.code=(\d+)'
         data = re.search(regx, r.text)
         if data and data.group(1) == '200':
             os.remove('QR.jpg')
             regx = r'window.redirect_uri="(\S+)";'
             self.loginInfo['url'] = re.search(regx, r.text).group(1)
+            # r = self.s.get(self.loginInfo['url'], allow_redirects=False)
             r = self.s.get(self.loginInfo['url'], allow_redirects=False)
             self.loginInfo['url'] = self.loginInfo['url'][:self.loginInfo['url'].rfind('/')]
             self.loginInfo['BaseRequest'] = {}
@@ -108,8 +153,12 @@ class client:
             'BaseRequest': self.loginInfo['BaseRequest']
         }
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
-        r = self.s.post(url, data = json.dumps(payloads), headers = headers)
-        dic = json.loads(r.content.decode('utf-8', 'replace'))
+        r = self.s.post(url, data=json.dumps(BytesDecode(payloads)), headers=headers)
+        print(r)
+        print(r.content)
+        print()
+        dic = json.loads(BytesDecode(r.content.decode('utf-8', 'replace')))
+        print(dic)
         # deal with emoji
         dic['User'] = tools.emoji_dealer([dic['User']])[0]
         self.storageClass.userName = dic['User']['UserName']
@@ -127,6 +176,7 @@ class client:
             'List': [{
                 'UserName': userName,
                 'ChatRoomId': '', }], }
+        # r = self.s.post(url, data = json.dumps(payloads), headers = headers)
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
         return json.loads(r.content.decode('utf-8', 'replace'))['ContactList'][0]['MemberList']
     def get_contract(self, update = False):
@@ -134,20 +184,42 @@ class client:
         url = '%s/webwxgetcontact?r=%s&seq=0&skey=%s' % (self.loginInfo['url'],
             int(time.time()), self.loginInfo['skey'])
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
+        # r = self.s.get(url, headers = headers)
         r = self.s.get(url, headers = headers)
         memberList = json.loads(r.content.decode('utf-8', 'replace'))['MemberList']
         chatroomList = memberList[:]
         while 1:
             i = 0
             for m in chatroomList:
-                if ('@@' in m['UserName'] and any([str(n) in m['UserName'] for n in range(10)]) and
-                    any([chr(n) in m['UserName'] for n in (range(ord('a'), ord('z') + 1) + range(ord('A'), ord('Z') + 1))])):
+                if (
+                                    '@@' in m['UserName']
+                            and any([str(n) in m['UserName'] for n in range(10)])
+                        and any(
+                            [
+                                [chr(n) in m['UserName'] for n in range(ord('a'), ord('z') + 1)],
+                                [chr(n) in m['UserName'] for n in range(ord('A'), ord('Z') + 1)]
+                            ]
+                        )
+                ):
                     continue
-                chatroomList.remove(m);i+=1
+                chatroomList.remove(m)
+                i += 1
             for m in memberList:
-                if m['Sex'] != 0 or (m['VerifyFlag'] & 8 == 0 and '@' in m['UserName'] and not '@@' in m['UserName'] and
-                    any([str(n) in m['UserName'] for n in range(10)]) and any([chr(n) in m['UserName'] for n in (
-                        range(ord('a'), ord('z') + 1) + range(ord('A'), ord('Z') + 1))])): continue
+                if (
+                                m['Sex'] != 0
+                        or (m['VerifyFlag'] & 8 == 0
+                            and '@' in m['UserName']
+                            and not '@@' in m['UserName']
+                            and any([str(n) in m['UserName'] for n in range(10)])
+                            and any(
+                                [
+                                    [chr(n) in m['UserName'] for n in range(ord('a'), ord('z') + 1)],
+                                    [chr(n) in m['UserName'] for n in range(ord('A'), ord('Z') + 1)]
+                                ]
+                            )
+                            )
+                ):
+                    continue
                 memberList.remove(m);i+=1
             if i == 0: break
         # deal with emoji
@@ -167,7 +239,8 @@ class client:
                 'ClientMsgId': int(time.time()),
                 }
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
-        r = self.s.post(url, data = json.dumps(payloads), headers = headers)
+        # r = self.s.post(url, data = json.dumps(payloads), headers = headers)
+        r = self.s.post(url, data = json.dumps(BytesDecode(payloads)), headers = headers)
     def start_receiving(self):
         def maintain_loop():
             i = self.__sync_check()
@@ -176,7 +249,7 @@ class client:
             while i and count <4:
                 try:
                     if pauseTime < 5: pauseTime += 2
-                    if i != '0': msgList = self.__get_msg()
+                    if i != '0': msgList = self.s.get_msg()
                     if msgList: 
                         msgList = self.__produce_msg(msgList)
                         for msg in msgList: self.msgList.insert(0, msg)
@@ -184,11 +257,14 @@ class client:
                     time.sleep(pauseTime)
                     i = self.__sync_check()
                     count = 0
-                except Exception, e:
+                except Exception as e:
                     count += 1
                     time.sleep(count*3)
             out.print_line('LOG OUT', False)
-        thread.start_new_thread(maintain_loop, ())
+
+        worker = threading.Thread(target=maintain_loop)
+        worker.start()
+        # thread.start_new_thread(maintain_loop, ())
     def __sync_check(self):
         url = '%s/synccheck'%self.loginInfo['url']
         payloads = {
@@ -199,8 +275,8 @@ class client:
                 'deviceid': self.loginInfo['pass_ticket'],
                 'synckey': self.loginInfo['synckey'],
                 }
-        r = self.s.get(url, params = payloads)
-
+        # r = self.s.get(url, params = payloads)
+        r = self.s.get(url, params=payloads)
         regx = r'window.synccheck={retcode:"(\d+)",selector:"(\d+)"}'
         pm = re.search(regx, r.text)
 
@@ -214,6 +290,7 @@ class client:
             'SyncKey': self.loginInfo['SyncKey'],
             'rr': int(time.time()), }
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
+        # r = self.s.post(url, data = json.dumps(payloads), headers = headers)
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
 
         dic = json.loads(r.content.decode('utf-8', 'replace'))
@@ -242,7 +319,8 @@ class client:
                     payloads = {
                         'MsgID': m['NewMsgId'],
                         'skey': self.loginInfo['skey'],}
-                    r = self.s.get(url, params = payloads, stream = True)
+                    # r = self.s.get(url, params = payloads, stream = True)
+                    r = self.s.get(url, params=payloads, stream=True)
                     with open(picDir, 'wb') as f:
                         for block in r.iter_content(1024):
                             f.write(block)
@@ -255,7 +333,8 @@ class client:
                     payloads = {
                         'msgid': m['NewMsgId'],
                         'skey': self.loginInfo['skey'],}
-                    r = self.s.get(url, params = payloads, stream = True)
+                    # r = self.s.get(url, params = payloads, stream = True)
+                    r = self.s.get(url, params=payloads, stream=True)
                     with open(voiceDir, 'wb') as f:
                         for block in r.iter_content(1024):
                             f.write(block)
@@ -285,7 +364,8 @@ class client:
                             'fromuser': self.loginInfo['wxuin'],
                             'pass_ticket': 'undefined',
                             'webwx_data_ticket': cookiesList['webwx_data_ticket'],}
-                        r = self.s.get(url, params = payloads, stream = True)
+                        # r = self.s.get(url, params = payloads, stream = True)
+                        r = self.s.get(url, params=payloads, stream=True)
                         with open(attaDir, 'wb') as f:
                             for block in r.iter_content(1024):
                                 f.write(block)
@@ -318,7 +398,8 @@ class client:
                         'msgid': m['MsgId'],
                         'skey': self.loginInfo['skey'],}
                     headers = { 'Range:': 'bytes=0-'}
-                    r = self.s.get(url, params = payloads, headers = headers, stream = True)
+                    # r = self.s.get(url, params = payloads, headers = headers, stream = True)
+                    r = self.s.get(url, params=payloads, headers = headers, stream=True)
                     with open(videoDir, 'wb') as f: 
                         for chunk in r.iter_content(chunk_size = 1024):
                             if chunk:
@@ -387,6 +468,7 @@ class client:
                     },
                 }
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
+        # r = self.s.post(url, data = json.dumps(payloads, ensure_ascii = False), headers = headers)
         r = self.s.post(url, data = json.dumps(payloads, ensure_ascii = False), headers = headers)
     def __upload_file(self, fileDir, isPicture = False):
         if not tools.check_file(fileDir): return
@@ -415,6 +497,7 @@ class client:
                 'filename' : (os.path.basename(fileDir), open(fileDir, 'rb'), fileType),
                 }
         headers = { 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36', }
+        # r = self.s.post(url, files = files, headers = headers)
         r = self.s.post(url, files = files, headers = headers)
         return json.loads(r.text)['MediaId']
     def send_file(self, fileDir, toUserName = None):
@@ -438,6 +521,7 @@ class client:
         headers = {
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36',
             'Content-Type': 'application/json;charset=UTF-8', }
+        # r = self.s.post(url, data = json.dumps(payloads, ensure_ascii = False), headers = headers)
         r = self.s.post(url, data = json.dumps(payloads, ensure_ascii = False), headers = headers)
         return True
     def send_image(self, fileDir, toUserName = None):
@@ -461,6 +545,7 @@ class client:
         headers = {
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36',
             'Content-Type': 'application/json;charset=UTF-8', }
+        # r = self.s.post(url, data = json.dumps(payloads, ensure_ascii = False), headers = headers)
         r = self.s.post(url, data = json.dumps(payloads, ensure_ascii = False), headers = headers)
         return True
     def add_friend(self, Status, UserName, Ticket):
@@ -478,6 +563,7 @@ class client:
             'SceneList': 33,
             'skey': self.loginInfo['skey'],}
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
+        # r = self.s.post(url, data = json.dumps(payloads), headers = headers)
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
     def create_chatroom(self, memberList, topic = ''):
         url = ('%s/webwxcreatechatroom?pass_ticket=%s&r=%s'%(
@@ -489,6 +575,7 @@ class client:
             'Topic': topic, }
         headers = {'content-type': 'application/json; charset=UTF-8'}
 
+        # r = self.s.post(url, data=json.dumps(params),headers=headers)
         r = self.s.post(url, data=json.dumps(params),headers=headers)
         dic = json.loads(r.content.decode('utf8', 'replace'))
         return dic['ChatRoomName']
@@ -500,6 +587,7 @@ class client:
             'ChatRoomName': chatRoomName,
             'DelMemberList': ','.join([member['UserName'] for member in memberList]),}
         headers = {'content-type': 'application/json; charset=UTF-8'}
+        # r = self.s.post(url, data=json.dumps(params),headers=headers)
         r = self.s.post(url, data=json.dumps(params),headers=headers)
     def add_member_into_chatroom(self, chatRoomName, memberList):
         url = ('%s/webwxupdatechatroom?fun=addmember&pass_ticket=%s'%(
@@ -509,6 +597,7 @@ class client:
             'ChatRoomName': chatRoomName,
             'AddMemberList': ','.join([member['UserName'] for member in memberList]),}
         headers = {'content-type': 'application/json; charset=UTF-8'}
+        # r = self.s.post(url, data=json.dumps(params),headers=headers)
         r = self.s.post(url, data=json.dumps(params),headers=headers)
 
 if __name__ == '__main__':
