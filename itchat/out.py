@@ -1,5 +1,5 @@
 import sys
-import config
+from . import config
 
 def ErrorIgnore(fn, *args, **kwargs):
     def wrapped(*args, **kwargs):
@@ -7,7 +7,7 @@ def ErrorIgnore(fn, *args, **kwargs):
             result = fn(*args, **kwargs)
             return result
         except:
-            print 'Encode Fail'
+            print('Encode Fail')
         return None
     return wrapped
 
