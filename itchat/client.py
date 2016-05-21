@@ -277,7 +277,7 @@ class client:
                 if m['AppMsgType'] == 6:
                     def download_atta(attaDir):
                         cookiesList = {name:data for name,data in self.s.cookies.items()}
-                        url = 'https://file2.wx.qq.com/cgi-bin/mmwebwx-bin/webwxgetmedia'
+                        url = 'https://file%s.wx.qq.com/cgi-bin/mmwebwx-bin/webwxgetmedia'%('2' if '2' in self.loginInfo['url'] else '')
                         payloads = {
                             'sender': m['FromUserName'],
                             'mediaid': m['MediaId'],
