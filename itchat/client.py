@@ -7,10 +7,9 @@ from . import config, storage, out, tools
 
 BASE_URL = config.BASE_URL
 
-import pickle
 
 def BytesDecode(b):
-    """Python3 bytes 解码为str
+    """Python3 bytes解码为str
     Github@Chyroc
     """
     if isinstance(b, dict):
@@ -68,9 +67,8 @@ class client:
         self.show_mobile_login()
         tools.clear_screen()
         self.get_contract()
-        out.print_line('Login successfully as %s\n' % (self.storageClass.find_nickname(self.storageClass.userName)),
-                       False)
-        self.send_msg()
+        out.print_line('Login successfully as %s\n' % (
+            self.storageClass.find_nickname(self.storageClass.userName)), False)
         self.start_receiving()
 
     def get_QRuuid(self):
@@ -79,7 +77,6 @@ class client:
             'appid': 'wx782c26e4c19acffb',
             'fun': 'new',
         }
-        # r = self.s.get(url, params = payloads)
         r = self.s.get(url, params=payloads)
         regx = r'window.QRLogin.code = (\d+); window.QRLogin.uuid = "(\S+?)";'
         data = re.search(regx, r.text)
@@ -89,10 +86,8 @@ class client:
 
     def get_QR(self, uuid=None):
         try:
-            if uuid == None:
-                uuid = self.uuid
+            uuid = self.uuid if uuid == None else uuid
             url = '%s/qrcode/%s' % (BASE_URL, uuid)
-            # r = self.s.get(url, stream = True)
             r = self.s.get(url, stream=True)
             QR_DIR = 'QR.jpg'
             with open(QR_DIR, 'wb') as f:
@@ -108,8 +103,7 @@ class client:
             return False
 
     def check_login(self, uuid=None):
-        if uuid is None:
-            uuid = self.uuid
+        uuid = self.uuid if uuid == None else uuid
         url = '%s/cgi-bin/mmwebwx-bin/login' % BASE_URL
         payloads = 'tip=1&uuid=%s&_=%s' % (uuid, int(time.time()))
         r = self.s.get(url, params=payloads)
@@ -124,17 +118,17 @@ class client:
             self.loginInfo['BaseRequest'] = {}
             for node in xml.dom.minidom.parseString(r.text).documentElement.childNodes:
                 if node.nodeName == 'skey':
-                    self.loginInfo['skey'] = self.loginInfo['BaseRequest']['Skey'] = node.childNodes[0].data.encode(
-                        'utf8')
+                    self.loginInfo['skey'] = self.loginInfo['BaseRequest']['Skey'] \
+                        = node.childNodes[0].data.encode('utf8')
                 elif node.nodeName == 'wxsid':
-                    self.loginInfo['wxsid'] = self.loginInfo['BaseRequest']['Sid'] = node.childNodes[0].data.encode(
-                        'utf8')
+                    self.loginInfo['wxsid'] = self.loginInfo['BaseRequest']['Sid'] \
+                        = node.childNodes[0].data.encode('utf8')
                 elif node.nodeName == 'wxuin':
-                    self.loginInfo['wxuin'] = self.loginInfo['BaseRequest']['Uin'] = node.childNodes[0].data.encode(
-                        'utf8')
+                    self.loginInfo['wxuin'] = self.loginInfo['BaseRequest']['Uin'] \
+                        = node.childNodes[0].data.encode('utf8')
                 elif node.nodeName == 'pass_ticket':
-                    self.loginInfo['pass_ticket'] = self.loginInfo['BaseRequest']['DeviceID'] = node.childNodes[
-                        0].data.encode('utf8')
+                    self.loginInfo['pass_ticket'] = self.loginInfo['BaseRequest']['DeviceID'] \
+                        = node.childNodes[0].data.encode('utf8')
             return '200'
         elif data and data.group(1) == '201':
             return '201'
@@ -158,7 +152,8 @@ class client:
         self.storageClass.nickName = dic['User']['NickName']
         self.storageClass.memberList.append(dic['User'])
         self.loginInfo['SyncKey'] = dic['SyncKey']
-        self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val']) for item in dic['SyncKey']['List']])
+        self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val'])
+                                              for item in dic['SyncKey']['List']])
         return dic['User']
 
     def get_batch_contract(self, userName):
@@ -169,7 +164,9 @@ class client:
             'Count': 1,
             'List': [{
                 'UserName': userName,
-                'ChatRoomId': '',}],}
+                'ChatRoomId': ''
+            }]
+        }
         r = self.s.post(url, data=json.dumps(BytesDecode(payloads)), headers=headers)
         return json.loads(BytesDecode(r.content.decode('utf-8', 'replace')))['ContactList'][0]['MemberList']
 
@@ -177,7 +174,8 @@ class client:
         if 1 < len(self.memberList) and not update:
             return self.memberList
         url = '%s/webwxgetcontact?r=%s&seq=0&skey=%s' % (self.loginInfo['url'],
-                                                         int(time.time()), self.loginInfo['skey'])
+                                                         int(time.time()),
+                                                         self.loginInfo['skey'])
         headers = {
             'ContentType': 'application/json; charset=UTF-8'
         }
@@ -187,34 +185,26 @@ class client:
         while True:
             i = 0
             for m in chatroomList:
-                if (
-                                    '@@' in m['UserName']
-                            and any([str(n) in m['UserName'] for n in range(10)])
-                        and any(
-                            [
-                                [chr(n) in m['UserName'] for n in range(ord('a'), ord('z') + 1)],
-                                [chr(n) in m['UserName'] for n in range(ord('A'), ord('Z') + 1)]
-                            ]
-                        )
-                ):
+                if ('@@' in m['UserName']
+                    and any([str(n) in m['UserName'] for n in range(10)])
+                    and any([
+                        [chr(n) in m['UserName'] for n in range(ord('a'), ord('z') + 1)],
+                        [chr(n) in m['UserName'] for n in range(ord('A'), ord('Z') + 1)]
+                    ])):
                     continue
                 chatroomList.remove(m)
                 i += 1
             for m in memberList:
-                if (
-                                m['Sex'] != 0
-                        or (m['VerifyFlag'] & 8 == 0
-                            and '@' in m['UserName']
-                            and not '@@' in m['UserName']
-                            and any([str(n) in m['UserName'] for n in range(10)])
-                            and any(
-                                [
-                                    [chr(n) in m['UserName'] for n in range(ord('a'), ord('z') + 1)],
-                                    [chr(n) in m['UserName'] for n in range(ord('A'), ord('Z') + 1)]
-                                ]
-                            )
-                            )
-                ):
+                if (m['Sex'] != 0
+                    or (m['VerifyFlag'] & 8 == 0
+                        and '@' in m['UserName']
+                        and not '@@' in m['UserName']
+                        and any([str(n) in m['UserName'] for n in range(10)])
+                        and any([
+                            [chr(n) in m['UserName'] for n in range(ord('a'), ord('z') + 1)],
+                            [chr(n) in m['UserName'] for n in range(ord('A'), ord('Z') + 1)]
+                        ]))
+                    ):
                     continue
                 memberList.remove(m)
                 i += 1
@@ -226,7 +216,8 @@ class client:
         return memberList
 
     def get_chatrooms(self, update=False):
-        if update: self.get_contract(update=True)
+        if update:
+            self.get_contract(update=True)
         return self.chatroomList
 
     def show_mobile_login(self):
@@ -249,23 +240,23 @@ class client:
             count = 0
             pauseTime = 1
             while i and count < 4:
-                # try:
-                if pauseTime < 5:
-                    pauseTime += 2
-                if i is not '0':
-                    msgList = self.__get_msg()
-                    if msgList:
-                        msgList = self.__produce_msg(msgList)
-                        for msg in msgList:
-                            self.msgList.insert(0, msg)
-                        pauseTime = 1
-                time.sleep(pauseTime)
-                i = self.__sync_check()
-                count = 0
-                # except Exception as e:
-                #     print(e)
-                #     count += 1
-                #     time.sleep(count * 3)
+                try:
+                    if pauseTime < 5:
+                        pauseTime += 2
+                    if i is not '0':
+                        msgList = self.__get_msg()
+                        if msgList:
+                            msgList = self.__produce_msg(msgList)
+                            for msg in msgList:
+                                self.msgList.insert(0, msg)
+                            pauseTime = 1
+                    time.sleep(pauseTime)
+                    i = self.__sync_check()
+                    count = 0
+                except Exception as e:
+                    print(e)
+                    count += 1
+                    time.sleep(count * 3)
             out.print_line('LOG OUT', False)
         worker = threading.Thread(target=maintain_loop)
         worker.start()
@@ -293,19 +284,24 @@ class client:
         payloads = {
             'BaseRequest': self.loginInfo['BaseRequest'],
             'SyncKey': self.loginInfo['SyncKey'],
-            'rr': int(time.time()),}
-        headers = {'ContentType': 'application/json; charset=UTF-8'}
+            'rr': int(time.time())
+        }
+        headers = {
+            'ContentType': 'application/json; charset=UTF-8'
+        }
         r = self.s.post(url, data=json.dumps(BytesDecode(payloads)), headers=headers)
         dic = json.loads(BytesDecode(r.content.decode('utf-8', 'replace')))
         self.loginInfo['SyncKey'] = dic['SyncKey']
-        if dic['AddMsgCount'] != 0: return dic['AddMsgList']
+        if dic['AddMsgCount'] != 0:
+            return dic['AddMsgList']
 
     def __produce_msg(self, l):
         rl = []
         srl = [40, 43, 50, 52, 53, 9999]
         # 40 msg, 43 videochat, 50 VOIPMSG, 52 voipnotifymsg, 53 webwxvoipnotifymsg, 9999 sysnotice
         for m in l:
-            if '@@' in m['FromUserName']: m = self.__produce_group_chat(m)
+            if '@@' in m['FromUserName']:
+                m = self.__produce_group_chat(m)
             if m['MsgType'] == 1:  # words
                 if m['Url']:
                     regx = r'(.+?\(.+?\))'
@@ -324,7 +320,8 @@ class client:
                     url = '%s/webwxgetmsgimg' % self.loginInfo['url']
                     payloads = {
                         'MsgID': m['NewMsgId'],
-                        'skey': self.loginInfo['skey'],}
+                        'skey': self.loginInfo['skey']
+                    }
                     r = self.s.get(url, params=payloads, stream=True)
                     with open(picDir, 'wb') as f:
                         for block in r.iter_content(1024):
@@ -332,32 +329,37 @@ class client:
 
                 msg = {
                     'Type': 'Picture',
-                    'Text': download_picture,}
+                    'Text': download_picture
+                }
             elif m['MsgType'] == 34:  # voice
                 def download_voice(voiceDir):
                     url = '%s/webwxgetvoice' % self.loginInfo['url']
                     payloads = {
                         'msgid': m['NewMsgId'],
-                        'skey': self.loginInfo['skey'],}
+                        'skey': self.loginInfo['skey']
+                    }
                     r = self.s.get(url, params=payloads, stream=True)
                     with open(voiceDir, 'wb') as f:
                         for block in r.iter_content(1024):
                             f.write(block)
-
                 msg = {
                     'Type': 'Recording',
-                    'Text': download_voice,}
+                    'Text': download_voice
+                }
             elif m['MsgType'] == 37:  # friends
                 msg = {
                     'Type': 'Friends',
                     'Text': {
                         'Status': m['Status'],
                         'UserName': m['RecommendInfo']['UserName'],
-                        'Ticket': m['Ticket'],},}
+                        'Ticket': m['Ticket']
+                    }
+                }
             elif m['MsgType'] == 42:  # name card
                 msg = {
                     'Type': 'Card',
-                    'Text': m['RecommendInfo'],}
+                    'Text': m['RecommendInfo']
+                }
             elif m['MsgType'] == 49:  # sharing
                 if m['AppMsgType'] == 6:
                     def download_atta(attaDir):
@@ -370,40 +372,46 @@ class client:
                             'filename': m['FileName'],
                             'fromuser': self.loginInfo['wxuin'],
                             'pass_ticket': 'undefined',
-                            'webwx_data_ticket': cookiesList['webwx_data_ticket'],}
+                            'webwx_data_ticket': cookiesList['webwx_data_ticket']
+                        }
                         r = self.s.get(url, params=payloads, stream=True)
                         with open(attaDir, 'wb') as f:
                             for block in r.iter_content(1024):
                                 f.write(block)
-
                     msg = {
                         'Type': 'Attachment',
                         # 'FileName': m['FileName'],
-                        'Text': download_atta,}
+                        'Text': download_atta
+                    }
                 elif m['AppMsgType'] == 17:
                     msg = {
                         'Type': 'Note',
-                        'Text': m['FileName'],}
+                        'Text': m['FileName']
+                    }
                 elif m['AppMsgType'] == 2000:
                     regx = r'\[CDATA\[(.+?)\].+?\[CDATA\[(.+?)\]'
                     data = re.search(regx, m['Content'])
                     msg = {
                         'Type': 'Note',
-                        'Text': data.group(2),}
+                        'Text': data.group(2)
+                    }
                 else:
                     msg = {
                         'Type': 'Sharing',
-                        'Text': m['FileName'],}
+                        'Text': m['FileName']
+                    }
             elif m['MsgType'] == 51:  # phone init
                 msg = {
                     'Type': 'Init',
-                    'Text': m['ToUserName'],}
+                    'Text': m['ToUserName']
+                }
             elif m['MsgType'] == 62:  # tiny video
                 def download_video(videoDir):
                     url = '%s/webwxgetvideo' % self.loginInfo['url']
                     payloads = {
                         'msgid': m['MsgId'],
-                        'skey': self.loginInfo['skey'],}
+                        'skey': self.loginInfo['skey']
+                    }
                     headers = {'Range:': 'bytes=0-'}
                     r = self.s.get(url, params=payloads, headers=headers, stream=True)
                     with open(videoDir, 'wb') as f:
@@ -412,30 +420,34 @@ class client:
                                 f.write(chunk)
                                 f.flush()
                                 os.fsync(f.fileno())
-
                 msg = {
                     'Type': 'Video',
-                    'Text': download_video,}
+                    'Text': download_video
+                }
             elif m['MsgType'] == 10000:
                 msg = {
                     'Type': 'Note',
-                    'Text': m['Content'],}
+                    'Text': m['Content']
+                }
             elif m['MsgType'] == 10002:
                 regx = r'[CDATA[(.+?)]]'
                 data = re.search(regx, m['Content'])
                 msg = {
                     'Type': 'Note',
-                    'Text': data.group(1).replace('\\', ''),}
+                    'Text': data.group(1).replace('\\', '')
+                }
             elif m['MsgType'] in srl:
                 msg = {
                     'Type': 'Useless',
-                    'Text': 'UselessMsg',}
+                    'Text': 'UselessMsg'
+                }
             else:
                 out.print_line('MsgType Unknown: %s\n%s' % (m['MsgType'], str(m)), False)
                 srl.append(m['MsgType'])
                 msg = {
                     'Type': 'Useless',
-                    'Text': 'UselessMsg',}
+                    'Text': 'UselessMsg'
+                }
             m = dict(m, **msg)
             rl.append(m)
         return rl
@@ -463,7 +475,8 @@ class client:
         additionalItems = {
             'ActualUserName': ActualUserName,
             'ActualNickName': ActualNickName,
-            'Content': Content,}
+            'Content': Content
+        }
         return dict(msg, **additionalItems)
 
     def send_msg(self, msg='Test Message', toUserName=None):
@@ -479,7 +492,9 @@ class client:
                 'ClientMsgId': int(time.time()),
             },
         }
-        headers = {'ContentType': 'application/json; charset=UTF-8'}
+        headers = {
+            'ContentType': 'application/json; charset=UTF-8'
+        }
         r = self.s.post(url, data=json.dumps(BytesDecode(payloads), ensure_ascii=False).encode('utf8'), headers=headers)
 
     def __upload_file(self, fileDir, isPicture=False):
@@ -510,14 +525,17 @@ class client:
             'filename': (os.path.basename(fileDir), open(fileDir, 'rb'), fileType),
         }
         headers = {
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36',}
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36'
+        }
         r = self.s.post(url, files=files, headers=headers)
         return json.loads(r.text)['MediaId']
 
     def send_file(self, fileDir, toUserName=None):
-        if toUserName is None: toUserName = self.storageClass.userName
+        if toUserName is None:
+            toUserName = self.storageClass.userName
         mediaId = self.__upload_file(fileDir)
-        if mediaId is None: return False
+        if mediaId is None:
+            return False
         url = '%s/webwxsendappmsg?fun=async&f=json' % self.loginInfo['url']
         payloads = {
             'BaseRequest': self.loginInfo['BaseRequest'],
@@ -535,17 +553,22 @@ class client:
                 'FromUserName': self.storageClass.userName.encode('utf8'),
                 'ToUserName': toUserName.encode('utf8'),
                 'LocalID': str(time.time() * 1e7),
-                'ClientMsgId': str(time.time() * 1e7),},}
+                'ClientMsgId': str(time.time() * 1e7)
+            }
+        }
         headers = {
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36',
-            'Content-Type': 'application/json;charset=UTF-8',}
+            'Content-Type': 'application/json;charset=UTF-8'
+        }
         r = self.s.post(url, data=json.dumps(BytesDecode(payloads), ensure_ascii=False), headers=headers)
         return True
 
     def send_image(self, fileDir, toUserName=None):
-        if toUserName is None: toUserName = self.storageClass.userName
+        if toUserName is None:
+            toUserName = self.storageClass.userName
         mediaId = self.__upload_file(fileDir, isPicture=not fileDir[-4:] == '.gif')
-        if mediaId is None: return False
+        if mediaId is None:
+            return False
         url = '%s/webwxsendmsgimg?fun=async&f=json' % self.loginInfo['url']
         payloads = {
             'BaseRequest': self.loginInfo['BaseRequest'],
@@ -555,14 +578,17 @@ class client:
                 'FromUserName': self.storageClass.userName.encode('utf8'),
                 'ToUserName': toUserName.encode('utf8'),
                 'LocalID': str(time.time() * 1e7),
-                'ClientMsgId': str(time.time() * 1e7),},}
+                'ClientMsgId': str(time.time() * 1e7)
+            }
+        }
         if fileDir[-4:] == '.gif':
             url = '%s/webwxsendemoticon?fun=sys' % self.loginInfo['url']
             payloads['Msg']['Type'] = 47
             payloads['Msg']['EmojiFlag'] = 2
         headers = {
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36',
-            'Content-Type': 'application/json;charset=UTF-8',}
+            'Content-Type': 'application/json;charset=UTF-8'
+        }
         r = self.s.post(url, data=json.dumps(BytesDecode(payloads), ensure_ascii=False), headers=headers)
         return True
 
@@ -580,8 +606,11 @@ class client:
             'VerifyContent': '',
             'SceneListCount': 1,
             'SceneList': 33,
-            'skey': self.loginInfo['skey'],}
-        headers = {'ContentType': 'application/json; charset=UTF-8'}
+            'skey': self.loginInfo['skey']
+        }
+        headers = {
+            'ContentType': 'application/json; charset=UTF-8'
+        }
         r = self.s.post(url, data=json.dumps(BytesDecode(payloads)), headers=headers)
 
     def create_chatroom(self, memberList, topic=''):
@@ -591,8 +620,11 @@ class client:
             'BaseRequest': self.loginInfo['BaseRequest'],
             'MemberCount': len(memberList),
             'MemberList': [{'UserName': member['UserName']} for member in memberList],
-            'Topic': topic,}
-        headers = {'content-type': 'application/json; charset=UTF-8'}
+            'Topic': topic
+        }
+        headers = {
+            'content-type': 'application/json; charset=UTF-8'
+        }
         r = self.s.post(url, data=json.dumps(BytesDecode(params)), headers=headers)
         dic = json.loads(BytesDecode(r.content.decode('utf8', 'replace')))
         return dic['ChatRoomName']

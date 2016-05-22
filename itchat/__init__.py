@@ -1,7 +1,5 @@
-import time, threading
+import time
 from .client import client
-
-import traceback
 
 __version__ = '0.1b'
 
@@ -104,13 +102,13 @@ def configured_reply():
             send(replyFn(msg), msg.get('FromUserName'))
         else:
             replyFn = __functionDict.get(msg['Type'], __functionDict['GeneralReply'])
-            print(msg.get('FromUserName'))
-            print(replyFn)
             send(replyFn(msg), msg.get('FromUserName'))
     except IndexError:
         pass
     except TypeError:
         pass
+
+
 def msg_register(_type = None, *args, **kwargs):
     if hasattr(_type, '__call__'):
         __functionDict['GeneralReply'] = _type
@@ -127,6 +125,7 @@ def msg_register(_type = None, *args, **kwargs):
                 else:
                     __functionDict[msgType] = fn
         return _msg_register
+
 
 # in-build run
 def run():
