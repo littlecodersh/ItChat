@@ -1,3 +1,4 @@
+# - * - coding: UTF-8 - * -
 import os, sys
 import requests, time, re
 import threading, subprocess
@@ -39,17 +40,21 @@ class client:
         self.uuid = None
 
     def auto_login(self):
-        for get_count in range(10):
-            out.print_line('Getting uuid', True)
-            while not self.get_QRuuid():
-                time.sleep(1)
-            out.print_line('Getting QR Code', True)
-            if self.get_QR():
-                break
-            elif get_count >= 9:
-                out.print_line('Failed to get QR Code, please restart the program')
-                sys.exit()
-        out.print_line('Please scan the QR Code', True)
+        def open_QR():
+            for get_count in range(10):
+                out.print_line('Getting uuid', True)
+                while not self.get_QRuuid():
+                    time.sleep(1)
+                out.print_line('Getting QR Code', True)
+                if self.get_QR():
+                    break
+                elif get_count >= 9:
+                    out.print_line('Failed to get QR Code, please restart the program')
+                    sys.exit()
+            out.print_line('Please scan the QR Code', True)
+
+        open_QR()
+
         while True:
             status = self.check_login()
             if status == '200':
@@ -244,23 +249,23 @@ class client:
             count = 0
             pauseTime = 1
             while i and count < 4:
-                try:
-                    if pauseTime < 5:
-                        pauseTime += 2
-                    if i is not '0':
-                        msgList = self.__get_msg()
-                        if msgList:
-                            msgList = self.__produce_msg(msgList)
-                            for msg in msgList:
-                                self.msgList.insert(0, msg)
-                            pauseTime = 1
-                    time.sleep(pauseTime)
-                    i = self.__sync_check()
-                    count = 0
-                except Exception as e:
-                    print(e)
-                    count += 1
-                    time.sleep(count * 3)
+                # try:
+                if pauseTime < 5:
+                    pauseTime += 2
+                if i is not '0':
+                    msgList = self.__get_msg()
+                    if msgList:
+                        msgList = self.__produce_msg(msgList)
+                        for msg in msgList:
+                            self.msgList.insert(0, msg)
+                        pauseTime = 1
+                time.sleep(pauseTime)
+                i = self.__sync_check()
+                count = 0
+                # except Exception as e:
+                #     print(e)
+                #     count += 1
+                #     time.sleep(count * 3)
             out.print_line('LOG OUT', False)
         worker = threading.Thread(target=maintain_loop)
         worker.start()
@@ -307,18 +312,19 @@ class client:
                     data = re.search(regx, m['Content'])
                     msg = {
                         'Type': 'Map',
-                        'Text': data.group(1),}
+                        'Text': data.group(1)
+                    }
                 else:
                     msg = {
                         'Type': 'Text',
-                        'Text': m['Content'],}
+                        'Text': m['Content']
+                    }
             elif m['MsgType'] == 3 or m['MsgType'] == 47:  # picture
                 def download_picture(picDir):
                     url = '%s/webwxgetmsgimg' % self.loginInfo['url']
                     payloads = {
                         'MsgID': m['NewMsgId'],
                         'skey': self.loginInfo['skey'],}
-                    # r = self.s.get(url, params = payloads, stream = True)
                     r = self.s.get(url, params=payloads, stream=True)
                     with open(picDir, 'wb') as f:
                         for block in r.iter_content(1024):
@@ -333,7 +339,6 @@ class client:
                     payloads = {
                         'msgid': m['NewMsgId'],
                         'skey': self.loginInfo['skey'],}
-                    # r = self.s.get(url, params = payloads, stream = True)
                     r = self.s.get(url, params=payloads, stream=True)
                     with open(voiceDir, 'wb') as f:
                         for block in r.iter_content(1024):
@@ -366,7 +371,6 @@ class client:
                             'fromuser': self.loginInfo['wxuin'],
                             'pass_ticket': 'undefined',
                             'webwx_data_ticket': cookiesList['webwx_data_ticket'],}
-                        # r = self.s.get(url, params = payloads, stream = True)
                         r = self.s.get(url, params=payloads, stream=True)
                         with open(attaDir, 'wb') as f:
                             for block in r.iter_content(1024):
@@ -401,7 +405,6 @@ class client:
                         'msgid': m['MsgId'],
                         'skey': self.loginInfo['skey'],}
                     headers = {'Range:': 'bytes=0-'}
-                    # r = self.s.get(url, params = payloads, headers = headers, stream = True)
                     r = self.s.get(url, params=payloads, headers=headers, stream=True)
                     with open(videoDir, 'wb') as f:
                         for chunk in r.iter_content(chunk_size=1024):
@@ -448,7 +451,8 @@ class client:
 
         ActualUserName, Content = get_msg_from_raw(msg['Content'])
         isAt = self.storageClass.nickName in Content
-        if '\342\200\205'.decode('utf8') in Content: Content = Content.split('\342\200\205'.decode('utf8'))[1]
+        if b'\342\200\205'.decode('utf8') in Content:
+            Content = Content.split(b'\342\200\205'.decode('utf8'))[1]
         try:
             self.storageClass.groupDict[msg['FromUserName']][ActualUserName]
         except:
@@ -468,7 +472,7 @@ class client:
             'BaseRequest': self.loginInfo['BaseRequest'],
             'Msg': {
                 'Type': 1,
-                'Content': BytesDecode(msg),
+                'Content': msg,
                 'FromUserName': self.storageClass.userName.encode('utf8'),
                 'ToUserName': (toUserName if toUserName else self.storageClass.userName).encode('utf8'),
                 'LocalID': int(time.time()),
@@ -476,7 +480,7 @@ class client:
             },
         }
         headers = {'ContentType': 'application/json; charset=UTF-8'}
-        r = self.s.post(url, data=json.dumps(BytesDecode(payloads), ensure_ascii=False), headers=headers)
+        r = self.s.post(url, data=json.dumps(BytesDecode(payloads), ensure_ascii=False).encode('utf8'), headers=headers)
 
     def __upload_file(self, fileDir, isPicture=False):
         if not tools.check_file(fileDir): return
@@ -507,7 +511,6 @@ class client:
         }
         headers = {
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36',}
-        # r = self.s.post(url, files = files, headers = headers)
         r = self.s.post(url, files=files, headers=headers)
         return json.loads(r.text)['MediaId']
 
