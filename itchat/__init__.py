@@ -105,9 +105,9 @@ def configured_reply():
         else:
             replyFn = __functionDict.get(msg['Type'], __functionDict['GeneralReply'])
             send(replyFn(msg), msg.get('FromUserName'))
-    except:
+    except IndexError:
+        # 无消息
         pass
-
 def msg_register(_type = None, *args, **kwargs):
     if hasattr(_type, '__call__'):
         __functionDict['GeneralReply'] = _type
