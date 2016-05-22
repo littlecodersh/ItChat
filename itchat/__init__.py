@@ -128,7 +128,7 @@ def msg_register(_type = None, *args, **kwargs):
 # in-build run
 def run():
     print('Start auto replying')
-    while 1:
+    while True:
         configured_reply()
         time.sleep(.3)
 
