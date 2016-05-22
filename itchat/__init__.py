@@ -60,7 +60,7 @@ def send_file(fileDir, toUserName):
 
 
 def send_img(fileDir, toUserName):
-    return __client.send_img(fileDir, toUserName)
+    return __client.send_image(fileDir, toUserName)
 
 
 def add_friend(Status, UserName, Ticket):
