@@ -220,6 +220,25 @@ class client:
             self.get_contract(update=True)
         return self.chatroomList
 
+    def get_username(self, contract=None, remarkname=None, alias=None, nickname=None):
+        """通过备注/微信号/昵称找到对应的username
+        """
+        contract = self.get_contract() if contract is None else contract
+        if remarkname is not None:
+            for ct in contract:
+                if remarkname == ct.get('RemarkName'):
+                    return ct['UserName']
+        elif alias is not None:
+            for ct in contract:
+                if alias == ct.get('Alias'):
+                    return ct['UserName']
+        elif nickname is not None:
+            for ct in contract:
+                if nickname == ct.get('NickName'):
+                    return ct['UserName']
+        else:
+            return '????'
+
     def show_mobile_login(self):
         url = '%s/webwxstatusnotify' % self.loginInfo['url']
         payloads = {

@@ -39,6 +39,12 @@ def get_chatrooms(update=False):
     return __client.get_chatrooms(update)
 
 
+def get_username(contract=None, remarkname=None, alias=None, nickname=None):
+    """通过备注/微信号/昵称找到对应的username
+    """
+    return __client.get_username(contract, remarkname, alias, nickname)
+
+
 def show_mobile_login():
     return __client.show_mobile_login()
 
