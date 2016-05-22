@@ -184,6 +184,7 @@ class client:
         chatroomList = memberList[:]
         while True:
             i = 0
+            a = list()
             for m in chatroomList:
                 if ('@@' in m['UserName']
                     and any([str(n) in m['UserName'] for n in range(10)])
@@ -237,7 +238,31 @@ class client:
                 if nickname == ct.get('NickName'):
                     return ct['UserName']
         else:
-            return '????'
+            raise Exception('error in get_username')
+
+    def get_chatroom_contract(self, username):
+        """获取群聊的联系人列表
+        """
+        url = '%s/webwxbatchgetcontact?type=%s&r=%s&pass_ticket=%s' % (self.loginInfo['url'],
+                                                                       'ex',
+                                                                       int(time.time()),
+                                                                       self.loginInfo['pass_ticket'])
+        data = {
+            'BaseRequest': self.loginInfo['BaseRequest'],
+            'Count': 1,
+            'List': [
+                {
+                    'UserName': username,
+                    'EncryChatRoomId': ''
+                }
+            ]
+        }
+        headers = {
+            'ContentType': 'application/json; charset=UTF-8'
+        }
+        r = self.s.post(url, data=json.dumps(BytesDecode(data)), headers=headers)
+        MemberList = json.loads(BytesDecode(r.content.decode('utf-8', 'replace')))['ContactList'][0]['MemberList']
+        return MemberList
 
     def show_mobile_login(self):
         url = '%s/webwxstatusnotify' % self.loginInfo['url']

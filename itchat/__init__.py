@@ -45,6 +45,12 @@ def get_username(contract=None, remarkname=None, alias=None, nickname=None):
     return __client.get_username(contract, remarkname, alias, nickname)
 
 
+def get_chatroom_contract(username):
+    """获取群聊的联系人列表
+    """
+    return __client.get_chatroom_contract(username)
+
+
 def show_mobile_login():
     return __client.show_mobile_login()
 
