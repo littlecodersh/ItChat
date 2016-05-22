@@ -184,7 +184,6 @@ class client:
         chatroomList = memberList[:]
         while True:
             i = 0
-            a = list()
             for m in chatroomList:
                 if ('@@' in m['UserName']
                     and any([str(n) in m['UserName'] for n in range(10)])
@@ -239,6 +238,15 @@ class client:
                     return ct['UserName']
         else:
             raise Exception('error in get_username')
+
+    def is_contract(self, username, contract=None):
+        """判断username是否是好友
+        """
+        contract = self.get_contract() if contract is None else contract
+        for single in contract:
+            if single['UserName'] == username:
+                return True
+        return False
 
     def get_chatroom_contract(self, username):
         """获取群聊的联系人列表
