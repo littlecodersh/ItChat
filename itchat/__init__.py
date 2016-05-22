@@ -104,7 +104,6 @@ def configured_reply():
             send(replyFn(msg), msg.get('FromUserName'))
         else:
             replyFn = __functionDict.get(msg['Type'], __functionDict['GeneralReply'])
-            print(msg['Type'])
             print(msg.get('FromUserName'))
             print(replyFn)
             send(replyFn(msg), msg.get('FromUserName'))

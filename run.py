@@ -7,8 +7,7 @@ def simple_reply():
     @itchat.msg_register
     def simple_reply(msg):
         if msg.get('Type', '') == 'Text':
-            return '.........\n%s' % msg.get('Content', '')
-
+            return 'I received: %s' % msg.get('Content', '')
     itchat.run()
 
 def complex_reply():
@@ -36,17 +35,6 @@ def complex_reply():
 
     itchat.run()
 
-
-def mysqlf():
-    @itchat.msg_register(['Text'])
-    def text_reply(msg):
-        itchat.send('陈云鹏的小C机器人竭诚为你服务\n请问你找我做什么', msg['FromUserName'])
-
-    @itchat.msg_register(['Map', 'Card', 'Note', 'Sharing', 'Picture', 'Recording', 'Attachment', 'Video'])
-    def download_files(msg):
-        itchat.send('陈云鹏的小C机器人竭诚为你服务\n无法识别发送的内容', msg['FromUserName'])
-
-    itchat.run()
-
 if __name__ == '__main__':
+    # simple_reply()
     complex_reply()
