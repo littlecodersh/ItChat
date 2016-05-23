@@ -50,10 +50,23 @@ def is_contract(username, contract=None):
     """
     return __client.is_contract(username, contract)
 
+
+def get_aliasname(contract=None, username=None):
+    """通过username寻找微信号或者昵称
+    """
+    return __client.get_aliasname(contract, username)
+
+
 def get_chatroom_contract(username):
     """获取群聊的联系人列表
     """
     return __client.get_chatroom_contract(username)
+
+
+def set_oplog(username, rename):
+    """设置备注
+    """
+    return __client.set_oplog(username, rename)
 
 
 def show_mobile_login():

@@ -239,6 +239,17 @@ class client:
         else:
             raise Exception('error in get_username')
 
+    def get_aliasname(self, contract=None, username=None):
+        """通过username寻找微信号或者昵称
+        """
+        contract = self.get_contract() if contract is None else contract
+        print(contract)
+        for ct in contract:
+            if ct.get('Alias') == '':
+                print(ct)
+                # if remarkname == ct.get('Alias'):
+                #     return ct['UserName']
+
     def is_contract(self, username, contract=None):
         """判断username是否是好友
         """
@@ -271,6 +282,25 @@ class client:
         r = self.s.post(url, data=json.dumps(BytesDecode(data)), headers=headers)
         MemberList = json.loads(BytesDecode(r.content.decode('utf-8', 'replace')))['ContactList'][0]['MemberList']
         return MemberList
+
+    def set_oplog(self, username, rename):
+        """设置备注
+        """
+        url = '%s/webwxoplog?lang=%s&pass_ticket=%s' % (self.loginInfo['url'],
+                                                        'zh_CN',
+                                                        self.loginInfo['pass_ticket'])
+        data = {
+            'UserName': username,
+            'CmdId': 2,
+            'RemarkName': rename,
+            'BaseRequest': self.loginInfo['BaseRequest'],
+        }
+        headers = {
+            'ContentType': 'application/json; charset=UTF-8'
+        }
+        r = self.s.post(url, data=json.dumps(BytesDecode(data)), headers=headers)
+        ret = json.loads(BytesDecode(r.content.decode('utf-8', 'replace')))['BaseResponse']['Ret']
+        return ret == 0
 
     def show_mobile_login(self):
         url = '%s/webwxstatusnotify' % self.loginInfo['url']
