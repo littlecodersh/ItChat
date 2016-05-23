@@ -1,5 +1,5 @@
 import os, time
-import config
+from . import config
 
 class Storage:
     def __init__(self):

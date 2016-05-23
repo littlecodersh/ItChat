@@ -7,14 +7,14 @@ def simple_reply():
     @itchat.msg_register
     def simple_reply(msg):
         if msg.get('Type', '') == 'Text':
-            return 'I received: %s'%msg.get('Content', '')
+            return 'I received: %s' % msg.get('Content', '')
     itchat.run()
 
 def complex_reply():
 
     @itchat.msg_register(['Text', 'Map', 'Card', 'Note', 'Sharing'])
     def text_reply(msg):
-        itchat.send('%s: %s'%(msg['Type'], msg['Text']), msg['FromUserName'])
+        itchat.send('%s: %s' % (msg['Type'], msg['Text']), msg['FromUserName'])
 
     @itchat.msg_register(['Picture', 'Recording', 'Attachment', 'Video'])
     def download_files(msg):
