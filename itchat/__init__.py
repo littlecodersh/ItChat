@@ -114,12 +114,15 @@ __functionDict = {'GroupChat': {}, 'GeneralReply': None}
 def configured_reply():
     try:
         msg = __client.storageClass.msgList.pop()
-        if '@@' in msg.get('FromUserName'):
-            replyFn = __functionDict['GroupChat'].get(msg['Type'], __functionDict['GeneralReply'])
-            send(replyFn(msg), msg.get('FromUserName'))
+        if msg.get('FromUserName') == msg.get('ToUserName'):
+            pass  # 自己发消息忽略(IOS测试有安卓测试没有此BUG)
         else:
-            replyFn = __functionDict.get(msg['Type'], __functionDict['GeneralReply'])
-            send(replyFn(msg), msg.get('FromUserName'))
+            if '@@' in msg.get('FromUserName'):
+                replyFn = __functionDict['GroupChat'].get(msg['Type'], __functionDict['GeneralReply'])
+                send(replyFn(msg), msg.get('FromUserName'))
+            else:
+                replyFn = __functionDict.get(msg['Type'], __functionDict['GeneralReply'])
+                send(replyFn(msg), msg.get('FromUserName'))
     except IndexError:
         pass
     except TypeError:
