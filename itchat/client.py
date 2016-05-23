@@ -239,16 +239,19 @@ class client:
         else:
             raise Exception('error in get_username')
 
-    def get_aliasname(self, contract=None, username=None):
-        """通过username寻找微信号或者昵称
+    def get_alias(self, contract=None, username=None):
+        """通过username寻找微信号/备注/昵称/username,优先级一次递减
         """
         contract = self.get_contract() if contract is None else contract
-        print(contract)
         for ct in contract:
-            if ct.get('Alias') == '':
-                print(ct)
-                # if remarkname == ct.get('Alias'):
-                #     return ct['UserName']
+            if username == ct.get('UserName'):
+                if ct.get('Alias') == '':
+                    if ct.get('RemarkName') == '':
+                        if ct.get('NickName') == '':
+                            return username
+                        return ct.get('NickName')
+                    return ct.get('RemarkName')
+                return ct.get('Alias')
 
     def is_contract(self, username, contract=None):
         """判断username是否是好友

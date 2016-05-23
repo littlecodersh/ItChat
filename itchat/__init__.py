@@ -45,16 +45,16 @@ def get_username(contract=None, remarkname=None, alias=None, nickname=None):
     return __client.get_username(contract, remarkname, alias, nickname)
 
 
+def get_alias(contract=None, username=None):
+    """通过username寻找微信号/备注/昵称/username,优先级一次递减
+    """
+    return __client.get_alias(contract, username)
+
+
 def is_contract(username, contract=None):
     """判断username是否是好友
     """
     return __client.is_contract(username, contract)
-
-
-def get_aliasname(contract=None, username=None):
-    """通过username寻找微信号或者昵称
-    """
-    return __client.get_aliasname(contract, username)
 
 
 def get_chatroom_contract(username):
