@@ -21,7 +21,7 @@ def start_receiving(): return __client.start_receiving()
 # if toUserName is set to None, msg will be sent to yourself
 def send_msg(msg = 'Test Message', toUserName = None): return __client.send_msg(msg, toUserName)
 def send_file(fileDir, toUserName): return __client.send_file(fileDir, toUserName)
-def send_img(fileDir, toUserName): return __client.send_img(fileDir, toUserName)
+def send_image(fileDir, toUserName): return __client.send_image(fileDir, toUserName)
 def add_friend(Status, UserName, Ticket): return __client.add_friend(Status, UserName, Ticket)
 def create_chatroom(memberList, topic = ''): return __client.create_chatroom(memberList, topic)
 def delete_member_from_chatroom(chatRoomUserName, memberList): return __client.delete_member_from_chatroom(chatRoomUserName, memberList)

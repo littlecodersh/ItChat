@@ -16,7 +16,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 setup(
     name='itchat',
 
-    version='1.0.7',
+    version='1.0.8',
 
     description='A complete wechat personal account api',
     long_description=long_description,
@@ -39,10 +39,6 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
-        # 'Programming Language :: Python :: 3',
-        # 'Programming Language :: Python :: 3.3',
-        # 'Programming Language :: Python :: 3.4',
-        # 'Programming Language :: Python :: 3.5',
     ],
 
     keywords='wechat itchat api robot weixin personal extend',

@@ -10,6 +10,8 @@ Consisted of less than 30 lines of codes, a wechat robot can deal with all the o
 
 Now Wechat is an important part of personal sociality, hope that this repo can help you extend your personal wechat account and make your life easier.
 
+Python 2.7.11 version is also available [here](https://github.com/littlecodersh/ItChat/tree/py3-dev).
+
 ## Documents
 
 You may get the document of this api from [here](https://itchat.readthedocs.org/zh/latest/).
@@ -69,6 +71,12 @@ This QRCode is a wechat account based on the framework of [robot branch](https:/
 Q: Why I can't upload files whose name is not purely english?
 
 A: This is caused because of the encoding of `requests`, you may fix it by placing [fields.py](https://github.com/littlecodersh/ItChat/blob/robot/plugin/config/fields.py) in packages/urllib of requests.
+
+## Author
+
+[LittleCoder](https://github.com/littlecodersh): Structure and py2 version
+
+[Chyroc](https://github.com/Chyroc): py3 version
 
 ## See also
 

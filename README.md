@@ -4,11 +4,12 @@
 
 itchat是一个开源的微信个人号接口，使用他你可以轻松的通过命令行使用个人微信号。
 
-微信机器人的实现及命令行版微信见[robot分支](https://github.com/littlecodersh/ItChat/tree/robot)。
+微信机器人的实现及命令行版微信见[robot分支](https://github.com/littlecodersh/ItChat/tree/robot)，Python 3.5.1 的版本可见这里：[here](https://github.com/littlecodersh/ItChat/tree/py3-dev)。
 
 使用不到三十行的代码，你就可以完成一个能够处理所有信息的微信机器人。
 
 如今微信已经成为了个人社交的很大一部分，希望这个项目能够帮助你扩展你的个人的微信号、方便自己的生活。
+
 
 ## Documents
 
@@ -70,6 +71,12 @@ itchat.run()
 Q: 为什么中文的文件没有办法上传？
 
 A: 这是由于`requests`的编码问题导致的。若需要支持中文文件传输，将[fields.py](https://github.com/littlecodersh/ItChat/blob/robot/plugin/config/fields.py)文件放入requests包的packages/urllib3下即可
+
+## Author
+
+[LittleCoder](https://github.com/littlecodersh): 整体构架及完成Python2版本。
+
+[Chyroc](https://github.com/Chyroc): 完成Python3版本。
 
 ## See also
 
