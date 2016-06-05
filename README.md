@@ -30,8 +30,6 @@ pip install itchat
 ```python
 import itchat, time
 
-itchat.auto_login()
-
 @itchat.msg_register(['Text', 'Map', 'Card', 'Note', 'Sharing'])
 def text_reply(msg):
     itchat.send('%s: %s'%(msg['Type'], msg['Text']), msg['FromUserName'])
@@ -51,8 +49,10 @@ def add_friend(msg):
 
 @itchat.msg_register('Text', isGroupChat = True)
 def text_reply(msg):
-    itchat.send(u'@%s\u2005I received: %s'%(msg['ActualNickName'], msg['Content']), msg['FromUserName'])
+    if msg['isAt']:
+        itchat.send(u'@%s\u2005I received: %s'%(msg['ActualNickName'], msg['Content']), msg['FromUserName'])
 
+itchat.auto_login()
 itchat.run()
 ```
 

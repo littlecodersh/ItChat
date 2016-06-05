@@ -1,7 +1,6 @@
 import time
 import itchat
 
-itchat.auto_login()
 
 def simple_reply():
     @itchat.msg_register
@@ -11,7 +10,6 @@ def simple_reply():
     itchat.run()
 
 def complex_reply():
-
     @itchat.msg_register(['Text', 'Map', 'Card', 'Note', 'Sharing'])
     def text_reply(msg):
         itchat.send('%s: %s'%(msg['Type'], msg['Text']), msg['FromUserName'])
@@ -31,10 +29,12 @@ def complex_reply():
 
     @itchat.msg_register('Text', isGroupChat = True)
     def text_reply(msg):
-        itchat.send(u'@%s\u2005I received: %s'%(msg['ActualNickName'], msg['Content']), msg['FromUserName'])
+        if msg['isAt']:
+            itchat.send(u'@%s\u2005I received: %s'%(msg['ActualNickName'], msg['Content']), msg['FromUserName'])
 
     itchat.run()
 
 if __name__ == '__main__':
+    itchat.auto_login()
     # simple_reply()
     complex_reply()

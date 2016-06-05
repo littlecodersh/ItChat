@@ -371,6 +371,7 @@ class client:
         additionalItems = {
             'ActualUserName': ActualUserName,
             'ActualNickName': ActualNickName,
+            'isAt': isAt,
             'Content': Content, }
         return dict(msg, **additionalItems)
     def send_msg(self, msg = 'Test Message', toUserName = None):

@@ -2,13 +2,13 @@
 
 [![Gitter](https://badges.gitter.im/littlecodersh/ItChat.svg)](https://gitter.im/littlecodersh/ItChat?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge) ![python](https://img.shields.io/badge/python-2.7-ff69b4.svg) [中文版](https://github.com/littlecodersh/ItChat/blob/master/README.md)
 
-itchat is an open source api for WeChat, a famous Chinese communicating app, you can easily use your personal wechat account through itchat in cmd.
+itchat is an open source api for WeChat, a commonly-used Chinese social networking app, you can easily access your personal wechat account through itchat in cmd.
 
-A wechat robot and a command line version of wechat are also structured, you can view them in [robot branch](https://github.com/littlecodersh/ItChat/tree/robot).
+Wechat is structured with a wechat robot and a command line, you can view them in [robot branch](https://github.com/littlecodersh/ItChat/tree/robot).
 
-Consisted of less than 30 lines of codes, a wechat robot can deal with all the oridinary messages.
+A wechat robot can handle all the basic messages with only less than 30 lines of codes.
 
-Now Wechat is an important part of personal sociality, hope that this repo can help you extend your personal wechat account and make your life easier.
+Now Wechat is an important part of personal life, hopefully this repo can help you extend your personal wechat account's functionality and enbetter user's experience with wechat.
 
 Python 2.7.11 version is also available [here](https://github.com/littlecodersh/ItChat/tree/py3-dev).
 
@@ -50,7 +50,8 @@ def add_friend(msg):
 
 @itchat.msg_register('Text', isGroupChat = True)
 def text_reply(msg):
-    itchat.send(u'@%s\u2005I received: %s'%(msg['ActualNickName'], msg['Content']), msg['FromUserName'])
+    if msg['isAt']:
+        itchat.send(u'@%s\u2005I received: %s'%(msg['ActualNickName'], msg['Content']), msg['FromUserName'])
 
 itchat.auto_login()
 itchat.run()

@@ -40,16 +40,14 @@ def send(msg, toUserName = None):
 # decorations
 __functionDict = {'GroupChat': {}, 'GeneralReply': None}
 def configured_reply():
-    try:
-        msg = __client.storageClass.msgList.pop()
-        if '@@' in msg.get('FromUserName'):
-            replyFn = __functionDict['GroupChat'].get(msg['Type'], __functionDict['GeneralReply'])
-            send(replyFn(msg), msg.get('FromUserName'))
-        else:
-            replyFn = __functionDict.get(msg['Type'], __functionDict['GeneralReply'])
-            send(replyFn(msg), msg.get('FromUserName'))
-    except:
-        pass
+    if not __client.storageClass.msgList: return
+    msg = __client.storageClass.msgList.pop()
+    if '@@' in msg.get('FromUserName'):
+        replyFn = __functionDict['GroupChat'].get(msg['Type'], __functionDict['GeneralReply'])
+        if replyFn: send(replyFn(msg), msg.get('FromUserName'))
+    else:
+        replyFn = __functionDict.get(msg['Type'], __functionDict['GeneralReply'])
+        if replyFn: send(replyFn(msg), msg.get('FromUserName'))
 
 def msg_register(_type = None, *args, **kwargs):
     if hasattr(_type, '__call__'):
