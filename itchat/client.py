@@ -515,7 +515,7 @@ class client:
                     'Text': m['Content']
                 }
             elif m['MsgType'] == 10002:
-                regx = r'[CDATA[(.+?)]]'
+                regx = r'\[CDATA\[(.+?)\]\]'
                 data = re.search(regx, m['Content'])
                 msg = {
                     'Type': 'Note',
