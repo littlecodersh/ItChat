@@ -46,7 +46,7 @@ def download_files(msg):
 def add_friend(msg):
     itchat.add_friend(**msg['Text'])
     itchat.get_contract()
-    itchat.send_msg(msg['RecommendInfo']['UserName'], 'Nice to meet you!')
+    itchat.send_msg('Nice to meet you!', msg['RecommendInfo']['UserName'])
 
 @itchat.msg_register('Text', isGroupChat = True)
 def text_reply(msg):
