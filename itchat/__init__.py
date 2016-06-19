@@ -3,7 +3,7 @@ from client import client
 
 import traceback
 
-__version__ = '0.1b'
+__version__ = '1.0.11'
 
 __client = client()
 def auto_login(): return __client.auto_login()

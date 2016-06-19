@@ -6,7 +6,7 @@ import config, storage, out, tools
 
 BASE_URL = config.BASE_URL
 
-class client:
+class client(object):
     def __init__(self):
         self.storageClass = storage.Storage()
         self.memberList = self.storageClass.memberList
@@ -127,8 +127,9 @@ class client:
             'List': [{
                 'UserName': userName,
                 'ChatRoomId': '', }], }
-        r = self.s.post(url, data = json.dumps(payloads), headers = headers)
-        return json.loads(r.content.decode('utf-8', 'replace'))['ContactList'][0]['MemberList']
+        j = self.s.post(url, data = json.dumps(payloads), headers = headers).json()['ContactList'][0]
+        j['isAdmin'] = j['OwnerUin'] == int(self.loginInfo['wxuin'])
+        return j
     def get_contract(self, update = False):
         if 1 < len(self.memberList) and not update: return self.memberList
         url = '%s/webwxgetcontact?r=%s&seq=0&skey=%s' % (self.loginInfo['url'],
@@ -365,7 +366,7 @@ class client:
         try:
             self.storageClass.groupDict[msg['FromUserName']][ActualUserName]
         except:
-            groupMemberList = self.get_batch_contract(msg['FromUserName'])
+            groupMemberList = self.get_batch_contract(msg['FromUserName'])['MemberList']
             self.storageClass.groupDict[msg['FromUserName']] = {member['UserName']: member for member in groupMemberList}
         ActualNickName = self.storageClass.groupDict[msg['FromUserName']][ActualUserName]['NickName']
         additionalItems = {
@@ -501,7 +502,7 @@ class client:
             'ChatRoomName': chatRoomName,
             'DelMemberList': ','.join([member['UserName'] for member in memberList]),}
         headers = {'content-type': 'application/json; charset=UTF-8'}
-        r = self.s.post(url, data=json.dumps(params),headers=headers)
+        return self.s.post(url, data=json.dumps(params),headers=headers)
     def add_member_into_chatroom(self, chatRoomName, memberList):
         url = ('%s/webwxupdatechatroom?fun=addmember&pass_ticket=%s'%(
             self.loginInfo['url'], self.loginInfo['pass_ticket']))
