@@ -28,7 +28,8 @@ def detectFiles(tableName):
                 elif qa[1][:5] == '@img@':
                     with open(os.path.join(FILE_DIR, qa[1][5:])): pass
     except:
-        raise Exception('Error occured when loading "%s" in table %s, it should be in storage/upload'%(fileName, tableName))
+        pass
+        #raise Exception('Error occured when loading "%s" in table %s, it should be in storage/upload'%(fileName, tableName))
 
 def getreply():
     regexAnsList = []

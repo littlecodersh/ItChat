@@ -60,6 +60,7 @@ if 'autoreply' in pluginList['msgdealers']:
         pluginList['msgdealers'].append('autoreply')
         sys_print('SUCC', 'msgdealers.autoreply')
     except Exception, e:
+        sys_print('WARN', "a")
         sys_print('WARN', e.message)
 
 # Test msgdealers.vote
