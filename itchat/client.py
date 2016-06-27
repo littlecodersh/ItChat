@@ -249,10 +249,36 @@ class WeChatClient:
         dic = json.loads(r.content.decode('utf-8', 'replace'))
         self.loginInfo['SyncKey'] = dic['SyncKey']
         if dic['AddMsgCount'] != 0: return dic['AddMsgList']
+
+    def __produce_group_chat(self, msg):
+        def get_msg_from_raw(content):
+            regex = re.compile('(@[0-9a-z]*?):<br/>(.*)$')
+            r = re.findall(regex, content)
+            if r:
+                return r[0][0], r[0][1]
+            else:
+                return '', content
+        ActualUserName, Content = get_msg_from_raw(msg['Content'])
+        isAt = self.storageClass.nickName in Content
+        if '\342\200\205'.decode('utf8') in Content: Content = Content.split('\342\200\205'.decode('utf8'))[1]
+        try:
+            self.storageClass.groupDict[msg['FromUserName']][ActualUserName]
+        except:
+            groupMemberList = self.get_batch_contract(msg['FromUserName'])
+            self.storageClass.groupDict[msg['FromUserName']] = {member['UserName']: member for member in groupMemberList}
+        ActualNickName = self.storageClass.groupDict[msg['FromUserName']][ActualUserName]['NickName']
+        additionalItems = {
+            'ActualUserName': ActualUserName,
+            'ActualNickName': ActualNickName,
+            'isAt': isAt,
+            'Content': Content, }
+        return dict(msg, **additionalItems)
+
     def produce_msg(self, l):
         rl = []
         srl = [51, 53] # 51 messy code, 53 webwxvoipnotifymsg
         for m in l:
+            if '@@' in m['FromUserName']: m = self.__produce_group_chat(m)
             if m['MsgType'] == 1: # words
                 if m['Url']:
                     regx = r'(.+?\(.+?\))'
@@ -268,6 +294,7 @@ class WeChatClient:
                         'FromUserName': m['FromUserName'],
                         'ToUserName': m['ToUserName'],
                         'Content': m['Content'],}
+                    if m.has_key('isAt') and m['isAt']: msg['ActualNickName'] = m['ActualNickName']
             elif m['MsgType'] == 3 or m['MsgType'] == 47: # picture
                 pic_dir = os.path.join(config.PIC_DIR, '%s.jpg'%int(time.time()))
                 msg = {

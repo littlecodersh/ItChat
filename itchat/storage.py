@@ -7,6 +7,7 @@ class Storage:
         self.userName = None
         self.nickName = None
         self.msgList = []
+        self.groupDict = {}
         self.lastInputUserName = None
     def load_sql_storage(self):
         self.sqlDir = os.path.join(config.ACC_DIR, '%s.db'%self.nickName)
