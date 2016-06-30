@@ -9,7 +9,7 @@ Here is the `document <https://itchat.readthedocs.org/zh/latest/>`__.
 
 So enjoy:)
 
-**Try:**
+**Try**
 
 You may have a try of the robot based on this project first:
 
