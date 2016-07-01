@@ -5,12 +5,11 @@ import config
 
 def clear_screen():
     os.system('cls' if config.OS == 'Windows' else 'clear')
-def emoji_dealer(l):
+def emoji_dealer(d):
     regex = re.compile('^(.*?)(?:<span class="emoji (.*?)"></span>(.*?))+$')
-    for m in l: # because m is dict so can be used like this
-        match = re.findall(regex, m['NickName'])
-        if len(match) > 0: m['NickName'] = ''.join(match[0])
-    return l
+    match = re.findall(regex, d['NickName'])
+    if len(match) > 0: d['NickName'] = ''.join(match[0])
+    return d
 def check_file(fileDir):
     try:
         with open(fileDir): pass

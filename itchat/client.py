@@ -40,8 +40,7 @@ class client(object):
         self.show_mobile_login()
         tools.clear_screen()
         self.get_contract()
-        out.print_line('Login successfully as %s\n'%(
-            self.storageClass.find_nickname(self.storageClass.userName)), False)
+        out.print_line('Login successfully as %s\n'%self.storageClass.nickName, False)
         self.start_receiving()
     def get_QRuuid(self):
         url = '%s/jslogin'%BASE_URL
@@ -110,13 +109,13 @@ class client(object):
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
         dic = json.loads(r.content.decode('utf-8', 'replace'))
-        # deal with emoji
-        dic['User'] = tools.emoji_dealer([dic['User']])[0]
-        self.storageClass.userName = dic['User']['UserName']
-        self.storageClass.nickName = dic['User']['NickName']
-        self.storageClass.memberList.append(dic['User'])
+        self.loginInfo['User'] = dic['User']
         self.loginInfo['SyncKey'] = dic['SyncKey']
         self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val']) for item in dic['SyncKey']['List']])
+        # deal with emoji
+        dic['User'] = tools.emoji_dealer(dic['User'])
+        self.storageClass.userName = dic['User']['UserName']
+        self.storageClass.nickName = dic['User']['NickName']
         return dic['User']
     def get_batch_contract(self, userName):
         url = '%s/webwxbatchgetcontact?type=ex&r=%s' % (self.loginInfo['url'], int(time.time()))
@@ -136,25 +135,22 @@ class client(object):
             int(time.time()), self.loginInfo['skey'])
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         r = self.s.get(url, headers = headers)
-        memberList = json.loads(r.content.decode('utf-8', 'replace'))['MemberList']
-        chatroomList = memberList[:]
-        while 1:
-            i = 0
-            for m in chatroomList:
-                if ('@@' in m['UserName'] and any([str(n) in m['UserName'] for n in range(10)]) and
-                    any([chr(n) in m['UserName'] for n in (range(ord('a'), ord('z') + 1) + range(ord('A'), ord('Z') + 1))])):
-                    continue
-                chatroomList.remove(m);i+=1
-            for m in memberList:
-                if m['Sex'] != 0 or (m['VerifyFlag'] & 8 == 0 and '@' in m['UserName'] and not '@@' in m['UserName'] and
-                    any([str(n) in m['UserName'] for n in range(10)]) and any([chr(n) in m['UserName'] for n in (
-                        range(ord('a'), ord('z') + 1) + range(ord('A'), ord('Z') + 1))])): continue
-                memberList.remove(m);i+=1
-            if i == 0: break
-        # deal with emoji
-        self.memberList = tools.emoji_dealer(memberList)
-        self.chatroomList = chatroomList
-        return memberList
+        tempList = json.loads(r.content.decode('utf-8', 'replace'))['MemberList']
+        del self.chatroomList[:]
+        del self.memberList[:]
+        self.memberList.append(tools.emoji_dealer(self.loginInfo['User']))
+        for m in tempList:
+            if m['Sex'] != 0:
+                self.memberList.append(tools.emoji_dealer(m))
+            elif not (any([str(n) in m['UserName'] for n in range(10)]) and 
+                    any([chr(n) in m['UserName'] for n in (
+                    range(ord('a'), ord('z') + 1) + range(ord('A'), ord('Z') + 1))])):
+                continue # userName have number and str
+            elif '@@' in m['UserName']:
+                self.chatroomList.append(tools.emoji_dealer(m))
+            elif m['VerifyFlag'] & 8 == 0 and '@' in m['UserName']:
+                self.memberList.append(tools.emoji_dealer(m))
+        return self.memberList
     def get_chatrooms(self, update = False):
         if update: self.get_contract(update = True)
         return self.chatroomList
