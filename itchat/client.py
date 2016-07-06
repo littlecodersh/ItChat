@@ -356,9 +356,22 @@ class client(object):
                 return r[0][0], r[0][1]
             else:
                 return '', content
+        def get_msg_purecontent(content):   #added by brothertian
+            nAtCount = content.count(u"@")
+            for n in range(nAtCount):
+                nSub1 = content.find(u"@".decode('utf8'))
+                nSub2 = content.find('\342\200\205'.decode('utf8'), nSub1)
+                if nSub1 < 0 or nSub2 < 0:
+                    break
+                else:
+                    strAtContent = content[nSub1:nSub2+1]
+                    if strAtContent:
+                        content = content.replace(strAtContent, u"")
+            return content
         ActualUserName, Content = get_msg_from_raw(msg['Content'])
         isAt = self.storageClass.nickName in Content
-        if '\342\200\205'.decode('utf8') in Content: Content = Content.split('\342\200\205'.decode('utf8'))[1]
+        # if '\342\200\205'.decode('utf8') in Content: Content = Content.split('\342\200\205'.decode('utf8'))[1]  #modified by brothertian
+        Content = get_msg_purecontent(Content)  #modified by brothertian
         try:
             self.storageClass.groupDict[msg['FromUserName']][ActualUserName]
         except:
