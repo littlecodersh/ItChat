@@ -1,7 +1,12 @@
 from PIL import Image 
 import sys, os, platform
 
-BLOCK = '\xA1\xF6' if platform.system() == 'Windows' else 'MM'
+ 
+
+if platform.system() == 'Windows':
+    BLOCK = '\xA1\xF6'
+else :
+    BLOCK = '\xe2\x96\x88\xe2\x96\x88'
 
 class QRCode():
     def __init__(self, fileName, size, padding = 0, background = 'BLACK'):
