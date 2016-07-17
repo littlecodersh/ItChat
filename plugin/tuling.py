@@ -2,10 +2,12 @@
 import sys, os
 import requests, json
 
+SQLITE_DIR = os.path.join('plugin', 'config')
 try:
-    with open(os.path.join('plugin', 'config', 'tuling.json')) as f: key = json.loads(f.read())['key']
+    with open(os.path.join(SQLITE_DIR, 'tuling.json')) as f: key = json.loads(f.read())['key']
 except:
-    key = ''
+    key = '' # if key is '', get_response will return None
+    # raise Exception('There is something wrong with the format of you plugin/config/tuling.json')
 
 def get_response(msg, storageClass = None, userName = None, userid = 'ItChat'):
     url = 'http://www.tuling123.com/openapi/api'
@@ -15,7 +17,7 @@ def get_response(msg, storageClass = None, userName = None, userid = 'ItChat'):
         'userid': userid,
     }
     try:
-        r = json.loads(requests.post(url, data = payloads).text)
+        r = requests.post(url, data = json.dumps(payloads)).json()
     except:
         return
     if not r['code'] in (100000, 200000, 302000, 308000, 313000, 314000): return
@@ -37,6 +39,8 @@ def get_response(msg, storageClass = None, userName = None, userid = 'ItChat'):
         return '\n'.join([r['text'].replace('<br>','\n')])
 
 if __name__ == '__main__':
+    print(get_response('hello', 'ItChat'))
     while True:
-        a = raw_input('>').decode(sys.stdin.encoding).encode('utf8')
+        a = raw_input('>').decode(sys.stdin.encoding)
+        # a = input('>')
         print(get_response(a, 'ItChat'))

@@ -52,6 +52,17 @@ if 'QRCode' in pluginList['systemmodules']:
     except:
         sys_print('INFO', 'Command line QRCode loaded failed, if you want to use this, you need to run `pip install Image`')
 
+# Test bus.py
+if 'findbus' in pluginList['msgdealers']:
+    try:
+        pluginList['msgdealers'].remove('findbus')
+        from plugin.msgdealers.findbus import findbus
+        pluginList['msgdealers'].append('findbus')
+        sys_print('SUCC', 'findbus')
+    except Exception, e:
+        sys_print('WARN', e.message)
+
+
 # Test msgdealers.autoreply
 if 'autoreply' in pluginList['msgdealers']:
     try:
@@ -61,6 +72,7 @@ if 'autoreply' in pluginList['msgdealers']:
         sys_print('SUCC', 'msgdealers.autoreply')
     except Exception, e:
         sys_print('WARN', e.message)
+
 
 # Test msgdealers.vote
 if 'vote' in pluginList['msgdealers']:
@@ -98,7 +110,7 @@ def send_msg(msg):
 if __name__ == '__main__':
     try:
         print 'Loading %s'%('successfully' if plugin_load_succeed() else 'failed')
-        pluginOrder = [('autoreply', autoreply), ('tuling', tuling.get_response)]
+        pluginOrder = [('autoreply', autoreply), ('findbus', findbus), ('tuling', tuling.get_response)]
         while True:
             msg = raw_input('>').decode(sys.stdin.encoding)
             if not msg: continue

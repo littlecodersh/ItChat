@@ -2,6 +2,14 @@
 import itchat.out as out
 import itchat.log as log
 from PluginTest import *
+import re
+
+try:
+    import plugin.msgdealers.findbus as findbus
+    findbus.findbus('机场', '坪洲')
+    IFFINDBUS = True
+except:
+    IFFINDBUS = False
 
 try:
     import plugin.tuling as tuling
@@ -36,12 +44,10 @@ def send_msg(client, toUserName, msg):
 def get_reply(msg, s, client, isGroupChat = False, cmdPrint = PRINT_ON_CMD):
     reply = ''
     if msg['MsgType'] == 'Text':
-        if not isGroupChat and cmdPrint:
-            out.print_line('%s: %s'%(s.find_nickname(msg['FromUserName']), msg['Content']))
         content = msg['Content']
         # Plugins should be added in order as ('name', function)
-        pluginOrder = [('vote', vote), ('autoreply', autoreply), ('tuling', tuling.get_response)]
-        if isGroupChat: pluginOrder = [('autoreply', autoreply), ('tuling', tuling.get_response)]
+        pluginOrder = [('vote', vote), ('findbus', findbus.findbus), ('tuling', tuling.get_response)]
+        if isGroupChat: pluginOrder = [('findbus', findbus.findbus), ('tuling', tuling.get_response)]
         getReply = False
         for plugin in pluginOrder:
             if plugin[0] in (pluginList['msgdealers'] + pluginList['systemmodules']):
@@ -87,11 +93,15 @@ def get_reply(msg, s, client, isGroupChat = False, cmdPrint = PRINT_ON_CMD):
 
 def deal_with_msg(msg, s, client):
     if msg.has_key('FromUserName') and msg['FromUserName'][:2] == '@@':
-        try:
-            r = grouptalking(msg, s, client, get_reply)
-            send_msg(client, msg['FromUserName'], r)
-        except:
-            log.log('Send group chat failed', False)
+        if msg.has_key('ActualNickName'):
+            out.print_line('[group msg] %s: %s'%(msg['ActualNickName'], msg['Content']))
+            try:
+                r = get_reply(msg, s, client, True)
+                # r = grouptalking(msg, s, client, get_reply)
+                send_msg(client, msg['FromUserName'], u'@%s\u2005 %s'%(msg['ActualNickName'], r))
+            except:
+                log.log('Send group chat failed', False)
     else:
+        out.print_line('[msg] %s: %s'%(s.find_nickname(msg['FromUserName']), msg['Content']))
         r = get_reply(msg, s, client)
         send_msg(client, msg['FromUserName'], r)
