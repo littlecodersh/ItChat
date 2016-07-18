@@ -45,13 +45,16 @@ def download_files(msg):
 def add_friend(msg):
     itchat.add_friend(**msg['Text'])
     itchat.get_contract()
-    itchat.send_msg(msg['RecommendInfo']['UserName'], 'Nice to meet you!')
+    itchat.send_msg('Nice to meet you!', msg['RecommendInfo']['UserName'])
 
 @itchat.msg_register('Text', isGroupChat = True)
 def text_reply(msg):
-    itchat.send(u'@%s\u2005I received: %s'%(msg['ActualNickName'], msg['Content']), msg['FromUserName'])
+    if msg['isAt']:
+        itchat.send(u'@%s\u2005I received: %s'%(msg['ActualNickName'], msg['Content']), msg['FromUserName'])
 
 itchat.auto_login()
+# if you don't want to use hot reload, you may use the following login command instead
+# itchat.auto_login(hotReload = False)
 itchat.run()
 ```
 

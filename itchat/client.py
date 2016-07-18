@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, pickle
 import requests, time, re
 import thread, subprocess
 import json, xml.dom.minidom, mimetypes
@@ -15,6 +15,33 @@ class client(object):
         self.loginInfo = {}
         self.s = requests.Session()
         self.uuid = None
+    def dump_login_status(self, fileDir):
+        try:
+            with open(fileDir, 'wb') as f: f.write('DELETE THIS')
+            os.remove(fileDir)
+        except:
+            raise Exception('Incorrect fileDir')
+        status = {
+            'loginInfo' : self.loginInfo,
+            'cookies'   : self.s.cookies.get_dict(), 
+            'storage'   : self.storageClass.dumps()}
+        with open(fileDir, 'wb') as f:
+            pickle.dump(status, f)
+    def load_login_status(self, fileDir):
+        try:
+            with open(fileDir, 'rb') as f:
+                j = pickle.load(f)
+        except Exception as e:
+            return False
+        self.loginInfo = j['loginInfo']
+        self.s.cookies = requests.utils.cookiejar_from_dict(j['cookies'])
+        self.storageClass.loads(j['storage'])
+        if self.__sync_check():
+            out.print_line('Login successfully as %s\n'%self.storageClass.nickName, False)
+            self.start_receiving()
+            return True
+        else:
+            return False
     def auto_login(self):
         def open_QR():
             for get_count in range(10):
@@ -388,16 +415,15 @@ class client(object):
     def send_msg(self, msg = 'Test Message', toUserName = None):
         url = '%s/webwxsendmsg'%self.loginInfo['url']
         payloads = {
-                'BaseRequest': self.loginInfo['BaseRequest'],
-                'Msg': {
-                    'Type': 1,
-                    'Content': msg.encode('utf8') if isinstance(msg, unicode) else msg,
-                    'FromUserName': self.storageClass.userName.encode('utf8'),
-                    'ToUserName': (toUserName if toUserName else self.storageClass.userName).encode('utf8'),
-                    'LocalID': int(time.time()),
-                    'ClientMsgId': int(time.time()),
-                    },
-                }
+            'BaseRequest': self.loginInfo['BaseRequest'],
+            'Msg': {
+                'Type': 1,
+                'Content': msg.encode('utf8') if isinstance(msg, unicode) else msg,
+                'FromUserName': self.storageClass.userName.encode('utf8'),
+                'ToUserName': (toUserName if toUserName else self.storageClass.userName).encode('utf8'),
+                'LocalID': int(time.time()),
+                'ClientMsgId': int(time.time()),
+                }, }
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         r = self.s.post(url, data = json.dumps(payloads, ensure_ascii = False), headers = headers)
     def __upload_file(self, fileDir, isPicture = False):
