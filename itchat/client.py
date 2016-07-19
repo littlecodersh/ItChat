@@ -150,8 +150,15 @@ class client(object):
             'List': [{
                 'UserName': userName,
                 'ChatRoomId': '', }], }
-        j = json.loads(self.s.post(url, data = json.dumps(payloads), headers = headers
-                ).content.decode('utf8', 'replace'))['ContactList'][0]
+        post_result = self.s.post(url, data = json.dumps(payloads), headers = headers)
+        result = post_result.content.decode('utf8', 'replace')
+        for contact in j["MemberList"]:
+            '''兄弟，函数如果传的是可变对象，传的就是引用，直接对对象修改就行。没必要写成
+        dic['User'] = tools.emoji_dealer(dic['User'])
+        其他的我也懒得改了。。。。。
+        '''
+            tools.emoji_dealer(contact)
+        j = json.loads(result)['ContactList'][0]
         j['isAdmin'] = j['OwnerUin'] == int(self.loginInfo['wxuin'])
         return j
     def get_contract(self, update = False):
