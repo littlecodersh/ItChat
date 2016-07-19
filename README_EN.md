@@ -54,8 +54,6 @@ def text_reply(msg):
         itchat.send(u'@%s\u2005I received: %s'%(msg['ActualNickName'], msg['Content']), msg['FromUserName'])
 
 itchat.auto_login()
-# if you don't want to use hot reload, you may use the following login command instead
-# itchat.auto_login(hotReload = False)
 itchat.run()
 ```
 

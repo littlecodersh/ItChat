@@ -1,5 +1,5 @@
 import os, time
-import config
+from . import config
 
 class Storage:
     def __init__(self):
@@ -26,7 +26,7 @@ class Storage:
         del self.chatroomList[:]
         for i in j.get('chatroomList', []): self.chatroomList.append(i)
         self.groupDict.clear()
-        for k, v in j.get('groupDict', {}).iteritems(): self.groupDict[k] = v
+        for k, v in j.get('groupDict', {}).items(): self.groupDict[k] = v
         self.lastInputUserName = j.get('lastInputUserName', None)
     def find_username(self, n):
         r = []

@@ -1,7 +1,6 @@
-import re
+import re, os
 
-import os
-import config
+from . import config
 
 def clear_screen():
     os.system('cls' if config.OS == 'Windows' else 'clear')

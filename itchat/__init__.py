@@ -1,12 +1,10 @@
-import time, thread
-from client import client
+import time
+from .client import client
 
-import traceback
-
-__version__ = '1.0.12'
+__version__ = '1.0.13'
 
 __client = client()
-def auto_login(hotReload = True, statusStorageDir = 'itchat.pkl'):
+def auto_login(hotReload = False, statusStorageDir = 'itchat.pkl'):
     if hotReload:
         if __client.load_login_status(statusStorageDir): return
         __client.auto_login()
@@ -78,7 +76,9 @@ def msg_register(_type = None, *args, **kwargs):
 # in-build run
 def run():
     print('Start auto replying')
-    while 1:
-        configured_reply()
-        time.sleep(.3)
-
+    try:
+        while 1:
+            configured_reply()
+            time.sleep(.3)
+    except KeyboardInterrupt:
+        print('Bye~')
