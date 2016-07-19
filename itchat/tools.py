@@ -9,7 +9,7 @@ def emojiRecover(string):
     def match(matched):
         return eval("u'\\U000{}'".format(matched.group("emoji")))
 
-    reobj = re.compile('<span class="emoji emoji(?P<emoji>.{,10})"></span>')
+    reobj = re.compile(r'<span class=\\"emoji emoji(?P<emoji>.{,10})\\"></span>')
     result, count = reobj.subn(match, string)
     return result
     
