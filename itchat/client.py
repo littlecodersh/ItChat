@@ -150,8 +150,9 @@ class client(object):
             'List': [{
                 'UserName': userName,
                 'ChatRoomId': '', }], }
-        j = json.loads(self.s.post(url, data = json.dumps(payloads), headers = headers
-                ).content.decode('utf8', 'replace'))['ContactList'][0]
+        post_result = self.s.post(url, data = json.dumps(payloads), headers = headers)
+        result = tools.emojiRecover(post_result.content.decode('utf8', 'replace'))
+        j = json.loads(result)['ContactList'][0]
         j['isAdmin'] = j['OwnerUin'] == int(self.loginInfo['wxuin'])
         return j
     def get_contract(self, update = False):
