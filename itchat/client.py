@@ -3,6 +3,7 @@ import requests, time, re
 import threading, subprocess
 import json, xml.dom.minidom, mimetypes
 from . import config, storage, out, tools
+from requests.exceptions import RequestException
 
 BASE_URL = config.BASE_URL
 
@@ -208,9 +209,12 @@ class client(object):
                     time.sleep(pauseTime)
                     i = self.__sync_check()
                     count = 0
-                except Exception as e:
+                except RequestException as e:
                     count += 1
+                    out.print_line(str(e), False)
                     time.sleep(count*3)
+                except Exception, e:
+                    out.print_line(str(e), False)
             out.print_line('LOG OUT', False)
         maintainThread = threading.Thread(target = maintain_loop)
         maintainThread.setDaemon(True)
