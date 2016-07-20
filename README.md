@@ -1,6 +1,6 @@
 # itchat
 
-[![Gitter](https://badges.gitter.im/littlecodersh/ItChat.svg)](https://gitter.im/littlecodersh/ItChat?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge) ![python](https://img.shields.io/badge/python-2.7-ff69b4.svg) [English version](https://github.com/littlecodersh/ItChat/blob/master/README_EN.md)
+[![Gitter](https://badges.gitter.im/littlecodersh/ItChat.svg)](https://gitter.im/littlecodersh/ItChat?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge) ![python](https://img.shields.io/badge/python-2.7-ff69b4.svg) ![python](https://img.shields.io/badge/python-3.5-red.svg) [English version](https://github.com/littlecodersh/ItChat/blob/master/README_EN.md)
 
 itchat是一个开源的微信个人号接口，使用他你可以轻松的通过命令行使用个人微信号。
 

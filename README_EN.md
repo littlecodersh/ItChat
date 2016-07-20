@@ -1,6 +1,6 @@
 # itchat
 
-[![Gitter](https://badges.gitter.im/littlecodersh/ItChat.svg)](https://gitter.im/littlecodersh/ItChat?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge) ![python](https://img.shields.io/badge/python-2.7-ff69b4.svg) [中文版](https://github.com/littlecodersh/ItChat/blob/master/README.md)
+[![Gitter](https://badges.gitter.im/littlecodersh/ItChat.svg)](https://gitter.im/littlecodersh/ItChat?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge) ![python](https://img.shields.io/badge/python-2.7-ff69b4.svg) ![python](https://img.shields.io/badge/python-3.5-red.svg) [中文版](https://github.com/littlecodersh/ItChat/blob/master/README.md)
 
 itchat is an open source api for WeChat, a commonly-used Chinese social networking app, you can easily access your personal wechat account through itchat in cmd.
 

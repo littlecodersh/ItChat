@@ -133,11 +133,10 @@ class client(object):
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
         dic = json.loads(r.content.decode('utf-8', 'replace'))
+        tools.emoji_formatter(dic['User'], 'NickName')
         self.loginInfo['User'] = dic['User']
         self.loginInfo['SyncKey'] = dic['SyncKey']
         self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val']) for item in dic['SyncKey']['List']])
-        # deal with emoji
-        dic['User'] = tools.emoji_dealer(dic['User'])
         self.storageClass.userName = dic['User']['UserName']
         self.storageClass.nickName = dic['User']['NickName']
         return dic['User']
@@ -152,6 +151,7 @@ class client(object):
                 'ChatRoomId': '', }], }
         j = json.loads(self.s.post(url, data = json.dumps(payloads), headers = headers
                 ).content.decode('utf8', 'replace'))['ContactList'][0]
+        for member in j['MemberList']: tools.emoji_formatter(member, 'NickName')
         j['isAdmin'] = j['OwnerUin'] == int(self.loginInfo['wxuin'])
         return j
     def get_contract(self, update = False):
@@ -163,19 +163,20 @@ class client(object):
         tempList = json.loads(r.content.decode('utf-8', 'replace'))['MemberList']
         del self.chatroomList[:]
         del self.memberList[:]
-        self.memberList.append(tools.emoji_dealer(self.loginInfo['User']))
+        self.memberList.append(self.loginInfo['User'])
         for m in tempList:
+            tools.emoji_formatter(m, 'NickName')
             if m['Sex'] != 0:
-                self.memberList.append(tools.emoji_dealer(m))
+                self.memberList.append(m)
             elif not (any([str(n) in m['UserName'] for n in range(10)]) and 
                     any([chr(n) in m['UserName'] for n in (
                     list(range(ord('a'), ord('z') + 1)) +
                     list(range(ord('A'), ord('Z') + 1)))])):
                 continue # userName have number and str
             elif '@@' in m['UserName']:
-                self.chatroomList.append(tools.emoji_dealer(m))
+                self.chatroomList.append(m)
             elif m['VerifyFlag'] & 8 == 0 and '@' in m['UserName']:
-                self.memberList.append(tools.emoji_dealer(m))
+                self.memberList.append(m)
         return self.memberList
     def get_chatrooms(self, update = False):
         if update: self.get_contract(update = True)
@@ -249,6 +250,7 @@ class client(object):
         srl = [40, 43, 50, 52, 53, 9999]
         # 40 msg, 43 videochat, 50 VOIPMSG, 52 voipnotifymsg, 53 webwxvoipnotifymsg, 9999 sysnotice
         for m in l:
+            tools.msg_formatter(m, 'Content')
             if '@@' in m['FromUserName']: m = self.__produce_group_chat(m)
             if m['MsgType'] == 1: # words
                 if m['Url']:
@@ -498,15 +500,15 @@ class client(object):
             'Content-Type': 'application/json;charset=UTF-8', }
         r = self.s.post(url, data = json.dumps(payloads, ensure_ascii = False).encode('utf8'), headers = headers)
         return True
-    def add_friend(self, Status, UserName, Ticket):
+    def add_friend(self, status, userName, ticket):
         url = '%s/webwxverifyuser?r=%s&pass_ticket=%s'%(self.loginInfo['url'], int(time.time()), self.loginInfo['pass_ticket'])
         payloads = {
             'BaseRequest': self.loginInfo['BaseRequest'],
-            'Opcode': Status,
+            'Opcode': status,
             'VerifyUserListSize': 1,
             'VerifyUserList': [{
-                'Value': UserName,
-                'VerifyUserTicket': Ticket, }],
+                'Value': userName,
+                'VerifyUserTicket': ticket, }],
             'VerifyContent': '',
             'SceneListCount': 1,
             'SceneList': 33,
