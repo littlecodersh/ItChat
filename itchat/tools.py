@@ -14,7 +14,10 @@ def emojiRecover(string):
     return result
     
 def emoji_dealer(d):
-    d['NickName'] = emojiRecover(d['NickName'])
+    try:
+        d['NickName'] = emojiRecover(d['NickName'])
+    except Exception,e:
+        pass
     return d
 def check_file(fileDir):
     try:
