@@ -3,3 +3,5 @@ dist/*
 itchat.egg-info/*
 *.pyc
 *.swp
+test.py
+itchat.pkl

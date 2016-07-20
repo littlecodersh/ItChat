@@ -19,7 +19,7 @@ class client(object):
         self.uuid = None
     def dump_login_status(self, fileDir):
         try:
-            with open(fileDir, 'wb') as f: f.write('DELETE THIS')
+            with open(fileDir, 'w') as f: f.write('DELETE THIS')
             os.remove(fileDir)
         except:
             raise Exception('Incorrect fileDir')
@@ -154,10 +154,8 @@ class client(object):
         j = json.loads(self.s.post(url, data = json.dumps(payloads), headers = headers
                 ).content.decode('utf8', 'replace'))['ContactList'][0]
         for member in j['MemberList']:
-            try:
-                tools.emoji_formatter(member, 'NickName')
-            except:
-                print member
+            tools.emoji_formatter(member, 'NickName')
+            tools.emoji_formatter(member, 'DisplayName')
         j['isAdmin'] = j['OwnerUin'] == int(self.loginInfo['wxuin'])
         return j
     def get_contract(self, update = False):
@@ -216,8 +214,8 @@ class client(object):
                     count = 0
                 except RequestException as e:
                     count += 1
-                    time.sleep(count*3)
-                except Exception, e:
+                    time.sleep(count * 3)
+                except Exception as e:
                     out.print_line(str(e), False)
             out.print_line('LOG OUT', False)
         maintainThread = threading.Thread(target = maintain_loop)
@@ -259,7 +257,7 @@ class client(object):
         # 40 msg, 43 videochat, 50 VOIPMSG, 52 voipnotifymsg, 53 webwxvoipnotifymsg, 9999 sysnotice
         for m in l:
             tools.msg_formatter(m, 'Content')
-            if '@@' in m['FromUserName']: m = self.__produce_group_chat(m)
+            if '@@' in m['FromUserName']: self.__produce_group_chat(m)
             if m['MsgType'] == 1: # words
                 if m['Url']:
                     regx = r'(.+?\(.+?\))'
@@ -387,41 +385,18 @@ class client(object):
             rl.append(m)
         return rl
     def __produce_group_chat(self, msg):
-        def get_msg_from_raw(content):
-            regex = re.compile('(@[0-9a-z]*?):<br/>(.*)$')
-            r = re.findall(regex, content)
-            if r:
-                return r[0][0], r[0][1]
-            else:
-                return '', content
-        def get_msg_purecontent(content):   #added by brothertian
-            nAtCount = content.count(u"@")
-            for n in range(nAtCount):
-                nSub1 = content.find(u"@".decode('utf8'))
-                nSub2 = content.find('\342\200\205'.decode('utf8'), nSub1)
-                if nSub1 < 0 or nSub2 < 0:
-                    break
-                else:
-                    strAtContent = content[nSub1:nSub2+1]
-                    if strAtContent:
-                        content = content.replace(strAtContent, u"")
-            return content
-        ActualUserName, Content = get_msg_from_raw(msg['Content'])
-        isAt = self.storageClass.nickName in Content
-        # if '\342\200\205'.decode('utf8') in Content: Content = Content.split('\342\200\205'.decode('utf8'))[1]  #modified by brothertian
-        Content = get_msg_purecontent(Content)  #modified by brothertian
+        r = re.match('(@[0-9a-z]*?):<br/>(.*)$', msg['Content'])
+        if not r: return
+        actualNickName, content = r.groups()
         try:
             self.storageClass.groupDict[msg['FromUserName']][ActualUserName]
         except:
             groupMemberList = self.get_batch_contract(msg['FromUserName'])['MemberList']
             self.storageClass.groupDict[msg['FromUserName']] = {member['UserName']: member for member in groupMemberList}
-        ActualNickName = self.storageClass.groupDict[msg['FromUserName']][ActualUserName]['NickName']
-        additionalItems = {
-            'ActualUserName': ActualUserName,
-            'ActualNickName': ActualNickName,
-            'isAt': isAt,
-            'Content': Content, }
-        return dict(msg, **additionalItems)
+        msg['ActualUserName'] = actualNickName
+        msg['ActualNickName'] = self.storageClass.groupDict[msg['FromUserName']][actualNickName]['NickName']
+        msg['Content']        = content
+        msg['isAt']           = u'@%s\u2005'%self.storageClass.nickName in msg['Content']
     def send_msg(self, msg = 'Test Message', toUserName = None):
         url = '%s/webwxsendmsg'%self.loginInfo['url']
         payloads = {
