@@ -1,5 +1,13 @@
 import re, os, sys
-
+try:
+    from PIL import Image
+    flag_console_qr = True
+except ImportError:
+    flag_console_qr = False
+    
+flag_callback_qr = False
+fun_callback_qr = None
+    
 try:
     from HTMLParser import HTMLParser
 except ImportError:
@@ -51,10 +59,11 @@ def print_qr(fileDir):
         subprocess.call(['xdg-open', fileDir])
     else:
         os.startfile(fileDir)
-try:
-    from PIL import Image 
-    def print_cmd_qr(fileDir, size = 37, padding = 3,
-            white = BLOCK, black = '  '):
+
+def print_cmd_qr(fileDir, size = 37, padding = 3,
+        white = BLOCK, black = '  '):
+            
+    if flag_console_qr:
         img     = Image.open(fileDir)
         times   = img.size[0] / (size + padding * 2)
         rgb     = img.convert('RGB')
@@ -70,7 +79,12 @@ try:
             qr += white + '\n'
         qr += white * (size + 2) + '\n'
         sys.stdout.write(qr)
-except ImportError:
-    def print_cmd_qr(fileDir, size = 37, padding = 3,
-            white = BLOCK, black = '  '):
+    elif flag_callback_qr:
+        fun_callback_qr(fileDir)
+    else:
         print_qr(fileDir)
+        
+def reg_qr_callback(fun):
+    global flag_callback_qr, fun_callback_qr
+    flag_callback_qr = True
+    fun_callback_qr = fun
