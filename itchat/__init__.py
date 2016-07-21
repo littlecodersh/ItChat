@@ -4,16 +4,16 @@ from .client import client
 __version__ = '1.0.13'
 
 __client = client()
-def auto_login(hotReload = False, statusStorageDir = 'itchat.pkl'):
+def auto_login(hotReload = False, statusStorageDir = 'itchat.pkl', enableCmdQR = False):
     if hotReload:
         if __client.load_login_status(statusStorageDir): return
-        __client.auto_login()
+        __client.auto_login(enableCmdQR = enableCmdQR)
         __client.dump_login_status(statusStorageDir)
     else:
-        __client.auto_login()
+        __client.auto_login(enableCmdQR = enableCmdQR)
 # The following method are all included in __client.auto_login >>>
 def get_QRuuid(): return __client.get_QRuuid()
-def get_QR(uuid = None): return __client.get_QR(uuid)
+def get_QR(uuid = None, enableCmdQR = False): return __client.get_QR(uuid, enableCmdQR)
 def check_login(uuid = None): return __client.check_login(uuid)
 def web_init(): return __client.web_init()
 def get_batch_contract(groupUserName): return __client.get_batch_contract(groupUserName)

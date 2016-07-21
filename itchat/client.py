@@ -44,13 +44,13 @@ class client(object):
             return True
         else:
             return False
-    def auto_login(self):
+    def auto_login(self, enableCmdQR = False):
         def open_QR():
             for get_count in range(10):
                 out.print_line('Getting uuid', True)
                 while not self.get_QRuuid(): time.sleep(1)
                 out.print_line('Getting QR Code', True)
-                if self.get_QR(): break
+                if self.get_QR(enableCmdQR = enableCmdQR): break
                 elif 9 <= get_count:
                     out.print_line('Failed to get QR Code, please restart the program')
                     sys.exit()
@@ -82,19 +82,17 @@ class client(object):
         if data and data.group(1) == '200': 
             self.uuid = data.group(2)
             return self.uuid
-    def get_QR(self, uuid = None):
+    def get_QR(self, uuid = None, enableCmdQR = False):
         try:
             if uuid == None: uuid = self.uuid
             url = '%s/qrcode/%s'%(BASE_URL, uuid)
             r = self.s.get(url, stream = True)
             QR_DIR = 'QR.jpg'
             with open(QR_DIR, 'wb') as f: f.write(r.content)
-            if config.OS == 'Darwin':
-                subprocess.call(['open', QR_DIR])
-            elif config.OS == 'Linux':
-                subprocess.call(['xdg-open', QR_DIR])
+            if enableCmdQR:
+                tools.print_cmd_qr(QR_DIR)
             else:
-                os.startfile(QR_DIR)
+                tools.print_qr(QR_DIR)
             return True
         except:
             return False
@@ -387,14 +385,14 @@ class client(object):
     def __produce_group_chat(self, msg):
         r = re.match('(@[0-9a-z]*?):<br/>(.*)$', msg['Content'])
         if not r: return
-        actualNickName, content = r.groups()
+        actualUserName, content = r.groups()
         try:
             self.storageClass.groupDict[msg['FromUserName']][ActualUserName]
         except:
             groupMemberList = self.get_batch_contract(msg['FromUserName'])['MemberList']
             self.storageClass.groupDict[msg['FromUserName']] = {member['UserName']: member for member in groupMemberList}
-        msg['ActualUserName'] = actualNickName
-        msg['ActualNickName'] = self.storageClass.groupDict[msg['FromUserName']][actualNickName]['NickName']
+        msg['ActualUserName'] = actualUserName
+        msg['ActualNickName'] = self.storageClass.groupDict[msg['FromUserName']][actualUserName]['NickName']
         msg['Content']        = content
         msg['isAt']           = u'@%s\u2005'%self.storageClass.nickName in msg['Content']
     def send_msg(self, msg = 'Test Message', toUserName = None):

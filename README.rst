@@ -56,10 +56,14 @@ Here is the `code <https://github.com/littlecodersh/ItChat/tree/robot>`__.
 
 **FAQ**
 
-Why I can't send files whose name is encoded in utf8?
+Q: Why I can't send files whose name is encoded in utf8?
 
-That's because of the upload setting of requests, you can put `this file <https://github.com/littlecodersh/ItChat/blob/robot/plugin/config/fields.py>`__ 
+A: That's because of the upload setting of requests, you can put `this file <https://github.com/littlecodersh/ItChat/blob/robot/plugin/config/fields.py>`__ 
 into packages/urllib3 of requests package.
+
+Q: Why I still can't show QRCode with command line after I set enableCmdQr key to True in itchat.auto_login()?
+
+A: That's because you need to install optional site-package pillow, try this script: pip install pillow
 
 **Comments**
 
