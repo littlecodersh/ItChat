@@ -1,10 +1,11 @@
-import os, sys, pickle
-import requests, time, re
+import os, sys, time, re
 import threading, subprocess
 import json, xml.dom.minidom, mimetypes
+import copy, pickle
+
 from . import config, storage, out, tools
 
-from requests.exceptions import RequestException
+import requests
 
 BASE_URL = config.BASE_URL
 
@@ -157,7 +158,7 @@ class client(object):
         j['isAdmin'] = j['OwnerUin'] == int(self.loginInfo['wxuin'])
         return j
     def get_contract(self, update = False):
-        if 1 < len(self.memberList) and not update: return self.memberList
+        if 1 < len(self.memberList) and not update: return copy.deepcopy(self.memberList)
         url = '%s/webwxgetcontact?r=%s&seq=0&skey=%s' % (self.loginInfo['url'],
             int(time.time()), self.loginInfo['skey'])
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
@@ -179,10 +180,10 @@ class client(object):
                 self.chatroomList.append(m)
             elif m['VerifyFlag'] & 8 == 0 and '@' in m['UserName']:
                 self.memberList.append(m)
-        return self.memberList
+        return copy.deepcopy(self.memberList)
     def get_chatrooms(self, update = False):
         if update: self.get_contract(update = True)
-        return self.chatroomList
+        return copy.deepcopy(self.chatroomList)
     def show_mobile_login(self):
         url = '%s/webwxstatusnotify'%self.loginInfo['url']
         payloads = {
@@ -210,7 +211,7 @@ class client(object):
                     time.sleep(pauseTime)
                     i = self.__sync_check()
                     count = 0
-                except RequestException as e:
+                except requests.exceptions.RequestException as e:
                     count += 1
                     time.sleep(count * 3)
                 except Exception as e:

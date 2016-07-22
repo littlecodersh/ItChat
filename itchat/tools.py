@@ -1,4 +1,4 @@
-import re, os, sys
+import re, os, sys, subprocess
 
 try:
     from HTMLParser import HTMLParser
@@ -21,7 +21,7 @@ else:
 def clear_screen():
     os.system('cls' if config.OS == 'Windows' else 'clear')
 def emoji_formatter(d, k):
-    # there's still a serious bug about emoji match
+    # there's still a serious bug about emoji match caused by wechat backstage
     # like :face with tears of joy: will be replaced with :cat face with tears of joy:
     def _emoji_formatter(m):
         s = m.group(1)

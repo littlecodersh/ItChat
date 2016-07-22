@@ -8,6 +8,6 @@ def print_line(msg, oneLine = False):
         sys.stdout.flush()
     else:
         sys.stdout.write('\n')
-    sys.stdout.write(msg.encode(sys.stdin.encoding, 'replace'
-        ).decode(sys.stdin.encoding, 'replace'))
+    sys.stdout.write(msg.encode(sys.stdin.encoding or 'utf8', 'replace'
+        ).decode(sys.stdin.encoding or 'utf8', 'replace'))
     sys.stdout.flush()
