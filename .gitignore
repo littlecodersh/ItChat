@@ -5,3 +5,4 @@ itchat.egg-info/*
 *.swp
 test.py
 itchat.pkl
+QR.jpg

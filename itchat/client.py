@@ -91,7 +91,7 @@ class client(object):
             QR_DIR = 'QR.jpg'
             with open(QR_DIR, 'wb') as f: f.write(r.content)
             if enableCmdQR:
-                tools.print_cmd_qr(QR_DIR)
+                tools.print_cmd_qr(QR_DIR, enableCmdQR = enableCmdQR)
             else:
                 tools.print_qr(QR_DIR)
             return True
