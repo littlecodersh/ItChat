@@ -1,4 +1,5 @@
 import re, os, sys, subprocess
+from . import config
 
 try:
     from HTMLParser import HTMLParser
@@ -9,8 +10,12 @@ from . import config
 
 emojiRegex = re.compile(r'<span class="emoji emoji(.*?)"></span>')
 htmlParser = HTMLParser()
+
 try:
-    b = u'\u2588'
+    if config.OS == 'Windows':
+        b = u'\u2588'
+    else:
+        b = u'\u2588\u2588'
     sys.stdout.write(b + '\r')
     sys.stdout.flush()
 except UnicodeEncodeError:
