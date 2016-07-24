@@ -4,7 +4,7 @@
 
 itchat是一个开源的微信个人号接口，使用他你可以轻松的通过命令行使用个人微信号。
 
-微信机器人的实现及命令行版微信见[robot分支](https://github.com/littlecodersh/ItChat/tree/robot)，Python 3.5.1 的版本可见这里：[here](https://github.com/littlecodersh/ItChat/tree/py3-dev)。
+微信机器人的实现及命令行版微信见[robot分支](https://github.com/littlecodersh/ItChat/tree/robot)。
 
 使用不到三十行的代码，你就可以完成一个能够处理所有信息的微信机器人。
 
@@ -54,6 +54,45 @@ def text_reply(msg):
 
 itchat.auto_login()
 itchat.run()
+```
+
+## Advanced uses
+
+### 命令行二维码
+
+通过以下命令可以在登陆的时候使用命令行显示二维码：
+
+```python
+itchat.auto_login(enableCmdQR = True)
+```
+
+部分系统可能字幅宽度有出入，可以通过将enableCmdQR赋值为特定的倍数进行调整：
+
+```python
+# 如部分的linux系统，块字符的宽度为一个字符（正常应为两字符），故赋值为2
+itchat.auto_login(enableCmdQR = 2)
+```
+
+### 退出程序后暂存登陆状态
+
+通过如下命令登陆，即使程序关闭，一定时间内重新开启也可以不用重新扫码。
+
+```python
+itchat.auto_login(hotReload = True)
+```
+
+### 附件的下载与发送
+
+itchat的附件下载方法存储在msg的Text键中。
+
+下载方法接受一个可用的位置参数（包括文件名），并将文件相应的存储。
+
+```python
+@itchat.msg_register(['Picture', 'Recording', 'Attachment', 'Video'])
+def download_files(msg):
+    msg['Text'](msg['FileName'])
+    itchat.send('%s received'%msg['Type'], msg['FromUserName'])
+    itchat.send('@%s@%s'%('img' if msg['Type'] == 'Picture' else 'fil', fileDir), msg['FromUserName'])
 ```
 
 ## Have a try

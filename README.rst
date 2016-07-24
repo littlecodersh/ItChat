@@ -1,6 +1,8 @@
 itchat
 ======
 
+|Python2| |Python3|
+
 itchat is a open souce wechat api project for personal account.
 
 It enables you to access your personal wechat account through command line.
@@ -54,6 +56,45 @@ Here is the `code <https://github.com/littlecodersh/ItChat/tree/robot>`__.
     itchat.auto_login()
     itchat.run()
 
+**Advanced uses**
+
+*Command line QR Code*
+
+You can access the QR Code in command line through using this command:
+
+.. code:: python
+
+    itchat.auto_login(enableCmdQR = True)
+
+Because of width of some character differs from systems, you may adjust the enableCmdQR to fix the problem.
+
+.. code:: python
+
+    # for some linux system, width of block character is one instead of two, so enableCmdQR should be 2
+    itchat.auto_login(enableCmdQR = 2)
+
+*Hot reload*
+
+By using the following command, you may reload the program without re-scan QRCode in some time.
+
+.. code:: python
+
+    itchat.auto_login(hotReload = True)
+
+*Download and send attachments*
+
+The attachment download function of itchat is in Text key of msg
+
+Download function accept one location value (include the file name) and store attachment accordingly.
+
+.. code:: python
+
+    @itchat.msg_register(['Picture', 'Recording', 'Attachment', 'Video'])
+    def download_files(msg):
+        msg['Text'](msg['FileName'])
+        itchat.send('%s received'%msg['Type'], msg['FromUserName'])
+        itchat.send('@%s@%s'%('img' if msg['Type'] == 'Picture' else 'fil', fileDir), msg['FromUserName'])
+
 **FAQ**
 
 Q: Why I can't send files whose name is encoded in utf8?
@@ -72,3 +113,5 @@ If you have any problems or suggestions, you can talk to me in this `issue <http
 Or on `gitter <https://badges.gitter.im/littlecodersh/ItChat.svg>`__.
 
 .. |QRCodeOfRobot| image:: http://7xrip4.com1.z0.glb.clouddn.com/ItChat%2FQRCode2.jpg?imageView/2/w/200/
+.. |Python2| image:: https://img.shields.io/badge/python-2.7-ff69b4.svg
+.. |Python3| image:: https://img.shields.io/badge/python-3.5-red.svg

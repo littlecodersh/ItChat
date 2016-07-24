@@ -10,8 +10,6 @@ A wechat robot can handle all the basic messages with only less than 30 lines of
 
 Now Wechat is an important part of personal life, hopefully this repo can help you extend your personal wechat account's functionality and enbetter user's experience with wechat.
 
-Python 2.7.11 version is also available [here](https://github.com/littlecodersh/ItChat/tree/py3-dev).
-
 ## Documents
 
 You may get the document of this api from [here](https://itchat.readthedocs.org/zh/latest/).
@@ -55,6 +53,45 @@ def text_reply(msg):
 
 itchat.auto_login()
 itchat.run()
+```
+
+## Advanced uses
+
+### Command line QR Code
+
+You can access the QR Code in command line through using this command:
+
+```python
+itchat.auto_login(enableCmdQR = True)
+```
+
+Because of width of some character differs from systems, you may adjust the enableCmdQR to fix the problem.
+
+```python
+# for some linux system, width of block character is one instead of two, so enableCmdQR should be 2
+itchat.auto_login(enableCmdQR = 2)
+```
+
+### Hot reload
+
+By using the following command, you may reload the program without re-scan QRCode in some time.
+
+```python
+itchat.auto_login(hotReload = True)
+```
+
+### Download and send attachments
+
+The attachment download function of itchat is in Text key of msg
+
+Download function accept one location value (include the file name) and store attachment accordingly.
+
+```python
+@itchat.msg_register(['Picture', 'Recording', 'Attachment', 'Video'])
+def download_files(msg):
+    msg['Text'](msg['FileName'])
+    itchat.send('%s received'%msg['Type'], msg['FromUserName'])
+    itchat.send('@%s@%s'%('img' if msg['Type'] == 'Picture' else 'fil', fileDir), msg['FromUserName'])
 ```
 
 ## Have a try
