@@ -279,8 +279,10 @@ class client(object):
                         for block in r.iter_content(1024):
                             f.write(block)
                 msg = {
-                    'Type': 'Picture',
-                    'Text': download_picture,}
+                    'Type'     : 'Picture',
+                    'FileName' : '%s.%s'%(time.strftime('%y%m%d-%H%M%S', time.localtime()),
+                        'png' if m['MsgType'] == 3 else 'gif'),
+                    'Text'     : download_picture, }
             elif m['MsgType'] == 34: # voice
                 def download_voice(voiceDir):
                     url = '%s/webwxgetvoice'%self.loginInfo['url']
@@ -298,9 +300,10 @@ class client(object):
                 msg = {
                     'Type': 'Friends',
                     'Text': {
-                        'Status': m['Status'],
-                        'UserName': m['RecommendInfo']['UserName'],
-                        'Ticket': m['Ticket'], }, }
+                        'status'        : m['Status'],
+                        'userName'      : m['RecommendInfo']['UserName'],
+                        'ticket'        : m['Ticket'],
+                        'recommendInfo' : m['RecommendInfo'], }, }
             elif m['MsgType'] == 42: # name card
                 msg = {
                     'Type': 'Card',
@@ -323,7 +326,6 @@ class client(object):
                                 f.write(block)
                     msg = {
                         'Type': 'Attachment',
-                        # 'FileName': m['FileName'],
                         'Text': download_atta, }
                 elif m['AppMsgType'] == 17:
                     msg = {
@@ -482,7 +484,7 @@ class client(object):
             'Content-Type': 'application/json;charset=UTF-8', }
         r = self.s.post(url, data = json.dumps(payloads, ensure_ascii = False).encode('utf8'), headers = headers)
         return True
-    def add_friend(self, status, userName, ticket):
+    def add_friend(self, status, userName, ticket, recommendInfo = {}):
         url = '%s/webwxverifyuser?r=%s&pass_ticket=%s'%(self.loginInfo['url'], int(time.time()), self.loginInfo['pass_ticket'])
         payloads = {
             'BaseRequest': self.loginInfo['BaseRequest'],
@@ -497,6 +499,16 @@ class client(object):
             'skey': self.loginInfo['skey'], }
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
+        if recommendInfo: # add user to storage
+            member = {}
+            for k in ('UserName', 'City', 'DisplayName', 'PYQuanPin', 'RemarkPYInitial', 'Province',
+                'KeyWord', 'RemarkName', 'PYInitial', 'EncryChatRoomId', 'Alias', 'Signature', 
+                'NickName', 'RemarkPYQuanPin', 'HeadImgUrl'): member[k] = ''
+            for k in ('UniFriend', 'Sex', 'AppAccountFlag', 'VerifyFlag', 'ChatRoomId', 'HideInputBarFlag',
+                'AttrStatus', 'SnsFlag', 'MemberCount', 'OwnerUin', 'ContactFlag', 'Uin',
+                'StarFriend', 'Statues'): member[k] = 0
+            member['MemberList'] = []
+            self.memberList.append(dict(member, **recommendInfo))
     def create_chatroom(self, memberList, topic = ''):
         url = ('%s/webwxcreatechatroom?pass_ticket=%s&r=%s'%(
                 self.loginInfo['url'], self.loginInfo['pass_ticket'], int(time.time())))

@@ -37,16 +37,14 @@ Here is the `code <https://github.com/littlecodersh/ItChat/tree/robot>`__.
 
     @itchat.msg_register(['Picture', 'Recording', 'Attachment', 'Video'])
     def download_files(msg):
-        fileDir = '%s%s'%(msg['Type'], int(time.time()))
-        msg['Text'](fileDir)
-        itchat.send('%s received'%msg['Type'], msg['FromUserName'])
-        itchat.send('@%s@%s'%('img' if msg['Type'] == 'Picture' else 'fil', fileDir), msg['FromUserName'])
+        msg['Text'](msg['FileName'])
+        itchat.send('@%s@%s'%('img' if msg['Type'] == 'Picture' else 'fil', msg['FileName']), msg['FromUserName'])
+        return '%s received'%msg['Type']
 
     @itchat.msg_register('Friends')
     def add_friend(msg):
-        itchat.add_friend(**msg['Text'])
-        itchat.get_contract()
-        itchat.send('Nice to meet you!', msg['RecommendInfo']['UserName'])
+        itchat.add_friend(**msg['Text']) # new friend will be automatically added into storage, you don't need to reload the memberList
+        itchat.send_msg('Nice to meet you!', msg['RecommendInfo']['UserName'])
 
     @itchat.msg_register('Text', isGroupChat = True)
     def text_reply(msg):
@@ -85,6 +83,8 @@ By using the following command, you may reload the program without re-scan QRCod
 
 The attachment download function of itchat is in Text key of msg
 
+Name of the file (default name of picture) is in FileName key of msg
+
 Download function accept one location value (include the file name) and store attachment accordingly.
 
 .. code:: python
@@ -92,8 +92,8 @@ Download function accept one location value (include the file name) and store at
     @itchat.msg_register(['Picture', 'Recording', 'Attachment', 'Video'])
     def download_files(msg):
         msg['Text'](msg['FileName'])
-        itchat.send('%s received'%msg['Type'], msg['FromUserName'])
-        itchat.send('@%s@%s'%('img' if msg['Type'] == 'Picture' else 'fil', fileDir), msg['FromUserName'])
+        itchat.send('@%s@%s'%('img' if msg['Type'] == 'Picture' else 'fil', msg['FileName']), msg['FromUserName'])
+        return '%s received'%msg['Type']
 
 **FAQ**
 

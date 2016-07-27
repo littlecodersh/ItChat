@@ -30,7 +30,7 @@ def load_login_status(fileDir = 'itchat.pkl'): return __client.load_login_status
 def send_msg(msg = 'Test Message', toUserName = None): return __client.send_msg(msg, toUserName)
 def send_file(fileDir, toUserName): return __client.send_file(fileDir, toUserName)
 def send_image(fileDir, toUserName): return __client.send_image(fileDir, toUserName)
-def add_friend(Status, UserName, Ticket): return __client.add_friend(Status, UserName, Ticket)
+def add_friend(status, userName, ticket, recommendInfo = {}): return __client.add_friend(status, userName, ticket, recommendInfo)
 def create_chatroom(memberList, topic = ''): return __client.create_chatroom(memberList, topic)
 def delete_member_from_chatroom(chatRoomUserName, memberList): return __client.delete_member_from_chatroom(chatRoomUserName, memberList)
 def add_member_into_chatroom(chatRoomUserName, memberList): return __client.add_member_into_chatroom(chatRoomUserName, memberList)

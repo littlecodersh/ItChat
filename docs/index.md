@@ -4,8 +4,6 @@
 
 itchat是一个开源的微信个人号接口，使用他你可以轻松的通过命令行使用个人微信号。
 
-微信机器人的实现及命令行版微信见[robot分支](https://github.com/littlecodersh/ItChat/tree/robot)。
-
 使用不到三十行的代码，你就可以完成一个能够处理所有信息的微信机器人。
 
 如今微信已经成为了个人社交的很大一部分，希望这个项目能够帮助你扩展你的个人的微信号、方便自己的生活。
@@ -36,15 +34,13 @@ def text_reply(msg):
 
 @itchat.msg_register(['Picture', 'Recording', 'Attachment', 'Video'])
 def download_files(msg):
-    fileDir = '%s%s'%(msg['Type'], int(time.time()))
-    msg['Text'](fileDir)
-    itchat.send('%s received'%msg['Type'], msg['FromUserName'])
-    itchat.send('@%s@%s'%('img' if msg['Type'] == 'Picture' else 'fil', fileDir), msg['FromUserName'])
+    msg['Text'](msg['FileName'])
+    itchat.send('@%s@%s'%('img' if msg['Type'] == 'Picture' else 'fil', msg['FileName']), msg['FromUserName'])
+    return '%s received'%msg['Type']
 
 @itchat.msg_register('Friends')
 def add_friend(msg):
-    itchat.add_friend(**msg['Text'])
-    itchat.get_contract()
+    itchat.add_friend(**msg['Text']) # 该操作会自动将新好友的消息录入，不需要重载通讯录
     itchat.send_msg('Nice to meet you!', msg['RecommendInfo']['UserName'])
 
 @itchat.msg_register('Text', isGroupChat = True)
@@ -85,14 +81,16 @@ itchat.auto_login(hotReload = True)
 
 itchat的附件下载方法存储在msg的Text键中。
 
+发送的文件的文件名（图片给出的默认文件名）都存储在msg的FileName键中。
+
 下载方法接受一个可用的位置参数（包括文件名），并将文件相应的存储。
 
 ```python
 @itchat.msg_register(['Picture', 'Recording', 'Attachment', 'Video'])
 def download_files(msg):
     msg['Text'](msg['FileName'])
-    itchat.send('%s received'%msg['Type'], msg['FromUserName'])
-    itchat.send('@%s@%s'%('img' if msg['Type'] == 'Picture' else 'fil', fileDir), msg['FromUserName'])
+    itchat.send('@%s@%s'%('img' if msg['Type'] == 'Picture' else 'fil', msg['FileName']), msg['FromUserName'])
+    return '%s received'%msg['Type']
 ```
 
 ## Have a try

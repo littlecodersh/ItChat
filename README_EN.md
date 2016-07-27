@@ -4,8 +4,6 @@
 
 itchat is an open source api for WeChat, a commonly-used Chinese social networking app, you can easily access your personal wechat account through itchat in cmd.
 
-Wechat is structured with a wechat robot and a command line, you can view them in [robot branch](https://github.com/littlecodersh/ItChat/tree/robot).
-
 A wechat robot can handle all the basic messages with only less than 30 lines of codes.
 
 Now Wechat is an important part of personal life, hopefully this repo can help you extend your personal wechat account's functionality and enbetter user's experience with wechat.
@@ -35,15 +33,13 @@ def text_reply(msg):
 
 @itchat.msg_register(['Picture', 'Recording', 'Attachment', 'Video'])
 def download_files(msg):
-    fileDir = '%s%s'%(msg['Type'], int(time.time()))
-    msg['Text'](fileDir)
-    itchat.send('%s received'%msg['Type'], msg['FromUserName'])
-    itchat.send('@%s@%s'%('img' if msg['Type'] == 'Picture' else 'fil', fileDir), msg['FromUserName'])
+    msg['Text'](msg['FileName'])
+    itchat.send('@%s@%s'%('img' if msg['Type'] == 'Picture' else 'fil', msg['FileName']), msg['FromUserName'])
+    return '%s received'%msg['Type']
 
 @itchat.msg_register('Friends')
 def add_friend(msg):
-    itchat.add_friend(**msg['Text'])
-    itchat.get_contract()
+    itchat.add_friend(**msg['Text']) # new friend will be automatically added into storage, you don't need to reload the memberList
     itchat.send_msg('Nice to meet you!', msg['RecommendInfo']['UserName'])
 
 @itchat.msg_register('Text', isGroupChat = True)
@@ -84,14 +80,16 @@ itchat.auto_login(hotReload = True)
 
 The attachment download function of itchat is in Text key of msg
 
+Name of the file (default name of picture) is in FileName key of msg
+
 Download function accept one location value (include the file name) and store attachment accordingly.
 
 ```python
 @itchat.msg_register(['Picture', 'Recording', 'Attachment', 'Video'])
 def download_files(msg):
     msg['Text'](msg['FileName'])
-    itchat.send('%s received'%msg['Type'], msg['FromUserName'])
-    itchat.send('@%s@%s'%('img' if msg['Type'] == 'Picture' else 'fil', fileDir), msg['FromUserName'])
+    itchat.send('@%s@%s'%('img' if msg['Type'] == 'Picture' else 'fil', msg['FileName']), msg['FromUserName'])
+    return '%s received'%msg['Type']
 ```
 
 ## Have a try
