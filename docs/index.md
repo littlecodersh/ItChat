@@ -77,6 +77,29 @@ itchat.auto_login(enableCmdQR = 2)
 itchat.auto_login(hotReload = True)
 ```
 
+### 用户搜索
+
+使用`get_friends`方法可以搜索用户，有四种搜索方式：
+1. 仅获取自己的用户信息
+2. 获取特定`UserName`的用户信息
+3. 获取备注、微信号、昵称中的任何一项等于`name`键值的用户
+4. 获取备注、微信号、昵称分别等于相应键值的用户
+
+其中三、四项可以一同使用，下面是示例程序：
+
+```python
+# 获取自己的用户信息，返回自己的属性字典
+itchat.get_friends()
+# 获取特定UserName的用户信息
+itchat.get_friends(userName = '@abcdefg1234567')
+# 获取任何一项等于name键值的用户
+itchat.get_friends(name = 'littlecodersh')
+# 获取分别对应相应键值的用户
+itchat.get_friends(wechatAccount = 'littlecodersh')
+# 三、四项功能可以一同使用
+itchat.get_friends(name = 'LittleCoder机器人', wechatAccount = 'littlecodersh')
+```
+
 ### 附件的下载与发送
 
 itchat的附件下载方法存储在msg的Text键中。

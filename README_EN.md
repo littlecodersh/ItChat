@@ -76,6 +76,29 @@ By using the following command, you may reload the program without re-scan QRCod
 itchat.auto_login(hotReload = True)
 ```
 
+### User search
+
+By using `get_friends`, you have four ways to search a user:
+1. Get your own user information
+2. Get user information through `UserName`
+3. Get user information whose remark name or wechat account or nickname matches name key of the function
+4. Get user information whose remark name, wechat account and nickname match what are given to the function
+
+Way 3, 4 can be used together, the following is the demo program:
+
+```python
+# get your own user information
+itchat.get_friends()
+# get user information of specific username
+itchat.get_friends(userName = '@abcdefg1234567')
+# get user information of function 3
+itchat.get_friends(name = 'littlecodersh')
+# get user information of function 4
+itchat.get_friends(wechatAccount = 'littlecodersh')
+# combination of way 3, 4
+itchat.get_friends(name = 'LittleCoder机器人', wechatAccount = 'littlecodersh')
+```
+
 ### Download and send attachments
 
 The attachment download function of itchat is in Text key of msg

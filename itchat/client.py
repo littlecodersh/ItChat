@@ -484,6 +484,16 @@ class client(object):
             'Content-Type': 'application/json;charset=UTF-8', }
         r = self.s.post(url, data = json.dumps(payloads, ensure_ascii = False).encode('utf8'), headers = headers)
         return True
+    def set_alias(self, userName, alias):
+        url = '%s/webwxoplog?lang=%s&pass_ticket=%s'%(
+            self.loginInfo['url'], 'zh_CN', self.loginInfo['pass_ticket'])
+        data = {
+            'UserName'    : userName,
+            'CmdId'       : 2,
+            'RemarkName'  : alias,
+            'BaseRequest' : self.loginInfo['BaseRequest'], }
+        j = self.s.post(url, json.dumps(data, ensure_ascii = False).encode('utf8')).json()
+        return j['BaseResponse']['Ret'] == 0
     def add_friend(self, status, userName, ticket, recommendInfo = {}):
         url = '%s/webwxverifyuser?r=%s&pass_ticket=%s'%(self.loginInfo['url'], int(time.time()), self.loginInfo['pass_ticket'])
         payloads = {

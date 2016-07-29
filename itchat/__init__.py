@@ -22,15 +22,20 @@ def get_chatrooms(update = False): return __client.get_chatrooms(update)
 def show_mobile_login(): return __client.show_mobile_login()
 def start_receiving(): return __client.start_receiving()
 # <<<
-# The following method are for reload without re-scan the QRCode
+# The following methods are for reload without re-scan the QRCode >>>
 def dump_login_status(fileDir = 'itchat.pkl'): return __client.dump_login_status(fileDir)
 def load_login_status(fileDir = 'itchat.pkl'): return __client.load_login_status(fileDir)
+# <<<
+# The following methods are for member dealing >>>
+def get_friends(name = None, userName = None, remarkName = None, nickName = None, wechatAccount = None):
+    return __client.storageClass.get_friends(name, userName, remarkName, nickName, wechatAccount)
+def set_alias(userName, alias): return __client.set_alias(userName, alias)
+def add_friend(status, userName, ticket, recommendInfo = {}): return __client.add_friend(status, userName, ticket, recommendInfo)
 # <<<
 # if toUserName is set to None, msg will be sent to yourself
 def send_msg(msg = 'Test Message', toUserName = None): return __client.send_msg(msg, toUserName)
 def send_file(fileDir, toUserName): return __client.send_file(fileDir, toUserName)
 def send_image(fileDir, toUserName): return __client.send_image(fileDir, toUserName)
-def add_friend(status, userName, ticket, recommendInfo = {}): return __client.add_friend(status, userName, ticket, recommendInfo)
 def create_chatroom(memberList, topic = ''): return __client.create_chatroom(memberList, topic)
 def delete_member_from_chatroom(chatRoomUserName, memberList): return __client.delete_member_from_chatroom(chatRoomUserName, memberList)
 def add_member_into_chatroom(chatRoomUserName, memberList): return __client.add_member_into_chatroom(chatRoomUserName, memberList)
