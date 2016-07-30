@@ -69,6 +69,12 @@ itchat.auto_login(enableCmdQR = True)
 itchat.auto_login(enableCmdQR = 2)
 ```
 
+默认控制台背景色为暗色（黑色），若背景色为浅色（白色），可以将enableCmdQR赋值为负值：
+
+```python
+itchat.auto_login(enableCmdQR = -1)
+```
+
 ### 退出程序后暂存登陆状态
 
 通过如下命令登陆，即使程序关闭，一定时间内重新开启也可以不用重新扫码。

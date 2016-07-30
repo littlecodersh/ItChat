@@ -71,6 +71,12 @@ Because of width of some character differs from systems, you may adjust the enab
     # for some linux system, width of block character is one instead of two, so enableCmdQR should be 2
     itchat.auto_login(enableCmdQR = 2)
 
+Default background color of command line is dark (black), if it's not, you may set enableCmdQR to be negative:
+
+.. code:: python
+
+    itchat.auto_login(enableCmdQR = -1)
+
 *Hot reload*
 
 By using the following command, you may reload the program without re-scan QRCode in some time.

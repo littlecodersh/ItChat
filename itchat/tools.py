@@ -63,7 +63,7 @@ def print_qr(fileDir):
     else:
         os.startfile(fileDir)
 try:
-    from PIL import Image 
+    from PIL import Image
     def print_cmd_qr(fileDir, size = 37, padding = 3,
             white = BLOCK, black = '  ', enableCmdQR = True):
         img     = Image.open(fileDir)
@@ -71,11 +71,12 @@ try:
         rgb     = img.convert('RGB')
         try:
             blockCount = int(enableCmdQR)
-            assert(0 < blockCount)
+            assert(0 < abs(blockCount))
         except:
             blockCount = 1
         finally:
-            white *= blockCount
+            white *= abs(blockCount)
+            if blockCount < 0: white, black = black, white
         sys.stdout.write(' '*50 + '\r')
         sys.stdout.flush()
         qr = white * (size + 2) + '\n'
