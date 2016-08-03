@@ -255,8 +255,10 @@ class client(object):
         srl = [40, 43, 50, 52, 53, 9999]
         # 40 msg, 43 videochat, 50 VOIPMSG, 52 voipnotifymsg, 53 webwxvoipnotifymsg, 9999 sysnotice
         for m in l:
-            tools.msg_formatter(m, 'Content')
-            if '@@' in m['FromUserName']: self.__produce_group_chat(m)
+            if '@@' in m['FromUserName']:
+                self.__produce_group_chat(m)
+            else:
+                tools.msg_formatter(m, 'Content')
             if m['MsgType'] == 1: # words
                 if m['Url']:
                     regx = r'(.+?\(.+?\))'
@@ -395,9 +397,13 @@ class client(object):
             groupMemberList = self.get_batch_contract(msg['FromUserName'])['MemberList']
             self.storageClass.groupDict[msg['FromUserName']] = {member['UserName']: member for member in groupMemberList}
         msg['ActualUserName'] = actualUserName
-        msg['ActualNickName'] = self.storageClass.groupDict[msg['FromUserName']][actualUserName]['NickName']
+        msg['ActualNickName'] = (self.storageClass.groupDict[msg['FromUserName']][actualUserName]['DisplayName'] or
+            self.storageClass.groupDict[msg['FromUserName']][actualUserName]['NickName'])
         msg['Content']        = content
-        msg['isAt']           = u'@%s\u2005'%self.storageClass.nickName in msg['Content']
+        tools.msg_formatter(msg, 'Content')
+        msg['isAt']           = u'@%s\u2005' % (
+            self.storageClass.groupDict[msg['FromUserName']][self.storageClass.userName]['DisplayName']
+            or self.storageClass.nickName) in msg['Content']
     def send_msg(self, msg = 'Test Message', toUserName = None):
         url = '%s/webwxsendmsg'%self.loginInfo['url']
         payloads = {

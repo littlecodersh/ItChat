@@ -48,6 +48,7 @@ def emoji_formatter(d, k):
     d[k] = emojiRegex.sub(_emoji_formatter, d[k])
 def msg_formatter(d, k):
     emoji_formatter(d, k)
+    d[k] = d[k].replace('<br/>', '\n')
     d[k]  = htmlParser.unescape(d[k])
 def check_file(fileDir):
     try:
