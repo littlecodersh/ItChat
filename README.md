@@ -142,6 +142,10 @@ Q: 为什么我在设定了`itchat.auto_login()`的`enableCmdQR`为`True`后还�
 
 A: 这是由于没有安装可选的包`pillow`，可以使用右边的命令安装：`pip install pillow`
 
+Q: 如何通过这个包将自己的微信号变为控制器？
+
+A: 有两种方式：发送、接受自己UserName的消息；发送接收文件传输助手（filehelper）的消息
+
 ## Author
 
 [LittleCoder](https://github.com/littlecodersh): 整体构架及完成Python2版本。
