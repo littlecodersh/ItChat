@@ -9,7 +9,7 @@ try:
 except:
     BLOCK = 'MM'
 else:
-    BLOCK = b
+    BLOCK = b + b
 
 class QRCode():
     def __init__(self, fileName, size, padding = 0, background = 'BLACK'):
