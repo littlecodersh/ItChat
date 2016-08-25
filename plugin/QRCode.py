@@ -9,7 +9,9 @@ try:
 except:
     BLOCK = 'MM'
 else:
+#please set ur terminal's background color black    
     BLOCK = b + b
+
 
 class QRCode():
     def __init__(self, fileName, size, padding = 0, background = 'BLACK'):
