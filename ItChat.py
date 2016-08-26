@@ -6,7 +6,7 @@ from itchat.client import WeChatClient
 from plugin.ChatLikeCMD import ChatLikeCMD
 
 # it's recorded in https://github.com/littlecodersh/ItChat/wiki/Screenshots
-ROBOT = True # change to False if you need to use command line wechat
+ROBOT = False # change to False if you need to use command line wechat
 
 def demo_robot(s, msgList, client): # ONLY FOR DEMO
     print('Start auto-replying')

@@ -8,9 +8,13 @@ try:
     sys.stdout.flush()
 except:
     BLOCK = 'MM'
+#please set ur terminal's background color black
 else:
-    BLOCK = b
-
+    if os.name == 'nt':
+        BLOCK = b
+    elif os.name == 'posix':
+        BLOCK = b + b
+    
 class QRCode():
     def __init__(self, fileName, size, padding = 0, background = 'BLACK'):
         self.size = size

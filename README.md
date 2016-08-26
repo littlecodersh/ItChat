@@ -33,6 +33,9 @@ ItChat是一个个人微信号的机器人，他实现了一个机器人需要�
 ![login_page](http://7xrip4.com1.z0.glb.clouddn.com/ItChat%2FScreenshots%2F%E7%99%BB%E5%BD%95%E7%95%8C%E9%9D%A2%E6%88%AA%E5%9B%BE.jpg?imageView/2/w/300/)
 
 和登陆网页端微信一样，扫码即可登录。
+![login_page_linux](http://ww1.sinaimg.cn/mw690/76731d17gw1f77hqowonbj2154130jzs.jpg)
+
+在Mac/linux终端可以正常显示二维码，扫码登录。
 
 ##Installation
 
