@@ -29,29 +29,29 @@ Here is the `code <https://github.com/littlecodersh/ItChat/tree/robot>`__.
 
 .. code:: python
     
+    #coding=utf8
     import itchat, time
 
     @itchat.msg_register(['Text', 'Map', 'Card', 'Note', 'Sharing'])
     def text_reply(msg):
-        itchat.send('%s: %s'%(msg['Type'], msg['Text']), msg['FromUserName'])
+        itchat.send('%s: %s' % (msg['Type'], msg['Text']), msg['FromUserName'])
 
     @itchat.msg_register(['Picture', 'Recording', 'Attachment', 'Video'])
     def download_files(msg):
         msg['Text'](msg['FileName'])
-        itchat.send('@%s@%s'%('img' if msg['Type'] == 'Picture' else 'fil', msg['FileName']), msg['FromUserName'])
-        return '%s received'%msg['Type']
+        return '@%s@%s' % ({'Picture': 'img', 'Video': 'vid'}.get(msg['Type'], 'fil'))
 
     @itchat.msg_register('Friends')
     def add_friend(msg):
-        itchat.add_friend(**msg['Text']) # new friend will be automatically added into storage, you don't need to reload the memberList
+        itchat.add_friend(**msg['Text']) # 该操作会自动将新好友的消息录入，不需要重载通讯录
         itchat.send_msg('Nice to meet you!', msg['RecommendInfo']['UserName'])
 
     @itchat.msg_register('Text', isGroupChat = True)
     def text_reply(msg):
         if msg['isAt']:
-            itchat.send(u'@%s\u2005I received: %s'%(msg['ActualNickName'], msg['Content']), msg['FromUserName'])
+            itchat.send(u'@%s\u2005I received: %s' % (msg['ActualNickName'], msg['Content']), msg['FromUserName'])
 
-    itchat.auto_login()
+    itchat.auto_login(True)
     itchat.run()
 
 **Advanced uses**

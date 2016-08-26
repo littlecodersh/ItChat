@@ -1,7 +1,7 @@
 import time
 from .client import client
 
-__version__ = '1.1.1'
+__version__ = '1.1.2'
 
 __client = client()
 def auto_login(hotReload = False, statusStorageDir = 'itchat.pkl', enableCmdQR = False):
@@ -35,6 +35,7 @@ def add_friend(status, userName, ticket, recommendInfo = {}): return __client.ad
 # if toUserName is set to None, msg will be sent to yourself
 def send_msg(msg = 'Test Message', toUserName = None): return __client.send_msg(msg, toUserName)
 def send_file(fileDir, toUserName): return __client.send_file(fileDir, toUserName)
+def send_video(fileDir, toUserName): return __client.send_video(fileDir, toUserName)
 def send_image(fileDir, toUserName): return __client.send_image(fileDir, toUserName)
 def create_chatroom(memberList, topic = ''): return __client.create_chatroom(memberList, topic)
 def delete_member_from_chatroom(chatRoomUserName, memberList): return __client.delete_member_from_chatroom(chatRoomUserName, memberList)
@@ -47,6 +48,8 @@ def send(msg, toUserName = None):
         return __client.send_image(msg[5:], toUserName)
     elif msg[:5] == '@msg@':
         return __client.send_msg(msg[5:], toUserName)
+    elif msg[:5] == '@vid@':
+        return __client.send_video(msg[5:], toUserName)
     else:
         return __client.send_msg(msg, toUserName)
 

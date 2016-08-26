@@ -26,17 +26,17 @@ pip install itchat
 通过如下代码，微信已经可以就日常的各种信息进行获取与回复。
 
 ```python
+#coding=utf8
 import itchat, time
 
 @itchat.msg_register(['Text', 'Map', 'Card', 'Note', 'Sharing'])
 def text_reply(msg):
-    itchat.send('%s: %s'%(msg['Type'], msg['Text']), msg['FromUserName'])
+    itchat.send('%s: %s' % (msg['Type'], msg['Text']), msg['FromUserName'])
 
 @itchat.msg_register(['Picture', 'Recording', 'Attachment', 'Video'])
 def download_files(msg):
     msg['Text'](msg['FileName'])
-    itchat.send('@%s@%s'%('img' if msg['Type'] == 'Picture' else 'fil', msg['FileName']), msg['FromUserName'])
-    return '%s received'%msg['Type']
+    return '@%s@%s' % ({'Picture': 'img', 'Video': 'vid'}.get(msg['Type'], 'fil'))
 
 @itchat.msg_register('Friends')
 def add_friend(msg):
@@ -46,9 +46,9 @@ def add_friend(msg):
 @itchat.msg_register('Text', isGroupChat = True)
 def text_reply(msg):
     if msg['isAt']:
-        itchat.send(u'@%s\u2005I received: %s'%(msg['ActualNickName'], msg['Content']), msg['FromUserName'])
+        itchat.send(u'@%s\u2005I received: %s' % (msg['ActualNickName'], msg['Content']), msg['FromUserName'])
 
-itchat.auto_login()
+itchat.auto_login(True)
 itchat.run()
 ```
 
