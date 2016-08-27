@@ -45,6 +45,8 @@ class client(object):
             self.start_receiving()
             return True
         else:
+            self.storageClass.groupDict.clear()
+            self.s.cookies.clear() # other info will be automatically cleared
             return False
     def auto_login(self, enableCmdQR = False):
         def open_QR():
@@ -70,7 +72,7 @@ class client(object):
         self.web_init()
         self.show_mobile_login()
         tools.clear_screen()
-        self.get_contract()
+        self.get_contract(True)
         out.print_line('Login successfully as %s\n'%self.storageClass.nickName, False)
         self.start_receiving()
     def get_QRuuid(self):
@@ -528,14 +530,14 @@ class client(object):
         url = '%s/webwxverifyuser?r=%s&pass_ticket=%s'%(self.loginInfo['url'], int(time.time()), self.loginInfo['pass_ticket'])
         payloads = {
             'BaseRequest': self.loginInfo['BaseRequest'],
-            'Opcode': status,
+            'Opcode': status, # 3
             'VerifyUserListSize': 1,
             'VerifyUserList': [{
                 'Value': userName,
-                'VerifyUserTicket': ticket, }],
+                'VerifyUserTicket': ticket, }], # ''
             'VerifyContent': '',
             'SceneListCount': 1,
-            'SceneList': 33,
+            'SceneList': 33, # [33]
             'skey': self.loginInfo['skey'], }
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)

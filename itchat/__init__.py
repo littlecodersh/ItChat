@@ -1,7 +1,7 @@
 import time
 from .client import client
 
-__version__ = '1.1.2'
+__version__ = '1.1.3'
 
 __client = client()
 def auto_login(hotReload = False, statusStorageDir = 'itchat.pkl', enableCmdQR = False):
