@@ -39,7 +39,7 @@ Here is the `code <https://github.com/littlecodersh/ItChat/tree/robot>`__.
     @itchat.msg_register(['Picture', 'Recording', 'Attachment', 'Video'])
     def download_files(msg):
         msg['Text'](msg['FileName'])
-        return '@%s@%s' % ({'Picture': 'img', 'Video': 'vid'}.get(msg['Type'], 'fil'))
+        return '@%s@%s' % ({'Picture': 'img', 'Video': 'vid'}.get(msg['Type'], 'fil'), msg['FileName'])
 
     @itchat.msg_register('Friends')
     def add_friend(msg):
@@ -124,6 +124,15 @@ Download function accept one location value (include the file name) and store at
         msg['Text'](msg['FileName'])
         itchat.send('@%s@%s'%('img' if msg['Type'] == 'Picture' else 'fil', msg['FileName']), msg['FromUserName'])
         return '%s received'%msg['Type']
+
+If you don't want a local copy of the picture, you may pass nothing to the function to get a binary string.
+
+.. code:: python
+
+    @itchat.msg_register(['Picture', 'Recording', 'Attachment', 'Video'])
+    def download_files(msg):
+        with open(msg['FileName'], 'wb') as f:
+            f.write(msg['Text']())
 
 **FAQ**
 

@@ -1,4 +1,4 @@
-import os, sys, time, re
+import os, sys, time, re, io
 import threading, subprocess
 import json, xml.dom.minidom, mimetypes
 import copy, pickle
@@ -273,30 +273,34 @@ class client(object):
                         'Type': 'Text',
                         'Text': m['Content'],}
             elif m['MsgType'] == 3 or m['MsgType'] == 47: # picture
-                def download_picture(picDir):
+                def download_picture(picDir=None):
                     url = '%s/webwxgetmsgimg'%self.loginInfo['url']
                     payloads = {
                         'MsgID': m['NewMsgId'],
                         'skey': self.loginInfo['skey'],}
                     r = self.s.get(url, params = payloads, stream = True)
-                    with open(picDir, 'wb') as f:
-                        for block in r.iter_content(1024):
-                            f.write(block)
+                    tempStorage = io.BytesIO()
+                    for block in r.iter_content(1024):
+                        tempStorage.write(block)
+                    if picDir is None: return tempStorage.getvalue()
+                    with open(picDir, 'wb') as f: f.write(tempStorage.getvalue())
                 msg = {
                     'Type'     : 'Picture',
                     'FileName' : '%s.%s'%(time.strftime('%y%m%d-%H%M%S', time.localtime()),
                         'png' if m['MsgType'] == 3 else 'gif'),
                     'Text'     : download_picture, }
             elif m['MsgType'] == 34: # voice
-                def download_voice(voiceDir):
+                def download_voice(voiceDir=None):
                     url = '%s/webwxgetvoice'%self.loginInfo['url']
                     payloads = {
                         'msgid': m['NewMsgId'],
                         'skey': self.loginInfo['skey'],}
                     r = self.s.get(url, params = payloads, stream = True)
-                    with open(voiceDir, 'wb') as f:
-                        for block in r.iter_content(1024):
-                            f.write(block)
+                    tempStorage = io.BytesIO()
+                    for block in r.iter_content(1024):
+                        tempStorage.write(block)
+                    if voiceDir is None: return tempStorage.getvalue()
+                    with open(voiceDir, 'wb') as f: f.write(tempStorage.getvalue())
                 msg = {
                     'Type': 'Recording',
                     'FileName' : '%s.mp4' % time.strftime('%y%m%d-%H%M%S', time.localtime()),
@@ -315,7 +319,7 @@ class client(object):
                     'Text': m['RecommendInfo'], }
             elif m['MsgType'] == 49: # sharing
                 if m['AppMsgType'] == 6:
-                    def download_atta(attaDir):
+                    def download_atta(attaDir=None):
                         cookiesList = {name:data for name,data in self.s.cookies.items()}
                         url = 'https://file%s.wx.qq.com/cgi-bin/mmwebwx-bin/webwxgetmedia'%('2' if '2' in self.loginInfo['url'] else '')
                         payloads = {
@@ -326,9 +330,11 @@ class client(object):
                             'pass_ticket': 'undefined',
                             'webwx_data_ticket': cookiesList['webwx_data_ticket'],}
                         r = self.s.get(url, params = payloads, stream = True)
-                        with open(attaDir, 'wb') as f:
-                            for block in r.iter_content(1024):
-                                f.write(block)
+                        tempStorage = io.BytesIO()
+                        for block in r.iter_content(1024):
+                            tempStorage.write(block)
+                        if attaDir is None: return tempStorage.getvalue()
+                        with open(attaDir, 'wb') as f: f.write(tempStorage.getvalue())
                     msg = {
                         'Type': 'Attachment',
                         'Text': download_atta, }
@@ -351,19 +357,18 @@ class client(object):
                     'Type': 'Init',
                     'Text': m['ToUserName'], }
             elif m['MsgType'] == 62: # tiny video
-                def download_video(videoDir):
+                def download_video(videoDir=None):
                     url = '%s/webwxgetvideo'%self.loginInfo['url']
                     payloads = {
                         'msgid': m['MsgId'],
                         'skey': self.loginInfo['skey'],}
                     headers = {'Range': 'bytes=0-'}
                     r = self.s.get(url, params = payloads, headers = headers, stream = True)
-                    with open(videoDir, 'wb') as f: 
-                        for chunk in r.iter_content(chunk_size = 1024):
-                            if chunk:
-                                f.write(chunk)
-                                f.flush()
-                                os.fsync(f.fileno())
+                    tempStorage = io.BytesIO()
+                    for block in r.iter_content(1024):
+                        tempStorage.write(block)
+                    if videoDir is None: return tempStorage.getvalue()
+                    with open(videoDir, 'wb') as f: f.write(tempStorage.getvalue())
                 msg = {
                     'Type': 'Video',
                     'FileName' : '%s.mp4' % time.strftime('%y%m%d-%H%M%S', time.localtime()),

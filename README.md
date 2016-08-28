@@ -36,7 +36,7 @@ def text_reply(msg):
 @itchat.msg_register(['Picture', 'Recording', 'Attachment', 'Video'])
 def download_files(msg):
     msg['Text'](msg['FileName'])
-    return '@%s@%s' % ({'Picture': 'img', 'Video': 'vid'}.get(msg['Type'], 'fil'))
+    return '@%s@%s' % ({'Picture': 'img', 'Video': 'vid'}.get(msg['Type'], 'fil'), msg['FileName'])
 
 @itchat.msg_register('Friends')
 def add_friend(msg):
@@ -120,6 +120,15 @@ def download_files(msg):
     msg['Text'](msg['FileName'])
     itchat.send('@%s@%s'%('img' if msg['Type'] == 'Picture' else 'fil', msg['FileName']), msg['FromUserName'])
     return '%s received'%msg['Type']
+```
+
+如果你不需要下载到本地，仅想要读取二进制串进行进一步处理可以不传入参数，方法将会返回图片的二进制串。
+
+```python
+@itchat.msg_register(['Picture', 'Recording', 'Attachment', 'Video'])
+def download_files(msg):
+    with open(msg['FileName'], 'wb') as f:
+        f.write(msg['Text']())
 ```
 
 ## Have a try
