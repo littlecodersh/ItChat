@@ -1,4 +1,4 @@
-import re, os, sys, subprocess
+import re, os, sys, subprocess, copy
 
 try:
     from HTMLParser import HTMLParser
@@ -17,6 +17,14 @@ except UnicodeEncodeError:
     BLOCK = 'MM'
 else:
     BLOCK = b
+friendInfoTemplate = {}
+for k in ('UserName', 'City', 'DisplayName', 'PYQuanPin', 'RemarkPYInitial', 'Province',
+    'KeyWord', 'RemarkName', 'PYInitial', 'EncryChatRoomId', 'Alias', 'Signature', 
+    'NickName', 'RemarkPYQuanPin', 'HeadImgUrl'): friendInfoTemplate[k] = ''
+for k in ('UniFriend', 'Sex', 'AppAccountFlag', 'VerifyFlag', 'ChatRoomId', 'HideInputBarFlag',
+    'AttrStatus', 'SnsFlag', 'MemberCount', 'OwnerUin', 'ContactFlag', 'Uin',
+    'StarFriend', 'Statues'): friendInfoTemplate[k] = 0
+friendInfoTemplate['MemberList'] = []
 
 def clear_screen():
     os.system('cls' if config.OS == 'Windows' else 'clear')
@@ -95,3 +103,7 @@ except ImportError:
             white = BLOCK, black = '  '):
         print('pillow should be installed to use command line QRCode: pip install pillow')
         print_qr(fileDir)
+def struct_friend_info(knownInfo):
+    member = copy.deepcopy(friendInfoTemplate)
+    for k, v in knownInfo.items(): member[k] = v
+    return member

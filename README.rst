@@ -62,20 +62,20 @@ You can access the QR Code in command line through using this command:
 
 .. code:: python
 
-    itchat.auto_login(enableCmdQR = True)
+    itchat.auto_login(enableCmdQR=True)
 
 Because of width of some character differs from systems, you may adjust the enableCmdQR to fix the problem.
 
 .. code:: python
 
     # for some linux system, width of block character is one instead of two, so enableCmdQR should be 2
-    itchat.auto_login(enableCmdQR = 2)
+    itchat.auto_login(enableCmdQR=2)
 
 Default background color of command line is dark (black), if it's not, you may set enableCmdQR to be negative:
 
 .. code:: python
 
-    itchat.auto_login(enableCmdQR = -1)
+    itchat.auto_login(enableCmdQR=-1)
 
 *Hot reload*
 
@@ -83,7 +83,7 @@ By using the following command, you may reload the program without re-scan QRCod
 
 .. code:: python
 
-    itchat.auto_login(hotReload = True)
+    itchat.auto_login(hotReload=True)
 
 *User search*
 
@@ -101,13 +101,13 @@ Way 3, 4 can be used together, the following is the demo program:
     # get your own user information
     itchat.get_friends()
     # get user information of specific username
-    itchat.get_friends(userName = '@abcdefg1234567')
+    itchat.get_friends(userName='@abcdefg1234567')
     # get user information of function 3
-    itchat.get_friends(name = 'littlecodersh')
+    itchat.get_friends(name='littlecodersh')
     # get user information of function 4
-    itchat.get_friends(wechatAccount = 'littlecodersh')
+    itchat.get_friends(wechatAccount='littlecodersh')
     # combination of way 3, 4
-    itchat.get_friends(name = 'LittleCoder机器人', wechatAccount = 'littlecodersh')
+    itchat.get_friends(name='LittleCoder机器人', wechatAccount='littlecodersh')
 
 *Download and send attachments*
 
@@ -138,8 +138,7 @@ If you don't want a local copy of the picture, you may pass nothing to the funct
 
 Q: Why I can't send files whose name is encoded in utf8?
 
-A: That's because of the upload setting of requests, you can put `this file <https://github.com/littlecodersh/ItChat/blob/robot/plugin/config/fields.py>`__ 
-into packages/urllib3 of requests package.
+A: That's because of the upload setting of requests, you can put `this file <https://gist.github.com/littlecodersh/9a0c5466f442d67d910f877744011705>`__ (for py3 you need `this <https://gist.github.com/littlecodersh/e93532d5e7ddf0ec56c336499165c4dc>`__) into packages/urllib3 of requests package.
 
 Q: Why I still can't show QRCode with command line after I set enableCmdQr key to True in itchat.auto_login()?
 

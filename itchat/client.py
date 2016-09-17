@@ -257,7 +257,7 @@ class client(object):
         srl = [40, 43, 50, 52, 53, 9999]
         # 40 msg, 43 videochat, 50 VOIPMSG, 52 voipnotifymsg, 53 webwxvoipnotifymsg, 9999 sysnotice
         for m in l:
-            if '@@' in m['FromUserName']:
+            if '@@' in m['FromUserName'] or '@@' in m['ToUserName']:
                 self.__produce_group_chat(m)
             else:
                 tools.msg_formatter(m, 'Content')
@@ -547,15 +547,7 @@ class client(object):
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
         if recommendInfo: # add user to storage
-            member = {}
-            for k in ('UserName', 'City', 'DisplayName', 'PYQuanPin', 'RemarkPYInitial', 'Province',
-                'KeyWord', 'RemarkName', 'PYInitial', 'EncryChatRoomId', 'Alias', 'Signature', 
-                'NickName', 'RemarkPYQuanPin', 'HeadImgUrl'): member[k] = ''
-            for k in ('UniFriend', 'Sex', 'AppAccountFlag', 'VerifyFlag', 'ChatRoomId', 'HideInputBarFlag',
-                'AttrStatus', 'SnsFlag', 'MemberCount', 'OwnerUin', 'ContactFlag', 'Uin',
-                'StarFriend', 'Statues'): member[k] = 0
-            member['MemberList'] = []
-            self.memberList.append(dict(member, **recommendInfo))
+            self.memberList.append(tools.struct_friend_info(recommendInfo))
     def create_chatroom(self, memberList, topic = ''):
         url = ('%s/webwxcreatechatroom?pass_ticket=%s&r=%s'%(
                 self.loginInfo['url'], self.loginInfo['pass_ticket'], int(time.time())))
