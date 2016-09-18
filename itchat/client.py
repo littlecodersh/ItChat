@@ -14,6 +14,7 @@ class client(object):
     def __init__(self):
         self.storageClass = storage.Storage()
         self.memberList = self.storageClass.memberList
+        self.mpList = self.storageClass.mpList
         self.chatroomList = self.storageClass.chatroomList
         self.msgList = self.storageClass.msgList
         self.loginInfo = {}
@@ -72,7 +73,7 @@ class client(object):
         self.web_init()
         self.show_mobile_login()
         tools.clear_screen()
-        self.get_contract(True)
+        self.get_friends(True)
         out.print_line('Login successfully as %s\n'%self.storageClass.nickName, False)
         self.start_receiving()
     def get_QRuuid(self):
@@ -159,15 +160,16 @@ class client(object):
             tools.emoji_formatter(member, 'DisplayName')
         j['isAdmin'] = j['OwnerUin'] == int(self.loginInfo['wxuin'])
         return j
-    def get_contract(self, update = False):
+    def get_friends(self, update=False):
         if 1 < len(self.memberList) and not update: return copy.deepcopy(self.memberList)
         url = '%s/webwxgetcontact?r=%s&seq=0&skey=%s' % (self.loginInfo['url'],
             int(time.time()), self.loginInfo['skey'])
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
-        r = self.s.get(url, headers = headers)
+        r = self.s.get(url, headers=headers)
         tempList = json.loads(r.content.decode('utf-8', 'replace'))['MemberList']
         del self.chatroomList[:]
         del self.memberList[:]
+        del self.mpList[:]
         self.memberList.append(self.loginInfo['User'])
         for m in tempList:
             tools.emoji_formatter(m, 'NickName')
@@ -180,12 +182,18 @@ class client(object):
                 continue # userName have number and str
             elif '@@' in m['UserName']:
                 self.chatroomList.append(m)
-            elif m['VerifyFlag'] & 8 == 0 and '@' in m['UserName']:
-                self.memberList.append(m)
+            if '@' in m['UserName']:
+                if m['VerifyFlag'] & 8 == 0:
+                    self.memberList.append(m)
+                else:
+                    self.mpList.append(m)
         return copy.deepcopy(self.memberList)
-    def get_chatrooms(self, update = False):
-        if update: self.get_contract(update = True)
+    def get_chatrooms(self, update=False):
+        if update: self.get_friends(update=True)
         return copy.deepcopy(self.chatroomList)
+    def get_mps(self, update=False):
+        if update: self.get_friends(update=True)
+        return copy.deepcopy(self.mpList)
     def show_mobile_login(self):
         url = '%s/webwxstatusnotify'%self.loginInfo['url']
         payloads = {
@@ -225,13 +233,12 @@ class client(object):
     def __sync_check(self):
         url = '%s/synccheck'%self.loginInfo['url']
         payloads = {
-                'r': int(time.time()),
-                'skey': self.loginInfo['skey'],
-                'sid': self.loginInfo['wxsid'],
-                'uin': self.loginInfo['wxuin'],
-                'deviceid': self.loginInfo['pass_ticket'],
-                'synckey': self.loginInfo['synckey'],
-                }
+            'r': int(time.time()),
+            'skey': self.loginInfo['skey'],
+            'sid': self.loginInfo['wxsid'],
+            'uin': self.loginInfo['wxuin'],
+            'deviceid': self.loginInfo['pass_ticket'],
+            'synckey': self.loginInfo['synckey'], }
         r = self.s.get(url, params = payloads)
 
         regx = r'window.synccheck={retcode:"(\d+)",selector:"(\d+)"}'

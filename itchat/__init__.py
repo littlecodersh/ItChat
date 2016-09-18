@@ -4,42 +4,45 @@ from .client import client
 __version__ = '1.1.3'
 
 __client = client()
-def auto_login(hotReload = False, statusStorageDir = 'itchat.pkl', enableCmdQR = False):
+def auto_login(hotReload=False, statusStorageDir='itchat.pkl', enableCmdQR=False):
     if hotReload:
         if __client.load_login_status(statusStorageDir): return
-        __client.auto_login(enableCmdQR = enableCmdQR)
+        __client.auto_login(enableCmdQR=enableCmdQR)
         __client.dump_login_status(statusStorageDir)
     else:
-        __client.auto_login(enableCmdQR = enableCmdQR)
+        __client.auto_login(enableCmdQR=enableCmdQR)
 # The following method are all included in __client.auto_login >>>
 def get_QRuuid(): return __client.get_QRuuid()
-def get_QR(uuid = None, enableCmdQR = False): return __client.get_QR(uuid, enableCmdQR)
-def check_login(uuid = None): return __client.check_login(uuid)
+def get_QR(uuid=None, enableCmdQR=False): return __client.get_QR(uuid, enableCmdQR)
+def check_login(uuid=None): return __client.check_login(uuid)
 def web_init(): return __client.web_init()
-def get_batch_contract(groupUserName): return __client.get_batch_contract(groupUserName)
-def get_contract(update = False): return __client.get_contract(update)
-def get_chatrooms(update = False): return __client.get_chatrooms(update)
+def get_friends(update=False): return __client.get_friends(update)
 def show_mobile_login(): return __client.show_mobile_login()
 def start_receiving(): return __client.start_receiving()
 # <<<
 # The following methods are for reload without re-scan the QRCode >>>
-def dump_login_status(fileDir = 'itchat.pkl'): return __client.dump_login_status(fileDir)
-def load_login_status(fileDir = 'itchat.pkl'): return __client.load_login_status(fileDir)
+def dump_login_status(fileDir='itchat.pkl'): return __client.dump_login_status(fileDir)
+def load_login_status(fileDir='itchat.pkl'): return __client.load_login_status(fileDir)
 # <<<
-# The following methods are for member dealing >>>
-def get_friends(name = None, userName = None, remarkName = None, nickName = None, wechatAccount = None):
-    return __client.storageClass.get_friends(name, userName, remarkName, nickName, wechatAccount)
+# The following methods are for contract dealing >>>
+def search_friends(name=None, userName=None, remarkName=None, nickName=None, wechatAccount=None):
+    return __client.storageClass.search_friends(name, userName, remarkName, nickName, wechatAccount)
 def set_alias(userName, alias): return __client.set_alias(userName, alias)
 def add_friend(status, userName, ticket, recommendInfo = {}): return __client.add_friend(status, userName, ticket, recommendInfo)
+def get_mps(update=False): return __client.get_mps(update)
+def search_mps(name=None, userName=None): return __client.storageClass.search_mps(name, userName)
+def get_chatrooms(update=False): return __client.get_chatrooms(update)
+def search_chatrooms(name=None, userName=None): return __client.storageClass.search_chatrooms(name, userName)
+def get_batch_contract(groupUserName): return __client.get_batch_contract(groupUserName)
+def create_chatroom(memberList, topic = ''): return __client.create_chatroom(memberList, topic)
+def delete_member_from_chatroom(chatRoomUserName, memberList): return __client.delete_member_from_chatroom(chatRoomUserName, memberList)
+def add_member_into_chatroom(chatRoomUserName, memberList): return __client.add_member_into_chatroom(chatRoomUserName, memberList)
 # <<<
 # if toUserName is set to None, msg will be sent to yourself
 def send_msg(msg = 'Test Message', toUserName = None): return __client.send_msg(msg, toUserName)
 def send_file(fileDir, toUserName): return __client.send_file(fileDir, toUserName)
 def send_video(fileDir, toUserName): return __client.send_video(fileDir, toUserName)
 def send_image(fileDir, toUserName): return __client.send_image(fileDir, toUserName)
-def create_chatroom(memberList, topic = ''): return __client.create_chatroom(memberList, topic)
-def delete_member_from_chatroom(chatRoomUserName, memberList): return __client.delete_member_from_chatroom(chatRoomUserName, memberList)
-def add_member_into_chatroom(chatRoomUserName, memberList): return __client.add_member_into_chatroom(chatRoomUserName, memberList)
 def send(msg, toUserName = None):
     if msg is None: return False
     if msg[:5] == '@fil@':

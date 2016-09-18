@@ -5,6 +5,7 @@ class Storage:
         self.userName          = None
         self.nickName          = None
         self.memberList        = []
+        self.mpList            = []
         self.chatroomList      = []
         self.msgList           = []
         self.groupDict         = {}
@@ -14,6 +15,7 @@ class Storage:
             'userName'          : self.userName,
             'nickName'          : self.nickName,
             'memberList'        : self.memberList,
+            'mpList'            : self.mpList,
             'chatroomList'      : self.chatroomList,
             'groupDict'         : self.groupDict,
             'lastInputUserName' : self.lastInputUserName, }
@@ -22,13 +24,15 @@ class Storage:
         self.nickName          = j.get('nickName', None)
         del self.memberList[:]
         for i in j.get('memberList', []): self.memberList.append(i)
+        del self.mpList[:]
+        for i in j.get('mpList', []): self.mpList.append(i)
         del self.chatroomList[:]
         for i in j.get('chatroomList', []): self.chatroomList.append(i)
         self.groupDict.clear()
         for k, v in j.get('groupDict', {}).items(): self.groupDict[k] = v
         self.lastInputUserName = j.get('lastInputUserName', None)
-    def get_friends(self, name = None, userName = None, remarkName = None, nickName = None,
-            wechatAccount = None):
+    def search_friends(self, name=None, userName=None, remarkName=None, nickName=None,
+            wechatAccount=None):
         if (name or userName or remarkName or nickName or wechatAccount) is None:
             return copy.deepcopy(self.memberList[0]) # my own account
         elif userName: # return the only userName match
@@ -56,3 +60,21 @@ class Storage:
                 return copy.deepcopy(friendList)
             else:
                 return copy.deepcopy(contract)
+    def search_chatrooms(self, name=None, userName=None):
+        if userName is not None:
+            for m in self.chatroomList:
+                if m['UserName'] == userName: return copy.deepcopy(m)
+        elif name is not None:
+            matchList = []
+            for m in self.chatroomList:
+                if m['NickName'] == name: matchList.append(copy.deepcopy(m))
+            return matchList
+    def search_mps(self, name=None, userName=None):
+        if userName is not None:
+            for m in self.mpList:
+                if m['UserName'] == userName: return copy.deepcopy(m)
+        elif name is not None:
+            matchList = []
+            for m in self.mpList:
+                if m['NickName'] == name: matchList.append(copy.deepcopy(m))
+            return matchList
