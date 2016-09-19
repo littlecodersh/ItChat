@@ -46,7 +46,6 @@ class client(object):
             self.start_receiving()
             return True
         else:
-            self.storageClass.groupDict.clear()
             self.s.cookies.clear() # other info will be automatically cleared
             return False
     def auto_login(self, enableCmdQR = False):
@@ -138,13 +137,13 @@ class client(object):
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
         dic = json.loads(r.content.decode('utf-8', 'replace'))
         tools.emoji_formatter(dic['User'], 'NickName')
-        self.loginInfo['User'] = dic['User']
+        self.loginInfo['User'] = tools.struct_friend_info(dic['User'])
         self.loginInfo['SyncKey'] = dic['SyncKey']
         self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val']) for item in dic['SyncKey']['List']])
         self.storageClass.userName = dic['User']['UserName']
         self.storageClass.nickName = dic['User']['NickName']
         return dic['User']
-    def get_batch_contract(self, userName):
+    def update_chatroom(self, userName):
         url = '%s/webwxbatchgetcontact?type=ex&r=%s' % (self.loginInfo['url'], int(time.time()))
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         payloads = {
@@ -159,6 +158,12 @@ class client(object):
             tools.emoji_formatter(member, 'NickName')
             tools.emoji_formatter(member, 'DisplayName')
         j['isAdmin'] = j['OwnerUin'] == int(self.loginInfo['wxuin'])
+        oldIndex = None
+        for i, chatroom in enumerate(self.chatroomList):
+            if chatroom['UserName'] == j['UserName']:
+                oldIndex = i; break
+        if oldIndex is not None: del self.chatroomList[oldIndex]
+        self.chatroomList.insert(0, j)
         return j
     def get_friends(self, update=False):
         if 1 < len(self.memberList) and not update: return copy.deepcopy(self.memberList)
@@ -181,6 +186,7 @@ class client(object):
                     list(range(ord('A'), ord('Z') + 1)))])):
                 continue # userName have number and str
             elif '@@' in m['UserName']:
+                m['isAdmin'] = None # this value will be set after update_chatroom
                 self.chatroomList.append(m)
             if '@' in m['UserName']:
                 if m['VerifyFlag'] & 8 == 0:
@@ -407,19 +413,19 @@ class client(object):
         r = re.match('(@[0-9a-z]*?):<br/>(.*)$', msg['Content'])
         if not r: return
         actualUserName, content = r.groups()
-        try:
-            self.storageClass.groupDict[msg['FromUserName']][actualUserName]
-        except:
-            groupMemberList = self.get_batch_contract(msg['FromUserName'])['MemberList']
-            self.storageClass.groupDict[msg['FromUserName']] = {member['UserName']: member for member in groupMemberList}
+        chatroom = self.storageClass.search_chatrooms(userName=msg['FromUserName'])
+        member = tools.search_dict_list((chatroom or {}).get(
+            'MemberList') or [], 'UserName', actualUserName)
+        if member is None:
+            chatroom = self.update_chatroom(msg['FromUserName'])
+            member = tools.search_dict_list((chatroom or {}).get(
+                'MemberList') or [], 'UserName', actualUserName)
         msg['ActualUserName'] = actualUserName
-        msg['ActualNickName'] = (self.storageClass.groupDict[msg['FromUserName']][actualUserName]['DisplayName'] or
-            self.storageClass.groupDict[msg['FromUserName']][actualUserName]['NickName'])
+        msg['ActualNickName'] = member['NickName']
         msg['Content']        = content
         tools.msg_formatter(msg, 'Content')
-        msg['isAt']           = u'@%s\u2005' % (
-            self.storageClass.groupDict[msg['FromUserName']][self.storageClass.userName]['DisplayName']
-            or self.storageClass.nickName) in msg['Content']
+        msg['isAt']           = u'@%s\u2005' % (member['DisplayName'] or 
+            self.storageClass.nickName) in msg['Content']
     def send_msg(self, msg = 'Test Message', toUserName = None):
         url = '%s/webwxsendmsg'%self.loginInfo['url']
         payloads = {
@@ -555,6 +561,7 @@ class client(object):
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
         if recommendInfo: # add user to storage
             self.memberList.append(tools.struct_friend_info(recommendInfo))
+        return r.json()
     def create_chatroom(self, memberList, topic = ''):
         url = ('%s/webwxcreatechatroom?pass_ticket=%s&r=%s'%(
                 self.loginInfo['url'], self.loginInfo['pass_ticket'], int(time.time())))

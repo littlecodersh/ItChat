@@ -8,7 +8,6 @@ class Storage:
         self.mpList            = []
         self.chatroomList      = []
         self.msgList           = []
-        self.groupDict         = {}
         self.lastInputUserName = None
     def dumps(self):
         return {
@@ -17,7 +16,6 @@ class Storage:
             'memberList'        : self.memberList,
             'mpList'            : self.mpList,
             'chatroomList'      : self.chatroomList,
-            'groupDict'         : self.groupDict,
             'lastInputUserName' : self.lastInputUserName, }
     def loads(self, j):
         self.userName          = j.get('userName', None)
@@ -28,8 +26,6 @@ class Storage:
         for i in j.get('mpList', []): self.mpList.append(i)
         del self.chatroomList[:]
         for i in j.get('chatroomList', []): self.chatroomList.append(i)
-        self.groupDict.clear()
-        for k, v in j.get('groupDict', {}).items(): self.groupDict[k] = v
         self.lastInputUserName = j.get('lastInputUserName', None)
     def search_friends(self, name=None, userName=None, remarkName=None, nickName=None,
             wechatAccount=None):

@@ -105,5 +105,11 @@ except ImportError:
         print_qr(fileDir)
 def struct_friend_info(knownInfo):
     member = copy.deepcopy(friendInfoTemplate)
-    for k, v in knownInfo.items(): member[k] = v
+    for k, v in copy.deepcopy(knownInfo).items(): member[k] = v
     return member
+
+def search_dict_list(l, key, value):
+    ''' Search a list of dict
+        * return dict with specific value & key '''
+    for i in l:
+        if i.get(key) == value: return i

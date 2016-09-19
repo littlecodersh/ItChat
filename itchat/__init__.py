@@ -11,6 +11,7 @@ def auto_login(hotReload=False, statusStorageDir='itchat.pkl', enableCmdQR=False
         __client.dump_login_status(statusStorageDir)
     else:
         __client.auto_login(enableCmdQR=enableCmdQR)
+
 # The following method are all included in __client.auto_login >>>
 def get_QRuuid(): return __client.get_QRuuid()
 def get_QR(uuid=None, enableCmdQR=False): return __client.get_QR(uuid, enableCmdQR)
@@ -20,10 +21,12 @@ def get_friends(update=False): return __client.get_friends(update)
 def show_mobile_login(): return __client.show_mobile_login()
 def start_receiving(): return __client.start_receiving()
 # <<<
+
 # The following methods are for reload without re-scan the QRCode >>>
 def dump_login_status(fileDir='itchat.pkl'): return __client.dump_login_status(fileDir)
 def load_login_status(fileDir='itchat.pkl'): return __client.load_login_status(fileDir)
 # <<<
+
 # The following methods are for contract dealing >>>
 def search_friends(name=None, userName=None, remarkName=None, nickName=None, wechatAccount=None):
     return __client.storageClass.search_friends(name, userName, remarkName, nickName, wechatAccount)
@@ -33,11 +36,16 @@ def get_mps(update=False): return __client.get_mps(update)
 def search_mps(name=None, userName=None): return __client.storageClass.search_mps(name, userName)
 def get_chatrooms(update=False): return __client.get_chatrooms(update)
 def search_chatrooms(name=None, userName=None): return __client.storageClass.search_chatrooms(name, userName)
-def get_batch_contract(groupUserName): return __client.get_batch_contract(groupUserName)
+def update_chatroom(groupUserName): return __client.update_chatroom(groupUserName)
 def create_chatroom(memberList, topic = ''): return __client.create_chatroom(memberList, topic)
 def delete_member_from_chatroom(chatRoomUserName, memberList): return __client.delete_member_from_chatroom(chatRoomUserName, memberList)
 def add_member_into_chatroom(chatRoomUserName, memberList): return __client.add_member_into_chatroom(chatRoomUserName, memberList)
 # <<<
+
+# The following is the tear of age, will be deleted soon
+def get_batch_contract(groupUserName): return __client.update_chatroom(groupUserName)
+# <<<
+
 # if toUserName is set to None, msg will be sent to yourself
 def send_msg(msg = 'Test Message', toUserName = None): return __client.send_msg(msg, toUserName)
 def send_file(fileDir, toUserName): return __client.send_file(fileDir, toUserName)
