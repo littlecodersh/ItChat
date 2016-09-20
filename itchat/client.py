@@ -325,7 +325,7 @@ class client(object):
                         'status'        : m['Status'],
                         'userName'      : m['RecommendInfo']['UserName'],
                         'ticket'        : m['Ticket'],
-                        'recommendInfo' : m['RecommendInfo'], }, }
+                        'userInfo' : m['RecommendInfo'], }, }
             elif m['MsgType'] == 42: # name card
                 msg = {
                     'Type': 'Card',
@@ -544,7 +544,10 @@ class client(object):
             'BaseRequest' : self.loginInfo['BaseRequest'], }
         j = self.s.post(url, json.dumps(data, ensure_ascii = False).encode('utf8')).json()
         return j['BaseResponse']['Ret'] == 0
-    def add_friend(self, status, userName, ticket, recommendInfo = {}):
+    def add_friend(self, userName, status=2, ticket='', userInfo={}):
+        ''' Add a friend or accept a friend
+            * for adding status should be 2
+            * for accepting status should be 3 '''
         url = '%s/webwxverifyuser?r=%s&pass_ticket=%s'%(self.loginInfo['url'], int(time.time()), self.loginInfo['pass_ticket'])
         payloads = {
             'BaseRequest': self.loginInfo['BaseRequest'],
@@ -559,8 +562,8 @@ class client(object):
             'skey': self.loginInfo['skey'], }
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
-        if recommendInfo: # add user to storage
-            self.memberList.append(tools.struct_friend_info(recommendInfo))
+        if userInfo: # add user to storage
+            self.memberList.append(tools.struct_friend_info(userInfo))
         return r.json()
     def create_chatroom(self, memberList, topic = ''):
         url = ('%s/webwxcreatechatroom?pass_ticket=%s&r=%s'%(

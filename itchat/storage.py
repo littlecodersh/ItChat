@@ -63,7 +63,7 @@ class Storage:
         elif name is not None:
             matchList = []
             for m in self.chatroomList:
-                if m['NickName'] == name: matchList.append(copy.deepcopy(m))
+                if name in m['NickName']: matchList.append(copy.deepcopy(m))
             return matchList
     def search_mps(self, name=None, userName=None):
         if userName is not None:
@@ -72,5 +72,5 @@ class Storage:
         elif name is not None:
             matchList = []
             for m in self.mpList:
-                if m['NickName'] == name: matchList.append(copy.deepcopy(m))
+                if name in m['NickName']: matchList.append(copy.deepcopy(m))
             return matchList

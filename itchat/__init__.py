@@ -31,7 +31,7 @@ def load_login_status(fileDir='itchat.pkl'): return __client.load_login_status(f
 def search_friends(name=None, userName=None, remarkName=None, nickName=None, wechatAccount=None):
     return __client.storageClass.search_friends(name, userName, remarkName, nickName, wechatAccount)
 def set_alias(userName, alias): return __client.set_alias(userName, alias)
-def add_friend(status, userName, ticket, recommendInfo = {}): return __client.add_friend(status, userName, ticket, recommendInfo)
+def add_friend(userName, status=2, ticket='', userInfo={}): return __client.add_friend(status, userName, ticket, userInfo)
 def get_mps(update=False): return __client.get_mps(update)
 def search_mps(name=None, userName=None): return __client.storageClass.search_mps(name, userName)
 def get_chatrooms(update=False): return __client.get_chatrooms(update)
