@@ -2,17 +2,13 @@
 
 [![Gitter][gitter-picture]][gitter] ![py27][py27] ![py35][py35] [English version][english-version]
 
-itchat是一个开源的微信个人号接口，使用他你可以轻松的通过命令行使用个人微信号。
+itchat是一个开源的微信个人号接口，使用python调用微信从未如此简单。
 
 使用不到三十行的代码，你就可以完成一个能够处理所有信息的微信机器人。
 
-当然，该api的使用远不止一个机器人。
+当然，该api的使用远不止一个机器人，更多的功能等着你来发现。
 
 如今微信已经成为了个人社交的很大一部分，希望这个项目能够帮助你扩展你的个人的微信号、方便自己的生活。
-
-## Documents
-
-你可以在[这里][document]获取api的使用帮助。
 
 ## Installation
 
@@ -24,27 +20,59 @@ pip install itchat
 
 ## Simple uses
 
+有了itchat，如果你想要回复发给自己的文本消息，只需要这样：
+
+```python
+import itchat
+
+@itcaht.msg_register(itchat.content.TEXT)
+def text_reply(msg):
+    itchat.send(msg['Text'], msg['FromUserName'])
+
+itchat.auto_login()
+itchat.run()
+```
+
+一些进阶应用可以在Advanced uses中看到，或者你也可以阅览[文档][document]。
+
+
+
+## Have a try
+
+这是一个基于这一项目的[开源小机器人][robot-source-code]，百闻不如一见，有兴趣可以尝试一下。
+
+![QRCode][robot-qr]
+
+## Screenshots
+
+![file-autoreply][robot-demo-file] ![login-page][robot-demo-login]
+
+## Advanced uses
+
+### 各类型消息的注册
+
 通过如下代码，微信已经可以就日常的各种信息进行获取与回复。
 
 ```python
 #coding=utf8
 import itchat, time
+from itchat.content import *
 
-@itchat.msg_register(['Text', 'Map', 'Card', 'Note', 'Sharing'])
+@itchat.msg_register([TEXT, MAP, CARD, NOTE, SHARING])
 def text_reply(msg):
     itchat.send('%s: %s' % (msg['Type'], msg['Text']), msg['FromUserName'])
 
-@itchat.msg_register(['Picture', 'Recording', 'Attachment', 'Video'])
+@itchat.msg_register([PICTURE, RECORDING, ATTACHMENT, VIDEO])
 def download_files(msg):
     msg['Text'](msg['FileName'])
     return '@%s@%s' % ({'Picture': 'img', 'Video': 'vid'}.get(msg['Type'], 'fil'), msg['FileName'])
 
-@itchat.msg_register('Friends')
+@itchat.msg_register(FRIENDS)
 def add_friend(msg):
     itchat.add_friend(**msg['Text']) # 该操作会自动将新好友的消息录入，不需要重载通讯录
     itchat.send_msg('Nice to meet you!', msg['RecommendInfo']['UserName'])
 
-@itchat.msg_register('Text', isGroupChat = True)
+@itchat.msg_register(TEXT, isGroupChat=True)
 def text_reply(msg):
     if msg['isAt']:
         itchat.send(u'@%s\u2005I received: %s' % (msg['ActualNickName'], msg['Content']), msg['FromUserName'])
@@ -52,8 +80,6 @@ def text_reply(msg):
 itchat.auto_login(True)
 itchat.run()
 ```
-
-## Advanced uses
 
 ### 命令行二维码
 
@@ -86,7 +112,7 @@ itchat.auto_login(hotReload=True)
 
 ### 用户搜索
 
-使用`get_friends`方法可以搜索用户，有四种搜索方式：
+使用`search_friends`方法可以搜索用户，有四种搜索方式：
 1. 仅获取自己的用户信息
 2. 获取特定`UserName`的用户信息
 3. 获取备注、微信号、昵称中的任何一项等于`name`键值的用户
@@ -96,16 +122,18 @@ itchat.auto_login(hotReload=True)
 
 ```python
 # 获取自己的用户信息，返回自己的属性字典
-itchat.get_friends()
+itchat.search_friends()
 # 获取特定UserName的用户信息
-itchat.get_friends(userName='@abcdefg1234567')
+itchat.search_friends(userName='@abcdefg1234567')
 # 获取任何一项等于name键值的用户
-itchat.get_friends(name='littlecodersh')
+itchat.search_friends(name='littlecodersh')
 # 获取分别对应相应键值的用户
-itchat.get_friends(wechatAccount='littlecodersh')
+itchat.search_friends(wechatAccount='littlecodersh')
 # 三、四项功能可以一同使用
-itchat.get_friends(name='LittleCoder机器人', wechatAccount='littlecodersh')
+itchat.search_friends(name='LittleCoder机器人', wechatAccount='littlecodersh')
 ```
+
+关于公众号、群聊的获取与搜索在文档中有更加详细的介绍。
 
 ### 附件的下载与发送
 
@@ -132,16 +160,6 @@ def download_files(msg):
         f.write(msg['Text']())
 ```
 
-## Have a try
-
-这是一个基于这一项目的[开源小机器人][robot-source-code]，百闻不如一见，有兴趣可以尝试一下。
-
-![QRCode][robot-qr]
-
-## Screenshots
-
-![file-autoreply][robot-demo-file] ![login-page][robot-demo-login]
-
 ## FAQ
 
 Q: 为什么中文的文件没有办法上传？
@@ -158,9 +176,9 @@ A: 有两种方式：发送、接受自己UserName的消息；发送接收文件
 
 ## Author
 
-[LittleCoder][littlecodersh]: 整体构架及完成Python2版本。
+[LittleCoder][littlecodersh]: 整体构架及完成Python2 Python3版本。
 
-[Chyroc][Chyroc]: 完成Python3版本。
+[Chyroc][Chyroc]: 完成第一版本的Python3构架。
 
 ## See also
 

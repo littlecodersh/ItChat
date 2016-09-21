@@ -1,7 +1,7 @@
 import time
 from .client import client
 
-__version__ = '1.1.3'
+__version__ = '1.1.5'
 
 __client = client()
 def auto_login(hotReload=False, statusStorageDir='itchat.pkl', enableCmdQR=False):
@@ -76,7 +76,7 @@ def configured_reply():
         replyFn = __functionDict.get(msg['Type'], __functionDict['GeneralReply'])
         if replyFn: send(replyFn(msg), msg.get('FromUserName'))
 
-def msg_register(_type = None, *args, **kwargs):
+def msg_register(_type=None, *args, **kwargs):
     if hasattr(_type, '__call__'):
         __functionDict['GeneralReply'] = _type
         return configured_reply
