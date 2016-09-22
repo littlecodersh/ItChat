@@ -25,7 +25,7 @@ With itchat, you only need to write this to reply personal text messages.
 ```python
 import itchat
 
-@itcaht.msg_register(itchat.content.TEXT)
+@itchat.msg_register(itchat.content.TEXT)
 def text_reply(msg):
     itchat.send(msg['Text'], msg['FromUserName'])
 

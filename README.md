@@ -25,7 +25,7 @@ pip install itchat
 ```python
 import itchat
 
-@itcaht.msg_register(itchat.content.TEXT)
+@itchat.msg_register(itchat.content.TEXT)
 def text_reply(msg):
     itchat.send(msg['Text'], msg['FromUserName'])
 
