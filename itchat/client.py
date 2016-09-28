@@ -3,9 +3,9 @@ import threading, subprocess
 import json, xml.dom.minidom, mimetypes
 import copy, pickle
 
-from . import config, storage, out, tools
-
 import requests
+
+from . import config, storage, out, tools
 
 BASE_URL = config.BASE_URL
 QR_DIR = 'QR.jpg'
@@ -188,7 +188,7 @@ class client(object):
             elif '@@' in m['UserName']:
                 m['isAdmin'] = None # this value will be set after update_chatroom
                 self.chatroomList.append(m)
-            if '@' in m['UserName']:
+            elif '@' in m['UserName']:
                 if m['VerifyFlag'] & 8 == 0:
                     self.memberList.append(m)
                 else:
@@ -576,9 +576,7 @@ class client(object):
         headers = {'content-type': 'application/json; charset=UTF-8'}
 
         r = self.s.post(url, data=json.dumps(params),headers=headers)
-        dic = json.loads(r.content.decode('utf8', 'replace'))
-        print(dic)
-        return dic['ChatRoomName']
+        return json.loads(r.content.decode('utf8', 'replace'))
     def delete_member_from_chatroom(self, chatRoomName, memberList):
         url = ('%s/webwxupdatechatroom?fun=delmember&pass_ticket=%s'%(
             self.loginInfo['url'], self.loginInfo['pass_ticket']))
