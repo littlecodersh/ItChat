@@ -67,32 +67,40 @@ def send(msg, toUserName = None):
         return __client.send_msg(msg, toUserName)
 
 # decorations
-__functionDict = {'GroupChat': {}, 'GeneralReply': None}
+__functionDict = {'FriendChat': {}, 'GroupChat': {}, 'MpChat': {}}
 def configured_reply():
+    ''' determine the type of message and reply if its method is defined
+        however, I use a strange way to determine whether a msg is from massive platform
+        I haven't found a better solution here
+        The main problem I'm worrying about is the mismatching of new friends added on phone
+        If you have any good idea, pleeeease report an issue. I will be more than grateful. '''
     if not __client.storageClass.msgList: return
     msg = __client.storageClass.msgList.pop()
-    if '@@' in msg.get('FromUserName'):
-        replyFn = __functionDict['GroupChat'].get(msg['Type'], __functionDict['GeneralReply'])
+    if '@@' in msg['FromUserName']:
+        replyFn = __functionDict['GroupChat'].get(msg['Type'])
+        if replyFn: send(replyFn(msg), msg.get('FromUserName'))
+    elif search_friends(userName=msg['FromUserName']):
+        replyFn = __functionDict['FriendChat'].get(msg['Type'])
         if replyFn: send(replyFn(msg), msg.get('FromUserName'))
     else:
-        replyFn = __functionDict.get(msg['Type'], __functionDict['GeneralReply'])
+        replyFn = __functionDict['MpChat'].get(msg['Type'])
         if replyFn: send(replyFn(msg), msg.get('FromUserName'))
 
-def msg_register(_type=None, *args, **kwargs):
-    if hasattr(_type, '__call__'):
-        __functionDict['GeneralReply'] = _type
-        return configured_reply
-    elif _type is None:
-        return configured_reply
-    else:
-        if not isinstance(_type, list): _type = [_type]
-        def _msg_register(fn, *_args, **_kwargs):
-            for msgType in _type:
-                if kwargs.get('isGroupChat', False):
-                    __functionDict['GroupChat'][msgType] = fn
-                else:
-                    __functionDict[msgType] = fn
-        return _msg_register
+def msg_register(msgType, isFriendChat=False, isGroupChat=False, isMpChat=False):
+    ''' a decorator constructor
+        return a specific decorator based on information given '''
+    if not isinstance(msgType, list): msgType = [msgType]
+    def _msg_register(fn):
+        for _msgType in msgType:
+            if isFriendChat:
+                __functionDict['FriendChat'][_msgType] = fn
+            if isGroupChat:
+                __functionDict['GroupChat'][_msgType] = fn
+            if isMpChat:
+                __functionDict['MpChat'][_msgType] = fn
+            if not any((isFriendChat, isGroupChat, isMpChat)):
+                __functionDict['FriendChat'][_msgType] = fn
+    return _msg_register
 
 # in-build run
 def run():
