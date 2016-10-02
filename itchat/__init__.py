@@ -3,7 +3,7 @@ import time
 from .client import client
 from . import content # this is for creating pyc
 
-__version__ = '1.1.9'
+__version__ = '1.1.10'
 
 __client = client()
 def auto_login(hotReload=False, statusStorageDir='itchat.pkl', enableCmdQR=False):

@@ -420,12 +420,14 @@ class client(object):
             chatroom = self.update_chatroom(msg['FromUserName'])
             member = tools.search_dict_list((chatroom or {}).get(
                 'MemberList') or [], 'UserName', actualUserName)
+        myDisplayName = tools.search_dict_list(chatroom['MemberList'],
+            'UserName', self.storageClass.userName).get('DisplayName')
         msg['ActualUserName'] = actualUserName
         msg['ActualNickName'] = member['NickName']
         msg['Content']        = content
+        msg['isAt']           = u'@%s\u2005' % (myDisplayName
+            or self.storageClass.nickName) in msg['Content']
         tools.msg_formatter(msg, 'Content')
-        msg['isAt']           = u'@%s\u2005' % (member['DisplayName'] or 
-            self.storageClass.nickName) in msg['Content']
     def send_msg(self, msg = 'Test Message', toUserName = None):
         url = '%s/webwxsendmsg'%self.loginInfo['url']
         payloads = {
