@@ -424,6 +424,8 @@ class client(object):
         msg['ActualNickName'] = member['NickName']
         msg['Content']        = content
         tools.msg_formatter(msg, 'Content')
+        member = tools.search_dict_list((chatroom or {}).get(
+            'MemberList') or [], 'UserName', self.storageClass.userName)
         msg['isAt']           = u'@%s\u2005' % (member['DisplayName'] or 
             self.storageClass.nickName) in msg['Content']
     def send_msg(self, msg = 'Test Message', toUserName = None):
