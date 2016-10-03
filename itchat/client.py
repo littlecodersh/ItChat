@@ -424,8 +424,7 @@ class client(object):
         msg['ActualNickName'] = member['NickName']
         msg['Content']        = content
         tools.msg_formatter(msg, 'Content')
-        msg['isAt']           = u'@%s\u2005' % (member['DisplayName'] or 
-            self.storageClass.nickName) in msg['Content']
+        msg['isAt']           = u'@%s\u2005' %  self.storageClass.nickName in msg['Content']
     def send_msg(self, msg = 'Test Message', toUserName = None):
         url = '%s/webwxsendmsg'%self.loginInfo['url']
         payloads = {
