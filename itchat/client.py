@@ -155,6 +155,8 @@ class client(object):
         j = json.loads(self.s.post(url, data = json.dumps(payloads), headers = headers
                 ).content.decode('utf8', 'replace'))['ContactList'][0]
         for member in j['MemberList']:
+            if self.storageClass.userName == member['UserName']:
+                j['self'] = member
             tools.emoji_formatter(member, 'NickName')
             tools.emoji_formatter(member, 'DisplayName')
         j['isAdmin'] = j['OwnerUin'] == int(self.loginInfo['wxuin'])
@@ -420,14 +422,13 @@ class client(object):
             chatroom = self.update_chatroom(msg['FromUserName'])
             member = tools.search_dict_list((chatroom or {}).get(
                 'MemberList') or [], 'UserName', actualUserName)
-        myDisplayName = tools.search_dict_list(chatroom['MemberList'],
-            'UserName', self.storageClass.userName).get('DisplayName')
         msg['ActualUserName'] = actualUserName
         msg['ActualNickName'] = member['NickName']
         msg['Content']        = content
-        msg['isAt']           = u'@%s\u2005' % (myDisplayName
-            or self.storageClass.nickName) in msg['Content']
         tools.msg_formatter(msg, 'Content')
+        msg['isAt'] = u'@%s%s' % (chatroom['self']['DisplayName']
+            or self.storageClass.nickName, u'\u2005'
+            if u'\u2005' in msg['Content'] else ' ') in msg['Content']
     def send_msg(self, msg = 'Test Message', toUserName = None):
         url = '%s/webwxsendmsg'%self.loginInfo['url']
         payloads = {

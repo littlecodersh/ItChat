@@ -3,7 +3,7 @@ import time
 from .client import client
 from . import content # this is for creating pyc
 
-__version__ = '1.1.10'
+__version__ = '1.1.11'
 
 __client = client()
 def auto_login(hotReload=False, statusStorageDir='itchat.pkl', enableCmdQR=False):
@@ -79,12 +79,11 @@ def configured_reply():
     if '@@' in msg['FromUserName']:
         replyFn = __functionDict['GroupChat'].get(msg['Type'])
         if replyFn: send(replyFn(msg), msg.get('FromUserName'))
-    elif (search_friends(userName=msg['FromUserName']) or
-            msg['FromUserName'] in ('fmessage', 'filehelper')):
-        replyFn = __functionDict['FriendChat'].get(msg['Type'])
+    elif search_mps(userName=msg['FromUserName']):
+        replyFn = __functionDict['MpChat'].get(msg['Type'])
         if replyFn: send(replyFn(msg), msg.get('FromUserName'))
     else:
-        replyFn = __functionDict['MpChat'].get(msg['Type'])
+        replyFn = __functionDict['FriendChat'].get(msg['Type'])
         if replyFn: send(replyFn(msg), msg.get('FromUserName'))
 
 def msg_register(msgType, isFriendChat=False, isGroupChat=False, isMpChat=False):
