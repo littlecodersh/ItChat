@@ -19,7 +19,8 @@ def get_QRuuid(): return __client.get_QRuuid()
 def get_QR(uuid=None, enableCmdQR=False): return __client.get_QR(uuid, enableCmdQR)
 def check_login(uuid=None): return __client.check_login(uuid)
 def web_init(): return __client.web_init()
-def get_friends(update=False): return __client.get_friends(update)
+# This is a fake for get_friends
+def get_contract(update=False): return __client.get_friends(update)
 def show_mobile_login(): return __client.show_mobile_login()
 def start_receiving(): return __client.start_receiving()
 # <<<
@@ -30,6 +31,7 @@ def load_login_status(fileDir='itchat.pkl'): return __client.load_login_status(f
 # <<<
 
 # The following methods are for contract dealing >>>
+def get_friends(update=False): return __client.get_friends(update)
 def search_friends(name=None, userName=None, remarkName=None, nickName=None, wechatAccount=None):
     return __client.storageClass.search_friends(name, userName, remarkName, nickName, wechatAccount)
 def set_alias(userName, alias): return __client.set_alias(userName, alias)

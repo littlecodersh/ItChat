@@ -192,6 +192,8 @@ A: 有两种方式：发送、接受自己UserName的消息；发送接收文件
 
 或者也可以在gitter上交流：[![Gitter][gitter-picture]][gitter]
 
+当然也可以加入我们新建的QQ群讨论：549762872
+
 [gitter-picture]: https://badges.gitter.im/littlecodersh/ItChat.svg
 [gitter]: https://gitter.im/littlecodersh/ItChat?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge
 [py27]: https://img.shields.io/badge/python-2.7-ff69b4.svg
