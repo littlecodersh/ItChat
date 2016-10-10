@@ -336,7 +336,12 @@ class client(object):
                 if m['AppMsgType'] == 6:
                     def download_atta(attaDir=None):
                         cookiesList = {name:data for name,data in self.s.cookies.items()}
-                        url = 'https://file%s.wx.qq.com/cgi-bin/mmwebwx-bin/webwxgetmedia'%('2' if '2' in self.loginInfo['url'] else '')
+                        url = '/cgi-bin/mmwebwx-bin/webwxgetmedia'
+                        if 'web.wechat.com' in self.loginInfo['url']:
+                            url = 'https://file.web%s.wechat.com' + url
+                        else:
+                            url = 'https://file%s.wx.qq.com' + url
+                        url = url % ('2' if '2' in self.loginInfo['url'] else '')
                         payloads = {
                             'sender': m['FromUserName'],
                             'mediaid': m['MediaId'],
@@ -446,7 +451,12 @@ class client(object):
         return r.json()['BaseResponse']['Ret'] == 0
     def __upload_file(self, fileDir, isPicture = False, isVideo = False):
         if not tools.check_file(fileDir): return
-        url = 'https://file%s.wx.qq.com/cgi-bin/mmwebwx-bin/webwxuploadmedia?f=json'%('2' if '2' in self.loginInfo['url'] else '')
+        url = '/cgi-bin/mmwebwx-bin/webwxuploadmedia?f=json'
+        if 'web.wechat.com' in self.loginInfo['url']:
+            url = 'https://file.web%s.wechat.com' + url
+        else:
+            url = 'https://file%s.wx.qq.com' + url
+        url = url % ('2' if '2' in self.loginInfo['url'] else '')
         # save it on server
         fileSize = str(os.path.getsize(fileDir))
         cookiesList = {name:data for name,data in self.s.cookies.items()}
