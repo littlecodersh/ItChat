@@ -3,7 +3,7 @@ import time
 from .client import client
 from . import content # this is for creating pyc
 
-__version__ = '1.1.12'
+__version__ = '1.1.13'
 
 __client = client()
 def auto_login(hotReload=False, statusStorageDir='itchat.pkl', enableCmdQR=False):
@@ -19,8 +19,6 @@ def get_QRuuid(): return __client.get_QRuuid()
 def get_QR(uuid=None, enableCmdQR=False): return __client.get_QR(uuid, enableCmdQR)
 def check_login(uuid=None): return __client.check_login(uuid)
 def web_init(): return __client.web_init()
-# This is a fake for get_friends
-def get_contract(update=False): return __client.get_friends(update)
 def show_mobile_login(): return __client.show_mobile_login()
 def start_receiving(): return __client.start_receiving()
 # <<<
@@ -36,17 +34,20 @@ def search_friends(name=None, userName=None, remarkName=None, nickName=None, wec
     return __client.storageClass.search_friends(name, userName, remarkName, nickName, wechatAccount)
 def set_alias(userName, alias): return __client.set_alias(userName, alias)
 def add_friend(userName, status=2, ticket='', userInfo={}): return __client.add_friend(userName, status, ticket, userInfo)
+def get_head_img(userName=None, chatroomUserName=None, picDir=None): return __client.get_head_img(userName, chatroomUserName, picDir)
 def get_mps(update=False): return __client.get_mps(update)
 def search_mps(name=None, userName=None): return __client.storageClass.search_mps(name, userName)
 def get_chatrooms(update=False): return __client.get_chatrooms(update)
 def search_chatrooms(name=None, userName=None): return __client.storageClass.search_chatrooms(name, userName)
 def update_chatroom(groupUserName): return __client.update_chatroom(groupUserName)
 def create_chatroom(memberList, topic = ''): return __client.create_chatroom(memberList, topic)
-def delete_member_from_chatroom(chatRoomUserName, memberList): return __client.delete_member_from_chatroom(chatRoomUserName, memberList)
-def add_member_into_chatroom(chatRoomUserName, memberList): return __client.add_member_into_chatroom(chatRoomUserName, memberList)
+def set_chatroom_name(chatroomUserName, name): return __client.set_chatroom_name(chatroomUserName, name)
+def delete_member_from_chatroom(chatroomUserName, memberList): return __client.delete_member_from_chatroom(chatroomUserName, memberList)
+def add_member_into_chatroom(chatroomUserName, memberList): return __client.add_member_into_chatroom(chatroomUserName, memberList)
 # <<<
 
 # The following is the tear of age, will be deleted soon
+def get_contract(update=False): return __client.get_friends(update)
 def get_batch_contract(groupUserName): return __client.update_chatroom(groupUserName)
 # <<<
 

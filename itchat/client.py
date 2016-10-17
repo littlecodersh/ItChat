@@ -434,7 +434,7 @@ class client(object):
         msg['isAt'] = u'@%s%s' % (chatroom['self']['DisplayName']
             or self.storageClass.nickName, u'\u2005'
             if u'\u2005' in msg['Content'] else ' ') in msg['Content']
-    def send_msg(self, msg = 'Test Message', toUserName = None):
+    def send_msg(self, msg ='Test Message', toUserName = None):
         url = '%s/webwxsendmsg'%self.loginInfo['url']
         payloads = {
             'BaseRequest': self.loginInfo['BaseRequest'],
@@ -578,33 +578,69 @@ class client(object):
         if userInfo: # add user to storage
             self.memberList.append(tools.struct_friend_info(userInfo))
         return r.json()
+    def get_head_img(self, userName=None, chatroomUserName=None, picDir=None):
+        ''' get head image
+         * if you want to get chatroom header: only set chatroomUserName
+         * if you want to get friend header: only set userName
+         * if you want to get chatroom member header: set both
+        '''
+        params = {
+            'userName': userName or chatroomUserName,
+            'skey': self.loginInfo['skey'], }
+        url = '%s/webwxgeticon' % self.loginInfo['url']
+        if chatroomUserName is None:
+            infoDict = self.storageClass.search_friends(userName=userName)
+            if infoDict is None: return None
+        else:
+            if userName is None:
+                url = '%s/webwxgetheadimg' % self.loginInfo['url']
+            else:
+                chatroom = self.storageClass.search_chatrooms(userName=chatroomUserName)
+                if chatroomUserName is None: return None
+                if chatroom['EncryChatRoomId'] == '':
+                    chatroom = self.update_chatroom(chatroomUserName)
+                params['chatroomid'] = chatroom['EncryChatRoomId']
+        r = self.s.get(url, params=params, stream=True)
+        tempStorage = io.BytesIO()
+        for block in r.iter_content(1024):
+            tempStorage.write(block)
+        if picDir is None: return tempStorage.getvalue()
+        with open(picDir, 'wb') as f: f.write(tempStorage.getvalue())
     def create_chatroom(self, memberList, topic = ''):
         url = ('%s/webwxcreatechatroom?pass_ticket=%s&r=%s'%(
                 self.loginInfo['url'], self.loginInfo['pass_ticket'], int(time.time())))
-        params = {
+        data = {
             'BaseRequest': self.loginInfo['BaseRequest'],
             'MemberCount': len(memberList),
             'MemberList': [{'UserName': member['UserName']} for member in memberList],
             'Topic': topic, }
         headers = {'content-type': 'application/json; charset=UTF-8'}
-
-        r = self.s.post(url, data=json.dumps(params),headers=headers)
-        return json.loads(r.content.decode('utf8', 'replace'))
-    def delete_member_from_chatroom(self, chatRoomName, memberList):
+        r = self.s.post(url, data=json.dumps(data, ensure_ascii=False).encode('utf8', 'ignore'),headers=headers)
+        return r.json()
+    def set_chatroom_name(self, chatroomUserName, name):
+        url = ('%s/webwxupdatechatroom?fun=modtopic&pass_ticket=%s'%(
+            self.loginInfo['url'], self.loginInfo['pass_ticket']))
+        data = {
+            'BaseRequest': self.loginInfo['BaseRequest'],
+            'ChatRoomName': chatroomUserName,
+            'NewTopic': name, }
+        headers = {'content-type': 'application/json; charset=UTF-8'}
+        return self.s.post(url, data=json.dumps(data, ensure_ascii=False).encode('utf8', 'ignore'), headers=headers).json()
+    def delete_member_from_chatroom(self, chatroomUserName, memberList):
         url = ('%s/webwxupdatechatroom?fun=delmember&pass_ticket=%s'%(
             self.loginInfo['url'], self.loginInfo['pass_ticket']))
         params = {
             'BaseRequest': self.loginInfo['BaseRequest'],
-            'ChatRoomName': chatRoomName,
+            'ChatRoomName': chatroomUserName,
             'DelMemberList': ','.join([member['UserName'] for member in memberList]), }
         headers = {'content-type': 'application/json; charset=UTF-8'}
         return self.s.post(url, data=json.dumps(params),headers=headers).json()
-    def add_member_into_chatroom(self, chatRoomName, memberList):
+    def add_member_into_chatroom(self, chatroomUserName, memberList):
         url = ('%s/webwxupdatechatroom?fun=addmember&pass_ticket=%s'%(
             self.loginInfo['url'], self.loginInfo['pass_ticket']))
         params = {
             'BaseRequest': self.loginInfo['BaseRequest'],
-            'ChatRoomName': chatRoomName,
+            'ChatRoomName': chatroomUserName,
             'AddMemberList': ','.join([member['UserName'] for member in memberList]), }
         headers = {'content-type': 'application/json; charset=UTF-8'}
         return self.s.post(url, data=json.dumps(params),headers=headers).json()
