@@ -428,7 +428,7 @@ class client(object):
             member = tools.search_dict_list((chatroom or {}).get(
                 'MemberList') or [], 'UserName', actualUserName)
         msg['ActualUserName'] = actualUserName
-        msg['ActualNickName'] = member['NickName']
+        msg['ActualNickName'] = member.get('DisplayName') or member['NickName']
         msg['Content']        = content
         tools.msg_formatter(msg, 'Content')
         msg['isAt'] = u'@%s%s' % (chatroom['self']['DisplayName']
