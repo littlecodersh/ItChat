@@ -144,7 +144,7 @@ class client(object):
         self.storageClass.userName = dic['User']['UserName']
         self.storageClass.nickName = dic['User']['NickName']
         return dic['User']
-    def update_chatroom(self, userName):
+    def update_chatroom(self, userName, detailedMember=False):
         url = '%s/webwxbatchgetcontact?type=ex&r=%s' % (self.loginInfo['url'], int(time.time()))
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         payloads = {
@@ -155,6 +155,26 @@ class client(object):
                 'ChatRoomId': '', }], }
         j = json.loads(self.s.post(url, data = json.dumps(payloads), headers = headers
                 ).content.decode('utf8', 'replace'))['ContactList'][0]
+
+        if detailedMember:
+            def get_detailed_member_info(encryChatroomId, memberList):
+                url = '%s/webwxbatchgetcontact?type=ex&r=%s' % (self.loginInfo['url'], int(time.time()))
+                headers = { 'ContentType': 'application/json; charset=UTF-8' }
+                payloads = {
+                    'BaseRequest': self.loginInfo['BaseRequest'],
+                    'Count': len(j['MemberList']),
+                    'List': [{'UserName': member['UserName'], 'EncryChatRoomId': j['EncryChatRoomId']} \
+                        for member in memberList],
+                    }
+                return json.loads(self.s.post(url, data = json.dumps(payloads), headers = headers
+                        ).content.decode('utf8', 'replace'))['ContactList']
+            MAX_GET_NUMBER = 50
+            totalMemberList = []
+            for i in range(len(j['MemberList']) / MAX_GET_NUMBER + 1):
+                memberList = j['MemberList'][i*MAX_GET_NUMBER: (i+1)*MAX_GET_NUMBER]
+                totalMemberList += get_detailed_member_info(j['EncryChatRoomId'], memberList)
+            j['MemberList'] = totalMemberList
+
         for member in j['MemberList']:
             if self.storageClass.userName == member['UserName']:
                 j['self'] = member

@@ -3,7 +3,7 @@ import time
 from .client import client
 from . import content # this is for creating pyc
 
-__version__ = '1.1.14'
+__version__ = '1.1.15'
 
 __client = client()
 def auto_login(hotReload=False, statusStorageDir='itchat.pkl', enableCmdQR=False):
@@ -39,7 +39,7 @@ def get_mps(update=False): return __client.get_mps(update)
 def search_mps(name=None, userName=None): return __client.storageClass.search_mps(name, userName)
 def get_chatrooms(update=False): return __client.get_chatrooms(update)
 def search_chatrooms(name=None, userName=None): return __client.storageClass.search_chatrooms(name, userName)
-def update_chatroom(groupUserName): return __client.update_chatroom(groupUserName)
+def update_chatroom(groupUserName, detailedMember=False): return __client.update_chatroom(groupUserName, detailedMember)
 def create_chatroom(memberList, topic = ''): return __client.create_chatroom(memberList, topic)
 def set_chatroom_name(chatroomUserName, name): return __client.set_chatroom_name(chatroomUserName, name)
 def delete_member_from_chatroom(chatroomUserName, memberList): return __client.delete_member_from_chatroom(chatroomUserName, memberList)
