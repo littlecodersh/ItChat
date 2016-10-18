@@ -1,3 +1,4 @@
+#coding=utf8
 import os, sys, time, re, io
 import threading, subprocess
 import json, xml.dom.minidom, mimetypes
@@ -280,9 +281,10 @@ class client(object):
                 if m['Url']:
                     regx = r'(.+?\(.+?\))'
                     data = re.search(regx, m['Content'])
+                    data = 'Map' if data is None else data.group(1)
                     msg = {
                         'Type': 'Map',
-                        'Text': data.group(1),}
+                        'Text': data,}
                 else:
                     msg = {
                         'Type': 'Text',
@@ -363,11 +365,15 @@ class client(object):
                         'Type': 'Note',
                         'Text': m['FileName'], }
                 elif m['AppMsgType'] == 2000:
-                    regx = r'\[CDATA\[(.+?)\].+?\[CDATA\[(.+?)\]'
+                    regx = r'\[CDATA\[(.+?)\][\s\S]+?\[CDATA\[(.+?)\]'
                     data = re.search(regx, m['Content'])
+                    if data:
+                        data = data.group(2).split(u'。')[0]
+                    else:
+                        data = 'You may found detailed info in Content key.'
                     msg = {
                         'Type': 'Note',
-                        'Text': data.group(2), }
+                        'Text': data, }
                 else:
                     msg = {
                         'Type': 'Sharing',
@@ -400,9 +406,10 @@ class client(object):
             elif m['MsgType'] == 10002:
                 regx = r'\[CDATA\[(.+?)\]\]'
                 data = re.search(regx, m['Content'])
+                data = 'System message' if data is None else data.group(1).replace('\\', '')
                 msg = {
                     'Type': 'Note',
-                    'Text': data.group(1).replace('\\', ''), }
+                    'Text': data, }
             elif m['MsgType'] in srl:
                 msg = {
                     'Type': 'Useless',
