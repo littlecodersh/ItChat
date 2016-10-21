@@ -170,6 +170,10 @@ Q: How to use this package to use my wechat as an monitor?
 
 A: There are two ways: communicate with your own account or with filehelper.
 
+Q: Why sometimes I can't send messages?
+
+A: Some account simply can't send messages to yourself, so use `filehelper` instead. Besides, there's limitation in calling api, so set some gap between them.
+
 **Comments**
 
 If you have any problems or suggestions, you can talk to me in this `issue <https://github.com/littlecodersh/ItChat/issues/1>`__

@@ -3,7 +3,7 @@ import time
 from .client import client
 from . import content # this is for creating pyc
 
-__version__ = '1.1.16'
+__version__ = '1.1.17'
 
 __client = client()
 HOT_RELOAD = False

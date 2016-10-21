@@ -25,7 +25,7 @@ pip install itchat
 ```python
 import itchat
 
-@itcaht.msg_register(itchat.content.TEXT)
+@itchat.msg_register(itchat.content.TEXT)
 def text_reply(msg):
     itchat.send(msg['Text'], msg['FromUserName'])
 
@@ -34,8 +34,6 @@ itchat.run()
 ```
 
 一些进阶应用可以在Advanced uses中看到，或者你也可以阅览[文档][document]。
-
-
 
 ## Have a try
 
@@ -174,6 +172,10 @@ Q: 如何通过这个包将自己的微信号变为控制器？
 
 A: 有两种方式：发送、接受自己UserName的消息；发送接收文件传输助手（filehelper）的消息
 
+Q: 为什么我发送信息的时候部分信息没有成功发出来？
+
+A: 有些账号是天生无法给自己的账号发送信息的，建议使用`filehelper`代替。另外，接口调用是有频率限制，限制一下连续发送信息之间的时间间隔即可。
+
 ## Author
 
 [LittleCoder][littlecodersh]: 整体构架及完成Python2 Python3版本。
@@ -191,6 +193,8 @@ A: 有两种方式：发送、接受自己UserName的消息；发送接收文件
 如果有什么问题或者建议都可以在这个[Issue][issue#1]和我讨论
 
 或者也可以在gitter上交流：[![Gitter][gitter-picture]][gitter]
+
+当然也可以加入我们新建的QQ群讨论：549762872
 
 [gitter-picture]: https://badges.gitter.im/littlecodersh/ItChat.svg
 [gitter]: https://gitter.im/littlecodersh/ItChat?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge
