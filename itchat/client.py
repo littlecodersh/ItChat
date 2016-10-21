@@ -3,6 +3,7 @@ import os, sys, time, re, io
 import threading, subprocess
 import json, xml.dom.minidom, mimetypes
 import copy, pickle
+import traceback
 
 import requests
 
@@ -21,6 +22,7 @@ class client(object):
         self.loginInfo = {}
         self.s = requests.Session()
         self.uuid = None
+        self.debug = False
     def dump_login_status(self, fileDir):
         try:
             with open(fileDir, 'w') as f: f.write('DELETE THIS')
@@ -47,7 +49,9 @@ class client(object):
             self.start_receiving()
             return True
         else:
-            self.s.cookies.clear() # other info will be automatically cleared
+            self.s.cookies.clear()
+            del self.chatroomList[:]
+            # other info will be automatically cleared
             return False
     def auto_login(self, enableCmdQR = False):
         def open_QR():
@@ -73,7 +77,7 @@ class client(object):
         self.web_init()
         self.show_mobile_login()
         tools.clear_screen()
-        self.get_friends(True)
+        self.get_contact(True)
         out.print_line('Login successfully as %s\n'%self.storageClass.nickName, False)
         self.start_receiving()
     def get_QRuuid(self):
@@ -175,29 +179,21 @@ class client(object):
                 totalMemberList += get_detailed_member_info(j['EncryChatRoomId'], memberList)
             j['MemberList'] = totalMemberList
 
-        for member in j['MemberList']:
-            if self.storageClass.userName == member['UserName']:
-                j['self'] = member
-            tools.emoji_formatter(member, 'NickName')
-            tools.emoji_formatter(member, 'DisplayName')
-        j['isAdmin'] = j['OwnerUin'] == int(self.loginInfo['wxuin'])
-        oldIndex = None
-        for i, chatroom in enumerate(self.chatroomList):
-            if chatroom['UserName'] == j['UserName']:
-                oldIndex = i; break
-        if oldIndex is not None: del self.chatroomList[oldIndex]
-        self.chatroomList.insert(0, j)
-        return j
-    def get_friends(self, update=False):
+        self.__update_chatrooms([j])
+        return self.storageClass.search_chatrooms(userName=j['UserName'])
+    def get_contact(self, update=False):
         if 1 < len(self.memberList) and not update: return copy.deepcopy(self.memberList)
         url = '%s/webwxgetcontact?r=%s&seq=0&skey=%s' % (self.loginInfo['url'],
             int(time.time()), self.loginInfo['skey'])
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         r = self.s.get(url, headers=headers)
         tempList = json.loads(r.content.decode('utf-8', 'replace'))['MemberList']
-        del self.chatroomList[:]
         del self.memberList[:]
         del self.mpList[:]
+        chatroomList = []
+        # chatroomList will not be cleared because:
+        # when initializing, it's cleared once
+        # when updating, there's not need for clearing
         self.memberList.append(self.loginInfo['User'])
         for m in tempList:
             tools.emoji_formatter(m, 'NickName')
@@ -210,18 +206,27 @@ class client(object):
                 continue # userName have number and str
             elif '@@' in m['UserName']:
                 m['isAdmin'] = None # this value will be set after update_chatroom
-                self.chatroomList.append(m)
+                chatroomList.append(m)
             elif '@' in m['UserName']:
                 if m['VerifyFlag'] & 8 == 0:
                     self.memberList.append(m)
                 else:
                     self.mpList.append(m)
+        if chatroomList: self.__update_chatrooms(chatroomList)
+        return copy.deepcopy(chatroomList)
+    def get_friends(self, update=False):
+        if update: self.get_contact(update=True)
         return copy.deepcopy(self.memberList)
     def get_chatrooms(self, update=False):
-        if update: self.get_friends(update=True)
-        return copy.deepcopy(self.chatroomList)
+        ''' get chatrooms
+         * if update is set to True, this will only return chatrooms in contract
+        '''
+        if update:
+            return self.get_contact(update=True)
+        else:
+            return copy.deepcopy(self.chatroomList)
     def get_mps(self, update=False):
-        if update: self.get_friends(update=True)
+        if update: self.get_contact(update=True)
         return copy.deepcopy(self.mpList)
     def show_mobile_login(self):
         url = '%s/webwxstatusnotify'%self.loginInfo['url']
@@ -242,7 +247,8 @@ class client(object):
             while i and count <4:
                 try:
                     if pauseTime < 5: pauseTime += 2
-                    if i != '0': msgList = self.__get_msg()
+                    if i != '0': msgList, contractList = self.__get_msg()
+                    if contractList: self.__update_chatrooms(contractList)
                     if msgList: 
                         msgList = self.__produce_msg(msgList)
                         for msg in msgList: self.msgList.insert(0, msg)
@@ -252,9 +258,11 @@ class client(object):
                     count = 0
                 except requests.exceptions.RequestException as e:
                     count += 1
+                    if self.debug: traceback.print_exc()
                     time.sleep(count * 3)
                 except Exception as e:
                     out.print_line(str(e), False)
+                    if self.debug: traceback.print_exc()
             out.print_line('LOG OUT', False)
         maintainThread = threading.Thread(target = maintain_loop)
         maintainThread.setDaemon(True)
@@ -287,7 +295,58 @@ class client(object):
 
         dic = json.loads(r.content.decode('utf-8', 'replace'))
         self.loginInfo['SyncKey'] = dic['SyncKey']
-        if dic['AddMsgCount'] != 0: return dic['AddMsgList']
+        return dic['AddMsgList'], dic['ModContactList']
+    def __update_chatrooms(self, l):
+        oldUsernameList = []
+        for chatroom in l:
+            # format NickName & DisplayName & self keys
+            tools.emoji_formatter(chatroom, 'NickName')
+            for member in chatroom['MemberList']:
+                if self.storageClass.userName == member['UserName']:
+                    chatroom['self'] = member
+                tools.emoji_formatter(member, 'NickName')
+                tools.emoji_formatter(member, 'DisplayName')
+            # get useful information from old version of this chatroom
+            oldChatroom = tools.search_dict_list(
+                self.chatroomList, 'UserName', chatroom['UserName'])
+            if oldChatroom is not None:
+                memberList, oldMemberList = \
+                    chatroom['MemberList'], oldChatroom['MemberList']
+                # update member list
+                if memberList:
+                    for member in memberList:
+                        oldMember = tools.search_dict_list(
+                            oldMemberList, 'UserName', member['UserName'])
+                        if oldMember is not None:
+                            for k in oldMember:
+                                member[k] = member[k] or oldMember[k]
+                else:
+                    chatroom['MemberList'] = oldMemberList
+                # update other info
+                for k in oldChatroom:
+                    chatroom[k] = chatroom.get(k) or oldChatroom[k]
+                # ready for deletion
+                oldUsernameList.append(oldChatroom['UserName'])
+            # update OwnerUin
+            if 'ChatRoomOwner' in chatroom:
+                chatroom['OwnerUin'] = tools.search_dict_list(
+                    chatroom['MemberList'], 'UserName', chatroom['ChatRoomOwner'])['Uin']
+            # update isAdmin
+            if 'OwnerUin' in chatroom and chatroom['OwnerUin'] != 0:
+                chatroom['isAdmin'] = \
+                    chatroom['OwnerUin'] == int(self.loginInfo['wxuin'])
+            else:
+                chatroom['isAdmin'] = None
+        # delete old chatrooms
+        oldIndexList = []
+        for i, chatroom in enumerate(self.chatroomList):
+            if chatroom['UserName'] in oldUsernameList:
+                oldIndexList.append(i)
+        oldIndexList.sort(reverse=True)
+        for i in oldIndexList: del self.chatroomList[i]
+        # add new chatrooms
+        for chatroom in l:
+            self.chatroomList.append(chatroom)
     def __produce_msg(self, l):
         rl = []
         srl = [40, 43, 50, 52, 53, 9999]
@@ -458,9 +517,13 @@ class client(object):
         msg['ActualNickName'] = member['DisplayName'] or member['NickName']
         msg['Content']        = content
         tools.msg_formatter(msg, 'Content')
-        msg['isAt'] = u'@%s%s' % (chatroom['self']['DisplayName']
-            or self.storageClass.nickName, u'\u2005'
-            if u'\u2005' in msg['Content'] else ' ') in msg['Content']
+        atFlag = '@' + (chatroom['self']['DisplayName']
+            or self.storageClass.nickName)
+        msg['isAt'] = (
+            (atFlag + u'\u2005' if u'\u2005' in msg['Content'] else ' ')
+            in msg['Content']
+            or
+            msg['Content'].endswith(atFlag))
     def send_msg(self, msg ='Test Message', toUserName = None):
         url = '%s/webwxsendmsg'%self.loginInfo['url']
         payloads = {

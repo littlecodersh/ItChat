@@ -3,16 +3,22 @@ import time
 from .client import client
 from . import content # this is for creating pyc
 
-__version__ = '1.1.15'
+__version__ = '1.1.16'
 
 __client = client()
+HOT_RELOAD = False
+HOT_RELOAD_DIR = 'itchat.pkl'
+
 def auto_login(hotReload=False, statusStorageDir='itchat.pkl', enableCmdQR=False):
+    global HOT_RELOAD, HOT_RELOAD_DIR
     if hotReload:
         if __client.load_login_status(statusStorageDir): return
         __client.auto_login(enableCmdQR=enableCmdQR)
         __client.dump_login_status(statusStorageDir)
+        HOT_RELOAD, HOT_RELOAD_DIR = True, statusStorageDir
     else:
         __client.auto_login(enableCmdQR=enableCmdQR)
+        HOT_RELOAD = False
 
 # The following method are all included in __client.auto_login >>>
 def get_QRuuid(): return __client.get_QRuuid()
@@ -106,11 +112,13 @@ def msg_register(msgType, isFriendChat=False, isGroupChat=False, isMpChat=False)
     return _msg_register
 
 # in-build run
-def run():
+def run(debug=True):
     print('Start auto replying')
+    __client.debug = debug
     try:
         while 1:
             configured_reply()
             time.sleep(.3)
     except KeyboardInterrupt:
+        if HOT_RELOAD: __client.dump_login_status(HOT_RELOAD_DIR)
         print('Bye~')
