@@ -50,6 +50,9 @@ def create_chatroom(memberList, topic = ''): return __client.create_chatroom(mem
 def set_chatroom_name(chatroomUserName, name): return __client.set_chatroom_name(chatroomUserName, name)
 def delete_member_from_chatroom(chatroomUserName, memberList): return __client.delete_member_from_chatroom(chatroomUserName, memberList)
 def add_member_into_chatroom(chatroomUserName, memberList): return __client.add_member_into_chatroom(chatroomUserName, memberList)
+def add_member_into_chatroom_less_then_40(chatroomUserName, memberList): return __client.add_member_into_chatroom_less_then_40(chatroomUserName, memberList)
+def add_member_into_chatroom_more_then_40(chatroomUserName, memberList): return __client.add_member_into_chatroom_more_then_40(chatroomUserName, memberList)
+
 # <<<
 
 # The following is the tear of age, will be deleted soon

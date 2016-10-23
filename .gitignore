@@ -6,3 +6,4 @@ itchat.egg-info/*
 test.py
 itchat.pkl
 QR.jpg
+.DS_Store
