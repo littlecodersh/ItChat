@@ -734,8 +734,23 @@ class client(object):
             'AddMemberList': ','.join([member['UserName'] for member in memberList]), }
         headers = {'content-type': 'application/json; charset=UTF-8'}
         return self.s.post(url, data=json.dumps(params),headers=headers).json()
+    def add_member_into_chatroom_more_then_40(self, chatroomUserName, memberList):
+        url = ('%s/webwxupdatechatroom?fun=invitemember&lang=%s&pass_ticket=%s'%(
+            self.loginInfo['url'], 'zh_CN',self.loginInfo['pass_ticket']))
+        params = {
+            'BaseRequest': self.loginInfo['BaseRequest'],
+            'ChatRoomName': chatroomUserName,
+            'InviteMemberList': ','.join([member['UserName'] for member in memberList]), }
+        headers = {'content-type': 'application/json; charset=UTF-8'}
+        return self.s.post(url, data=json.dumps(params),headers=headers).json()
     def add_member_into_chatroom(self, chatroomUserName, memberList):
-        self.add_member_into_chatroom_less_then_40(chatroomUserName, memberList)
+        chatroom = self.storageClass.search_chatrooms(userName = chatroomUserName)
+        if not chatroom:
+            chatroom = self.update_chatroom(chatroomUserName)
+        if len(chatroom['MemberList']) > 40:
+            return self.add_member_into_chatroom_more_then_40(chatroomUserName, memberList)
+        else:
+            return self.add_member_into_chatroom_less_then_40(chatroomUserName, memberList)
 
 if __name__ == '__main__':
     wcc = WeChatClient()
