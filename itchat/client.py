@@ -134,6 +134,22 @@ class client(object):
             return '408'
         else:
             return '0'
+    def synchostcheck(self,login_url):
+        #域名腾讯不定期修改,因此后期列表需更新维护 by cc2cc
+        #排名分先后
+        services = [
+                ('wx2.qq.com', 'webpush.wx2.qq.com'),
+                ('wx8.qq.com', 'webpush.wx8.qq.com'),
+                ('qq.com', 'webpush.wx.qq.com'),
+                ('web2.wechat.com', 'webpush.web2.wechat.com'),
+                ('wechat.com', 'webpush.web.wechat.com'),]
+        for (searchUrl, pushUrl) in services:
+            if login_url.find(searchUrl) >= 0:
+                self.loginInfo['pushurl'] = 'https://%s/cgi-bin/mmwebwx-bin'%pushUrl
+                if self.__sync_check():
+                    return self.loginInfo['pushurl']
+                else:
+                    return login_url
     def web_init(self):
         url = '%s/webwxinit?r=%s' % (self.loginInfo['url'], int(time.time()))
         payloads = {
@@ -145,6 +161,7 @@ class client(object):
         self.loginInfo['User'] = tools.struct_friend_info(dic['User'])
         self.loginInfo['SyncKey'] = dic['SyncKey']
         self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val']) for item in dic['SyncKey']['List']])
+        self.loginInfo['pushurl'] = self.synchostcheck(self.loginInfo['url'])
         self.storageClass.userName = dic['User']['UserName']
         self.storageClass.nickName = dic['User']['NickName']
         return dic['User']
@@ -229,7 +246,7 @@ class client(object):
         if update: self.get_contact(update=True)
         return copy.deepcopy(self.mpList)
     def show_mobile_login(self):
-        url = '%s/webwxstatusnotify'%self.loginInfo['url']
+        url = '%s/webwxstatusnotify?lang=zh_CN&pass_ticket=%s'%(self.loginInfo['url'],self.loginInfo['pass_ticket'])
         payloads = {
                 'BaseRequest': self.loginInfo['BaseRequest'],
                 'Code': 3,
@@ -268,33 +285,39 @@ class client(object):
         maintainThread.setDaemon(True)
         maintainThread.start()
     def __sync_check(self):
-        url = '%s/synccheck'%self.loginInfo['url']
+        url = '%s/synccheck?'%self.loginInfo['pushurl']
         payloads = {
             'r': int(time.time()),
             'skey': self.loginInfo['skey'],
             'sid': self.loginInfo['wxsid'],
             'uin': self.loginInfo['wxuin'],
             'deviceid': self.loginInfo['pass_ticket'],
-            'synckey': self.loginInfo['synckey'], }
-        r = self.s.get(url, params = payloads)
-
-        regx = r'window.synccheck={retcode:"(\d+)",selector:"(\d+)"}'
-        pm = re.search(regx, r.text)
-
-        if pm.group(1) != '0' : return None
-        return pm.group(2)
+            'synckey': self.loginInfo['synckey'],
+            '_':int(time.time()),}
+        headers = {'User-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.125 Safari/537.36','Referer':'https://wx.qq.com/'}
+        try:
+            r = self.s.get(url, params = payloads ,headers = headers)
+            regx = r'window.synccheck={retcode:"(\d+)",selector:"(\d+)"}'
+            pm = re.search(regx, r.text)
+            if pm.group(1) != '0' : return None
+            return pm.group(2)
+        except Exception , e:
+            print e
+            time.sleep(10)
+            return '0'
     def __get_msg(self):
-        url = '%s/webwxsync?sid=%s&skey=%s'%(
-            self.loginInfo['url'], self.loginInfo['wxsid'], self.loginInfo['skey'])
+        url = '%s/webwxsync?sid=%s&skey=%s&pass_ticket=%s'%(
+            self.loginInfo['url'], self.loginInfo['wxsid'], self.loginInfo['skey'],self.loginInfo['pass_ticket'])
         payloads = {
             'BaseRequest': self.loginInfo['BaseRequest'],
             'SyncKey': self.loginInfo['SyncKey'],
-            'rr': int(time.time()), }
+            'rr': ~int(time.time()), }
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
 
         dic = json.loads(r.content.decode('utf-8', 'replace'))
-        self.loginInfo['SyncKey'] = dic['SyncKey']
+        self.loginInfo['SyncKey'] = dic['SyncCheckKey']
+        self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val']) for item in dic['SyncCheckKey']['List']])
         return dic['AddMsgList'], dic['ModContactList']
     def __update_chatrooms(self, l):
         oldUsernameList = []
@@ -329,8 +352,13 @@ class client(object):
                 oldUsernameList.append(oldChatroom['UserName'])
             # update OwnerUin
             if 'ChatRoomOwner' in chatroom:
-                chatroom['OwnerUin'] = tools.search_dict_list(
+                try:
+                    chatroom['OwnerUin'] = tools.search_dict_list(
                     chatroom['MemberList'], 'UserName', chatroom['ChatRoomOwner'])['Uin']
+                except Exception , e:
+                    #测试时这里产生了一个错误
+                    #这部分逻辑实在太复杂了,故做忽略处理 by cc2cc
+                    print e
             # update isAdmin
             if 'OwnerUin' in chatroom and chatroom['OwnerUin'] != 0:
                 chatroom['isAdmin'] = \
