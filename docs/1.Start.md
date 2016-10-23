@@ -2,16 +2,15 @@
 
 ## 最简单的回复
 
-通过如下代码，可以完成回复所有文本信息（包括群聊）。
+通过如下代码，可以完成回复所有文本信息（包括群聊，公众号）。
 
 ```python
 import itchat
 from itchat.content import TEXT
 
-@itchat.msg_register
+@itchat.msg_register(TEXT, isFriendChat=True, isGroupChat=True, isMpChat=True)
 def simple_reply(msg):
-    if msg['Type'] == TEXT:
-        return 'I received: %s' % msg['Content']
+    return 'I received: %s' % msg['Content']
 
 itchat.auto_login()
 itchat.run()

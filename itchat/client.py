@@ -31,7 +31,7 @@ class client(object):
             raise Exception('Incorrect fileDir')
         status = {
             'loginInfo' : self.loginInfo,
-            'cookies'   : self.s.cookies.get_dict(), 
+            'cookies'   : self.s.cookies.get_dict(),
             'storage'   : self.storageClass.dumps()}
         with open(fileDir, 'wb') as f:
             pickle.dump(status, f)
@@ -88,7 +88,7 @@ class client(object):
         r = self.s.get(url, params = payloads)
         regx = r'window.QRLogin.code = (\d+); window.QRLogin.uuid = "(\S+?)";'
         data = re.search(regx, r.text)
-        if data and data.group(1) == '200': 
+        if data and data.group(1) == '200':
             self.uuid = data.group(2)
             return self.uuid
     def get_QR(self, uuid = None, enableCmdQR = False):
@@ -199,7 +199,7 @@ class client(object):
             tools.emoji_formatter(m, 'NickName')
             if m['Sex'] != 0:
                 self.memberList.append(m)
-            elif not (any([str(n) in m['UserName'] for n in range(10)]) and 
+            elif not (any([str(n) in m['UserName'] for n in range(10)]) and
                     any([chr(n) in m['UserName'] for n in (
                     list(range(ord('a'), ord('z') + 1)) +
                     list(range(ord('A'), ord('Z') + 1)))])):
@@ -249,7 +249,7 @@ class client(object):
                     if pauseTime < 5: pauseTime += 2
                     if i != '0': msgList, contractList = self.__get_msg()
                     if contractList: self.__update_chatrooms(contractList)
-                    if msgList: 
+                    if msgList:
                         msgList = self.__produce_msg(msgList)
                         for msg in msgList: self.msgList.insert(0, msg)
                         pauseTime = 1
@@ -520,7 +520,7 @@ class client(object):
         atFlag = '@' + (chatroom['self']['DisplayName']
             or self.storageClass.nickName)
         msg['isAt'] = (
-            (atFlag + u'\u2005' if u'\u2005' in msg['Content'] else ' ')
+            (atFlag + (u'\u2005' if u'\u2005' in msg['Content'] else ' '))
             in msg['Content']
             or
             msg['Content'].endswith(atFlag))
@@ -583,7 +583,7 @@ class client(object):
                 'Content': ("<appmsg appid='wxeb7ec651dd0aefa9' sdkver=''><title>%s</title>"%os.path.basename(fileDir) +
                     "<des></des><action></action><type>6</type><content></content><url></url><lowurl></lowurl>" +
                     "<appattach><totallen>%s</totallen><attachid>%s</attachid>"%(str(os.path.getsize(fileDir)), mediaId) +
-                    "<fileext>%s</fileext></appattach><extinfo></extinfo></appmsg>"%os.path.splitext(fileDir)[1].replace('.','')), 
+                    "<fileext>%s</fileext></appattach><extinfo></extinfo></appmsg>"%os.path.splitext(fileDir)[1].replace('.','')),
                 'FromUserName': self.storageClass.userName,
                 'ToUserName': toUserName,
                 'LocalID': str(time.time() * 1e7),
@@ -725,13 +725,27 @@ class client(object):
             'DelMemberList': ','.join([member['UserName'] for member in memberList]), }
         headers = {'content-type': 'application/json; charset=UTF-8'}
         return self.s.post(url, data=json.dumps(params),headers=headers).json()
-    def add_member_into_chatroom(self, chatroomUserName, memberList):
-        url = ('%s/webwxupdatechatroom?fun=addmember&pass_ticket=%s'%(
-            self.loginInfo['url'], self.loginInfo['pass_ticket']))
+    def add_member_into_chatroom(self, chatroomUserName, memberList,
+            useInvitation=False):
+        ''' add or invite member into chatroom
+         * there are two ways to get members into chatroom: invite or directly add
+         * but for chatrooms with more than 40 users, you can only use invite
+         * but don't worry we will auto-force userInvitation for you when necessary
+        '''
+        if not useInvitation:
+            chatroom = self.storageClass.search_chatrooms(userName=chatroomUserName)
+            if not chatroom: chatroom = self.update_chatroom(chatroomUserName)
+            if len(chatroom['MemberList']) > 40: useInvitation = True
+        if useInvitation:
+            fun, memberKeyName = 'invitemember', 'InviteMemberList'
+        else:
+            fun, memberKeyName = 'addmember', 'AddMsgList'
+        url = ('%s/webwxupdatechatroom?fun=%s&pass_ticket=%s'%(
+            self.loginInfo['url'], fun, self.loginInfo['pass_ticket']))
         params = {
-            'BaseRequest': self.loginInfo['BaseRequest'],
-            'ChatRoomName': chatroomUserName,
-            'AddMemberList': ','.join([member['UserName'] for member in memberList]), }
+            'BaseRequest'  : self.loginInfo['BaseRequest'],
+            'ChatRoomName' : chatroomUserName,
+            memberKeyName  : ','.join([member['UserName'] for member in memberList]), }
         headers = {'content-type': 'application/json; charset=UTF-8'}
         return self.s.post(url, data=json.dumps(params),headers=headers).json()
 
