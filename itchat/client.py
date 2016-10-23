@@ -1,11 +1,13 @@
+#coding=utf8
 import os, sys, time, re, io
 import threading, subprocess
 import json, xml.dom.minidom, mimetypes
 import copy, pickle
+import traceback
+import urllib
+import requests
 
 from . import config, storage, out, tools
-
-import requests
 
 BASE_URL = config.BASE_URL
 QR_DIR = 'QR.jpg'
@@ -14,11 +16,13 @@ class client(object):
     def __init__(self):
         self.storageClass = storage.Storage()
         self.memberList = self.storageClass.memberList
+        self.mpList = self.storageClass.mpList
         self.chatroomList = self.storageClass.chatroomList
         self.msgList = self.storageClass.msgList
         self.loginInfo = {}
         self.s = requests.Session()
         self.uuid = None
+        self.debug = False
     def dump_login_status(self, fileDir):
         try:
             with open(fileDir, 'w') as f: f.write('DELETE THIS')
@@ -45,8 +49,9 @@ class client(object):
             self.start_receiving()
             return True
         else:
-            self.storageClass.groupDict.clear()
-            self.s.cookies.clear() # other info will be automatically cleared
+            self.s.cookies.clear()
+            del self.chatroomList[:]
+            # other info will be automatically cleared
             return False
     def auto_login(self, enableCmdQR = False):
         def open_QR():
@@ -72,7 +77,7 @@ class client(object):
         self.web_init()
         self.show_mobile_login()
         tools.clear_screen()
-        self.get_contract(True)
+        self.get_contact(True)
         out.print_line('Login successfully as %s\n'%self.storageClass.nickName, False)
         self.start_receiving()
     def get_QRuuid(self):
@@ -129,6 +134,24 @@ class client(object):
             return '408'
         else:
             return '0'
+            
+    def synchostcheck(self,login_url):
+        #域名腾讯不定期修改,因此后期列表需更新维护 by cc2cc
+        #排名分先后
+        services = [
+                ('wx2.qq.com', 'webpush.wx2.qq.com'),
+                ('wx8.qq.com', 'webpush.wx8.qq.com'),
+                ('qq.com', 'webpush.wx.qq.com'),
+                ('web2.wechat.com', 'webpush.web2.wechat.com'),
+                ('wechat.com', 'webpush.web.wechat.com'),]
+        for (searchUrl, pushUrl) in services:
+            if login_url.find(searchUrl) >= 0:
+                self.loginInfo['pushurl'] = 'https://%s/cgi-bin/mmwebwx-bin'%pushUrl
+                if self.__sync_check():
+                    return self.loginInfo['pushurl']
+                else:
+                    return login_url
+            
     def web_init(self):
         url = '%s/webwxinit?r=%s' % (self.loginInfo['url'], int(time.time()))
         payloads = {
@@ -137,13 +160,14 @@ class client(object):
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
         dic = json.loads(r.content.decode('utf-8', 'replace'))
         tools.emoji_formatter(dic['User'], 'NickName')
-        self.loginInfo['User'] = dic['User']
+        self.loginInfo['User'] = tools.struct_friend_info(dic['User'])
         self.loginInfo['SyncKey'] = dic['SyncKey']
         self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val']) for item in dic['SyncKey']['List']])
+        self.loginInfo['pushurl'] = self.synchostcheck(self.loginInfo['url'])
         self.storageClass.userName = dic['User']['UserName']
         self.storageClass.nickName = dic['User']['NickName']
         return dic['User']
-    def get_batch_contract(self, userName):
+    def update_chatroom(self, userName, detailedMember=False):
         url = '%s/webwxbatchgetcontact?type=ex&r=%s' % (self.loginInfo['url'], int(time.time()))
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         payloads = {
@@ -154,20 +178,42 @@ class client(object):
                 'ChatRoomId': '', }], }
         j = json.loads(self.s.post(url, data = json.dumps(payloads), headers = headers
                 ).content.decode('utf8', 'replace'))['ContactList'][0]
-        for member in j['MemberList']:
-            tools.emoji_formatter(member, 'NickName')
-            tools.emoji_formatter(member, 'DisplayName')
-        j['isAdmin'] = j['OwnerUin'] == int(self.loginInfo['wxuin'])
-        return j
-    def get_contract(self, update = False):
+
+        if detailedMember:
+            def get_detailed_member_info(encryChatroomId, memberList):
+                url = '%s/webwxbatchgetcontact?type=ex&r=%s' % (self.loginInfo['url'], int(time.time()))
+                headers = { 'ContentType': 'application/json; charset=UTF-8' }
+                payloads = {
+                    'BaseRequest': self.loginInfo['BaseRequest'],
+                    'Count': len(j['MemberList']),
+                    'List': [{'UserName': member['UserName'], 'EncryChatRoomId': j['EncryChatRoomId']} \
+                        for member in memberList],
+                    }
+                return json.loads(self.s.post(url, data = json.dumps(payloads), headers = headers
+                        ).content.decode('utf8', 'replace'))['ContactList']
+            MAX_GET_NUMBER = 50
+            totalMemberList = []
+            for i in range(len(j['MemberList']) / MAX_GET_NUMBER + 1):
+                memberList = j['MemberList'][i*MAX_GET_NUMBER: (i+1)*MAX_GET_NUMBER]
+                totalMemberList += get_detailed_member_info(j['EncryChatRoomId'], memberList)
+            j['MemberList'] = totalMemberList
+
+        self.__update_chatrooms([j])
+        return self.storageClass.search_chatrooms(userName=j['UserName'])
+    def get_contact(self, update=False):
         if 1 < len(self.memberList) and not update: return copy.deepcopy(self.memberList)
         url = '%s/webwxgetcontact?r=%s&seq=0&skey=%s' % (self.loginInfo['url'],
             int(time.time()), self.loginInfo['skey'])
+
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
-        r = self.s.get(url, headers = headers)
+        r = self.s.get(url, headers=headers)
         tempList = json.loads(r.content.decode('utf-8', 'replace'))['MemberList']
-        del self.chatroomList[:]
         del self.memberList[:]
+        del self.mpList[:]
+        chatroomList = []
+        # chatroomList will not be cleared because:
+        # when initializing, it's cleared once
+        # when updating, there's not need for clearing
         self.memberList.append(self.loginInfo['User'])
         for m in tempList:
             tools.emoji_formatter(m, 'NickName')
@@ -179,15 +225,32 @@ class client(object):
                     list(range(ord('A'), ord('Z') + 1)))])):
                 continue # userName have number and str
             elif '@@' in m['UserName']:
-                self.chatroomList.append(m)
-            elif m['VerifyFlag'] & 8 == 0 and '@' in m['UserName']:
-                self.memberList.append(m)
+                m['isAdmin'] = None # this value will be set after update_chatroom
+                chatroomList.append(m)
+            elif '@' in m['UserName']:
+                if m['VerifyFlag'] & 8 == 0:
+                    self.memberList.append(m)
+                else:
+                    self.mpList.append(m)
+        if chatroomList: self.__update_chatrooms(chatroomList)
+        return copy.deepcopy(chatroomList)
+    def get_friends(self, update=False):
+        if update: self.get_contact(update=True)
         return copy.deepcopy(self.memberList)
-    def get_chatrooms(self, update = False):
-        if update: self.get_contract(update = True)
-        return copy.deepcopy(self.chatroomList)
+    def get_chatrooms(self, update=False):
+        ''' get chatrooms
+         * if update is set to True, this will only return chatrooms in contract
+        '''
+        if update:
+            return self.get_contact(update=True)
+        else:
+            return copy.deepcopy(self.chatroomList)
+    def get_mps(self, update=False):
+        if update: self.get_contact(update=True)
+        return copy.deepcopy(self.mpList)
     def show_mobile_login(self):
-        url = '%s/webwxstatusnotify'%self.loginInfo['url']
+        #url = '%s/webwxstatusnotify'%self.loginInfo['url']
+        url = '%s/webwxstatusnotify?lang=zh_CN&pass_ticket=%s'%(self.loginInfo['url'],self.loginInfo['pass_ticket'])
         payloads = {
                 'BaseRequest': self.loginInfo['BaseRequest'],
                 'Code': 3,
@@ -205,7 +268,8 @@ class client(object):
             while i and count <4:
                 try:
                     if pauseTime < 5: pauseTime += 2
-                    if i != '0': msgList = self.__get_msg()
+                    if i != '0': msgList, contractList = self.__get_msg()
+                    if contractList: self.__update_chatrooms(contractList)
                     if msgList: 
                         msgList = self.__produce_msg(msgList)
                         for msg in msgList: self.msgList.insert(0, msg)
@@ -215,30 +279,41 @@ class client(object):
                     count = 0
                 except requests.exceptions.RequestException as e:
                     count += 1
+                    if self.debug: traceback.print_exc()
                     time.sleep(count * 3)
                 except Exception as e:
                     out.print_line(str(e), False)
+                    if self.debug: traceback.print_exc()
             out.print_line('LOG OUT', False)
         maintainThread = threading.Thread(target = maintain_loop)
         maintainThread.setDaemon(True)
         maintainThread.start()
     def __sync_check(self):
-        url = '%s/synccheck'%self.loginInfo['url']
+        url = '%s/synccheck?'%self.loginInfo['pushurl']
         payloads = {
-                'r': int(time.time()),
-                'skey': self.loginInfo['skey'],
-                'sid': self.loginInfo['wxsid'],
-                'uin': self.loginInfo['wxuin'],
-                'deviceid': self.loginInfo['pass_ticket'],
-                'synckey': self.loginInfo['synckey'],
-                }
-        r = self.s.get(url, params = payloads)
-
-        regx = r'window.synccheck={retcode:"(\d+)",selector:"(\d+)"}'
-        pm = re.search(regx, r.text)
-
-        if pm.group(1) != '0' : return None
-        return pm.group(2)
+            'r': int(time.time()),
+            'skey': self.loginInfo['skey'],
+            'sid': self.loginInfo['wxsid'],
+            'uin': self.loginInfo['wxuin'],
+            'deviceid': self.loginInfo['pass_ticket'],
+            'synckey': self.loginInfo['synckey'], 
+            '_':int(time.time()),
+            }
+        headers = {'User-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.125 Safari/537.36','Referer':'https://wx.qq.com/'}
+        try:
+            r = self.s.get(url, params = payloads, headers=headers)
+            regx = r'window.synccheck={retcode:"(\d+)",selector:"(\d+)"}'
+            pm = re.search(regx, r.text)
+            #打印心跳
+            print '[!] %s心跳正常%s'%(time.strftime("%H:%M:%S", time.localtime()),r.text.encode('utf-8').split('=')[-1])
+            if pm.group(1) != '0' : return None
+            return pm.group(2)
+        except Exception , e:
+            print e
+            #打印异常心跳
+            print '\033[31m[!] %s心跳异常\033[0m'%time.strftime("%H:%M:%S", time.localtime())
+            time.sleep(10)
+            return '0'
     def __get_msg(self):
         url = '%s/webwxsync?sid=%s&skey=%s'%(
             self.loginInfo['url'], self.loginInfo['wxsid'], self.loginInfo['skey'])
@@ -250,14 +325,72 @@ class client(object):
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
 
         dic = json.loads(r.content.decode('utf-8', 'replace'))
-        self.loginInfo['SyncKey'] = dic['SyncKey']
-        if dic['AddMsgCount'] != 0: return dic['AddMsgList']
+        self.loginInfo['SyncKey'] = dic['SyncCheckKey']
+        self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val']) for item in dic['SyncCheckKey']['List']])
+        return dic['AddMsgList'], dic['ModContactList']
+    def __update_chatrooms(self, l):
+        oldUsernameList = []
+        for chatroom in l:
+            # format NickName & DisplayName & self keys
+            tools.emoji_formatter(chatroom, 'NickName')
+            for member in chatroom['MemberList']:
+                if self.storageClass.userName == member['UserName']:
+                    chatroom['self'] = member
+                tools.emoji_formatter(member, 'NickName')
+                tools.emoji_formatter(member, 'DisplayName')
+            # get useful information from old version of this chatroom
+            oldChatroom = tools.search_dict_list(
+                self.chatroomList, 'UserName', chatroom['UserName'])
+            if oldChatroom is not None:
+                memberList, oldMemberList = \
+                    chatroom['MemberList'], oldChatroom['MemberList']
+                # update member list
+                if memberList:
+                    for member in memberList:
+                        oldMember = tools.search_dict_list(
+                            oldMemberList, 'UserName', member['UserName'])
+                        if oldMember is not None:
+                            for k in oldMember:
+                                member[k] = member[k] or oldMember[k]
+                else:
+                    chatroom['MemberList'] = oldMemberList
+                # update other info
+                for k in oldChatroom:
+                    chatroom[k] = chatroom.get(k) or oldChatroom[k]
+                # ready for deletion
+                oldUsernameList.append(oldChatroom['UserName'])
+            # update OwnerUin
+            if 'ChatRoomOwner' in chatroom:
+                try:
+                    chatroom['OwnerUin'] = tools.search_dict_list(
+                    chatroom['MemberList'], 'UserName', chatroom['ChatRoomOwner'])['Uin']
+                except:
+                #测试时这里产生了一个错误
+                #TypeError: 'NoneType' object has no attribute '__getitem__'
+                #这部分逻辑实在太复杂了,故做忽略处理 by cc2cc
+                    pass
+            # update isAdmin
+            if 'OwnerUin' in chatroom and chatroom['OwnerUin'] != 0:
+                chatroom['isAdmin'] = \
+                    chatroom['OwnerUin'] == int(self.loginInfo['wxuin'])
+            else:
+                chatroom['isAdmin'] = None
+        # delete old chatrooms
+        oldIndexList = []
+        for i, chatroom in enumerate(self.chatroomList):
+            if chatroom['UserName'] in oldUsernameList:
+                oldIndexList.append(i)
+        oldIndexList.sort(reverse=True)
+        for i in oldIndexList: del self.chatroomList[i]
+        # add new chatrooms
+        for chatroom in l:
+            self.chatroomList.append(chatroom)
     def __produce_msg(self, l):
         rl = []
         srl = [40, 43, 50, 52, 53, 9999]
         # 40 msg, 43 videochat, 50 VOIPMSG, 52 voipnotifymsg, 53 webwxvoipnotifymsg, 9999 sysnotice
         for m in l:
-            if '@@' in m['FromUserName']:
+            if '@@' in m['FromUserName'] or '@@' in m['ToUserName']:
                 self.__produce_group_chat(m)
             else:
                 tools.msg_formatter(m, 'Content')
@@ -265,9 +398,10 @@ class client(object):
                 if m['Url']:
                     regx = r'(.+?\(.+?\))'
                     data = re.search(regx, m['Content'])
+                    data = 'Map' if data is None else data.group(1)
                     msg = {
                         'Type': 'Map',
-                        'Text': data.group(1),}
+                        'Text': data,}
                 else:
                     msg = {
                         'Type': 'Text',
@@ -312,7 +446,7 @@ class client(object):
                         'status'        : m['Status'],
                         'userName'      : m['RecommendInfo']['UserName'],
                         'ticket'        : m['Ticket'],
-                        'recommendInfo' : m['RecommendInfo'], }, }
+                        'userInfo' : m['RecommendInfo'], }, }
             elif m['MsgType'] == 42: # name card
                 msg = {
                     'Type': 'Card',
@@ -321,7 +455,12 @@ class client(object):
                 if m['AppMsgType'] == 6:
                     def download_atta(attaDir=None):
                         cookiesList = {name:data for name,data in self.s.cookies.items()}
-                        url = 'https://file%s.wx.qq.com/cgi-bin/mmwebwx-bin/webwxgetmedia'%('2' if '2' in self.loginInfo['url'] else '')
+                        url = '/cgi-bin/mmwebwx-bin/webwxgetmedia'
+                        if 'web.wechat.com' in self.loginInfo['url']:
+                            url = 'https://file.web%s.wechat.com' + url
+                        else:
+                            url = 'https://file%s.wx.qq.com' + url
+                        url = url % ('2' if '2' in self.loginInfo['url'] else '')
                         payloads = {
                             'sender': m['FromUserName'],
                             'mediaid': m['MediaId'],
@@ -343,11 +482,15 @@ class client(object):
                         'Type': 'Note',
                         'Text': m['FileName'], }
                 elif m['AppMsgType'] == 2000:
-                    regx = r'\[CDATA\[(.+?)\].+?\[CDATA\[(.+?)\]'
+                    regx = r'\[CDATA\[(.+?)\][\s\S]+?\[CDATA\[(.+?)\]'
                     data = re.search(regx, m['Content'])
+                    if data:
+                        data = data.group(2).split(u'。')[0]
+                    else:
+                        data = 'You may found detailed info in Content key.'
                     msg = {
                         'Type': 'Note',
-                        'Text': data.group(2), }
+                        'Text': data, }
                 else:
                     msg = {
                         'Type': 'Sharing',
@@ -380,9 +523,10 @@ class client(object):
             elif m['MsgType'] == 10002:
                 regx = r'\[CDATA\[(.+?)\]\]'
                 data = re.search(regx, m['Content'])
+                data = 'System message' if data is None else data.group(1).replace('\\', '')
                 msg = {
                     'Type': 'Note',
-                    'Text': data.group(1).replace('\\', ''), }
+                    'Text': data, }
             elif m['MsgType'] in srl:
                 msg = {
                     'Type': 'Useless',
@@ -400,20 +544,25 @@ class client(object):
         r = re.match('(@[0-9a-z]*?):<br/>(.*)$', msg['Content'])
         if not r: return
         actualUserName, content = r.groups()
-        try:
-            self.storageClass.groupDict[msg['FromUserName']][actualUserName]
-        except:
-            groupMemberList = self.get_batch_contract(msg['FromUserName'])['MemberList']
-            self.storageClass.groupDict[msg['FromUserName']] = {member['UserName']: member for member in groupMemberList}
+        chatroom = self.storageClass.search_chatrooms(userName=msg['FromUserName'])
+        member = tools.search_dict_list((chatroom or {}).get(
+            'MemberList') or [], 'UserName', actualUserName)
+        if member is None:
+            chatroom = self.update_chatroom(msg['FromUserName'])
+            member = tools.search_dict_list((chatroom or {}).get(
+                'MemberList') or [], 'UserName', actualUserName)
         msg['ActualUserName'] = actualUserName
-        msg['ActualNickName'] = (self.storageClass.groupDict[msg['FromUserName']][actualUserName]['DisplayName'] or
-            self.storageClass.groupDict[msg['FromUserName']][actualUserName]['NickName'])
+        msg['ActualNickName'] = member['DisplayName'] or member['NickName']
         msg['Content']        = content
         tools.msg_formatter(msg, 'Content')
-        msg['isAt']           = u'@%s\u2005' % (
-            self.storageClass.groupDict[msg['FromUserName']][self.storageClass.userName]['DisplayName']
-            or self.storageClass.nickName) in msg['Content']
-    def send_msg(self, msg = 'Test Message', toUserName = None):
+        atFlag = '@' + (chatroom['self']['DisplayName']
+            or self.storageClass.nickName)
+        msg['isAt'] = (
+            (atFlag + u'\u2005' if u'\u2005' in msg['Content'] else ' ')
+            in msg['Content']
+            or
+            msg['Content'].endswith(atFlag))
+    def send_msg(self, msg ='Test Message', toUserName = None):
         url = '%s/webwxsendmsg'%self.loginInfo['url']
         payloads = {
             'BaseRequest': self.loginInfo['BaseRequest'],
@@ -430,7 +579,12 @@ class client(object):
         return r.json()['BaseResponse']['Ret'] == 0
     def __upload_file(self, fileDir, isPicture = False, isVideo = False):
         if not tools.check_file(fileDir): return
-        url = 'https://file%s.wx.qq.com/cgi-bin/mmwebwx-bin/webwxuploadmedia?f=json'%('2' if '2' in self.loginInfo['url'] else '')
+        url = '/cgi-bin/mmwebwx-bin/webwxuploadmedia?f=json'
+        if 'web.wechat.com' in self.loginInfo['url']:
+            url = 'https://file.web%s.wechat.com' + url
+        else:
+            url = 'https://file%s.wx.qq.com' + url
+        url = url % ('2' if '2' in self.loginInfo['url'] else '')
         # save it on server
         fileSize = str(os.path.getsize(fileDir))
         cookiesList = {name:data for name,data in self.s.cookies.items()}
@@ -531,7 +685,10 @@ class client(object):
             'BaseRequest' : self.loginInfo['BaseRequest'], }
         j = self.s.post(url, json.dumps(data, ensure_ascii = False).encode('utf8')).json()
         return j['BaseResponse']['Ret'] == 0
-    def add_friend(self, status, userName, ticket, recommendInfo = {}):
+    def add_friend(self, userName, status=2, ticket='', userInfo={}):
+        ''' Add a friend or accept a friend
+            * for adding status should be 2
+            * for accepting status should be 3 '''
         url = '%s/webwxverifyuser?r=%s&pass_ticket=%s'%(self.loginInfo['url'], int(time.time()), self.loginInfo['pass_ticket'])
         payloads = {
             'BaseRequest': self.loginInfo['BaseRequest'],
@@ -546,45 +703,72 @@ class client(object):
             'skey': self.loginInfo['skey'], }
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
-        if recommendInfo: # add user to storage
-            member = {}
-            for k in ('UserName', 'City', 'DisplayName', 'PYQuanPin', 'RemarkPYInitial', 'Province',
-                'KeyWord', 'RemarkName', 'PYInitial', 'EncryChatRoomId', 'Alias', 'Signature', 
-                'NickName', 'RemarkPYQuanPin', 'HeadImgUrl'): member[k] = ''
-            for k in ('UniFriend', 'Sex', 'AppAccountFlag', 'VerifyFlag', 'ChatRoomId', 'HideInputBarFlag',
-                'AttrStatus', 'SnsFlag', 'MemberCount', 'OwnerUin', 'ContactFlag', 'Uin',
-                'StarFriend', 'Statues'): member[k] = 0
-            member['MemberList'] = []
-            self.memberList.append(dict(member, **recommendInfo))
+        if userInfo: # add user to storage
+            self.memberList.append(tools.struct_friend_info(userInfo))
+        return r.json()
+    def get_head_img(self, userName=None, chatroomUserName=None, picDir=None):
+        ''' get head image
+         * if you want to get chatroom header: only set chatroomUserName
+         * if you want to get friend header: only set userName
+         * if you want to get chatroom member header: set both
+        '''
+        params = {
+            'userName': userName or chatroomUserName,
+            'skey': self.loginInfo['skey'], }
+        url = '%s/webwxgeticon' % self.loginInfo['url']
+        if chatroomUserName is None:
+            infoDict = self.storageClass.search_friends(userName=userName)
+            if infoDict is None: return None
+        else:
+            if userName is None:
+                url = '%s/webwxgetheadimg' % self.loginInfo['url']
+            else:
+                chatroom = self.storageClass.search_chatrooms(userName=chatroomUserName)
+                if chatroomUserName is None: return None
+                if chatroom['EncryChatRoomId'] == '':
+                    chatroom = self.update_chatroom(chatroomUserName)
+                params['chatroomid'] = chatroom['EncryChatRoomId']
+        r = self.s.get(url, params=params, stream=True)
+        tempStorage = io.BytesIO()
+        for block in r.iter_content(1024):
+            tempStorage.write(block)
+        if picDir is None: return tempStorage.getvalue()
+        with open(picDir, 'wb') as f: f.write(tempStorage.getvalue())
     def create_chatroom(self, memberList, topic = ''):
         url = ('%s/webwxcreatechatroom?pass_ticket=%s&r=%s'%(
                 self.loginInfo['url'], self.loginInfo['pass_ticket'], int(time.time())))
-        params = {
+        data = {
             'BaseRequest': self.loginInfo['BaseRequest'],
             'MemberCount': len(memberList),
             'MemberList': [{'UserName': member['UserName']} for member in memberList],
             'Topic': topic, }
         headers = {'content-type': 'application/json; charset=UTF-8'}
-
-        r = self.s.post(url, data=json.dumps(params),headers=headers)
-        dic = json.loads(r.content.decode('utf8', 'replace'))
-        print(dic)
-        return dic['ChatRoomName']
-    def delete_member_from_chatroom(self, chatRoomName, memberList):
+        r = self.s.post(url, data=json.dumps(data, ensure_ascii=False).encode('utf8', 'ignore'),headers=headers)
+        return r.json()
+    def set_chatroom_name(self, chatroomUserName, name):
+        url = ('%s/webwxupdatechatroom?fun=modtopic&pass_ticket=%s'%(
+            self.loginInfo['url'], self.loginInfo['pass_ticket']))
+        data = {
+            'BaseRequest': self.loginInfo['BaseRequest'],
+            'ChatRoomName': chatroomUserName,
+            'NewTopic': name, }
+        headers = {'content-type': 'application/json; charset=UTF-8'}
+        return self.s.post(url, data=json.dumps(data, ensure_ascii=False).encode('utf8', 'ignore'), headers=headers).json()
+    def delete_member_from_chatroom(self, chatroomUserName, memberList):
         url = ('%s/webwxupdatechatroom?fun=delmember&pass_ticket=%s'%(
             self.loginInfo['url'], self.loginInfo['pass_ticket']))
         params = {
             'BaseRequest': self.loginInfo['BaseRequest'],
-            'ChatRoomName': chatRoomName,
+            'ChatRoomName': chatroomUserName,
             'DelMemberList': ','.join([member['UserName'] for member in memberList]), }
         headers = {'content-type': 'application/json; charset=UTF-8'}
         return self.s.post(url, data=json.dumps(params),headers=headers).json()
-    def add_member_into_chatroom(self, chatRoomName, memberList):
+    def add_member_into_chatroom(self, chatroomUserName, memberList):
         url = ('%s/webwxupdatechatroom?fun=addmember&pass_ticket=%s'%(
             self.loginInfo['url'], self.loginInfo['pass_ticket']))
         params = {
             'BaseRequest': self.loginInfo['BaseRequest'],
-            'ChatRoomName': chatRoomName,
+            'ChatRoomName': chatroomUserName,
             'AddMemberList': ','.join([member['UserName'] for member in memberList]), }
         headers = {'content-type': 'application/json; charset=UTF-8'}
         return self.s.post(url, data=json.dumps(params),headers=headers).json()
