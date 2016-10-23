@@ -295,6 +295,7 @@ class client(object):
 
         dic = json.loads(r.content.decode('utf-8', 'replace'))
         self.loginInfo['SyncKey'] = dic['SyncKey']
+        self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val']) for item in dic['SyncKey']['List']])
         return dic['AddMsgList'], dic['ModContactList']
     def __update_chatrooms(self, l):
         oldUsernameList = []
