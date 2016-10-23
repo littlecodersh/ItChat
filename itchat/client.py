@@ -520,7 +520,7 @@ class client(object):
         atFlag = '@' + (chatroom['self']['DisplayName']
             or self.storageClass.nickName)
         msg['isAt'] = (
-            (atFlag + u'\u2005' if u'\u2005' in msg['Content'] else ' ')
+            (atFlag +( u'\u2005' if u'\u2005' in msg['Content'] else ' ' ))
             in msg['Content']
             or
             msg['Content'].endswith(atFlag))
