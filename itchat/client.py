@@ -40,9 +40,9 @@ class client(object):
             'storage'   : self.storageClass.dumps()}
         with open(self.pkifileDir, 'wb') as f:
             pickle.dump(status, f)
-    def load_login_status(self, self.pkifileDir):
+    def load_login_status(self, fileDir):
         try:
-            with open(self.pkifileDir, 'rb') as f:
+            with open(fileDir, 'rb') as f:
                 j = pickle.load(f)
         except Exception as e:
             return False
