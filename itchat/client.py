@@ -23,6 +23,11 @@ class client(object):
         self.s = requests.Session()
         self.uuid = None
         self.debug = False
+        self.hotReloadFlag = False
+        
+    def set_hot_reload_flag(self):
+        self.hotReloadFlag = True
+        
     def dump_login_status(self, fileDir):
         try:
             with open(fileDir, 'w') as f: f.write('DELETE THIS')
@@ -308,8 +313,10 @@ class client(object):
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
         dic = json.loads(r.content.decode('utf-8', 'replace'))
         if dic['BaseResponse']['Ret'] != 0: return None, None
-        self.loginInfo['SyncKey'] = dic['SyncKey']
-        self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val']) for item in dic['SyncKey']['List']])
+        if self.loginInfo['SyncKey'] != dic['SyncKey']:
+            self.loginInfo['SyncKey'] = dic['SyncKey']
+            self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val']) for item in dic['SyncKey']['List']])
+            if self.hotReloadFlag: self.dump_login_status()
         return dic['AddMsgList'], dic['ModContactList']
     def __update_chatrooms(self, l):
         oldUsernameList = []
