@@ -3,7 +3,7 @@ import time
 from .client import client
 from . import content # this is for creating pyc
 
-__version__ = '1.1.17'
+__version__ = '1.1.18'
 
 __client = client()
 HOT_RELOAD = False
@@ -58,6 +58,7 @@ def get_batch_contract(groupUserName): return __client.update_chatroom(groupUser
 # <<<
 
 # if toUserName is set to None, msg will be sent to yourself
+def send_raw_msg(msgType, content, toUserName): return __client.send_raw_msg(msgType, content, toUserName)
 def send_msg(msg = 'Test Message', toUserName = None): return __client.send_msg(msg, toUserName)
 def send_file(fileDir, toUserName): return __client.send_file(fileDir, toUserName)
 def send_video(fileDir, toUserName): return __client.send_video(fileDir, toUserName)

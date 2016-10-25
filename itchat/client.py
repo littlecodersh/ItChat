@@ -44,15 +44,20 @@ class client(object):
         self.loginInfo = j['loginInfo']
         self.s.cookies = requests.utils.cookiejar_from_dict(j['cookies'])
         self.storageClass.loads(j['storage'])
-        if self.__sync_check():
-            out.print_line('Login successfully as %s\n'%self.storageClass.nickName, True)
-            self.start_receiving()
-            return True
-        else:
+        msgList, contactList = self.__get_msg()
+        if (msgList or contactList) is None:
             self.s.cookies.clear()
             del self.chatroomList[:]
             # other info will be automatically cleared
             return False
+        else:
+            if contactList: self.__update_chatrooms(contactList)
+            if msgList:
+                msgList = self.__produce_msg(msgList)
+                for msg in msgList: self.msgList.insert(0, msg)
+            out.print_line('Login successfully as %s\n'%self.storageClass.nickName, True)
+            self.start_receiving()
+            return True
     def auto_login(self, enableCmdQR = False):
         def open_QR():
             for get_count in range(10):
@@ -117,6 +122,19 @@ class client(object):
             self.loginInfo['url'] = re.search(regx, r.text).group(1)
             r = self.s.get(self.loginInfo['url'], allow_redirects=False)
             self.loginInfo['url'] = self.loginInfo['url'][:self.loginInfo['url'].rfind('/')]
+            for indexUrl, detailedUrl in {
+                    "wx2.qq.com": ("file.wx2.qq.com", "webpush.wx2.qq.com"),
+                    "wx8.qq.com": ("file.wx8.qq.com", "webpush.wx8.qq.com"),
+                    "qq.com": ("file.wx.qq.com", "webpush.wx.qq.com"),
+                    "web2.wechat.com": ("file.web2.wechat.com", "webpush.web2.wechat.com"),
+                    "wechat.com": ("file.web.wechat.com", "webpush.web.wechat.com"), }.items():
+                fileUrl, syncUrl = ['https://%s/cgi-bin/mmwebwx-bin' % url for url in detailedUrl]
+                if indexUrl in self.loginInfo['url']:
+                    self.loginInfo['fileUrl'], self.loginInfo['syncUrl'] = \
+                        fileUrl, syncUrl
+                    break
+            else:
+                self.loginInfo['fileUrl'] = self.loginInfo['syncUrl'] = self.loginInfo['url']
             self.loginInfo['BaseRequest'] = {}
             for node in xml.dom.minidom.parseString(r.text).documentElement.childNodes:
                 if node.nodeName == 'skey':
@@ -219,7 +237,7 @@ class client(object):
         return copy.deepcopy(self.memberList)
     def get_chatrooms(self, update=False):
         ''' get chatrooms
-         * if update is set to True, this will only return chatrooms in contract
+         * if update is set to True, this will only return chatrooms in contact
         '''
         if update:
             return self.get_contact(update=True)
@@ -229,7 +247,7 @@ class client(object):
         if update: self.get_contact(update=True)
         return copy.deepcopy(self.mpList)
     def show_mobile_login(self):
-        url = '%s/webwxstatusnotify'%self.loginInfo['url']
+        url = '%s/webwxstatusnotify?lang=zh_CN&pass_ticket=%s'%(self.loginInfo['url'],self.loginInfo['pass_ticket'])
         payloads = {
                 'BaseRequest': self.loginInfo['BaseRequest'],
                 'Code': 3,
@@ -243,17 +261,14 @@ class client(object):
         def maintain_loop():
             i = self.__sync_check()
             count = 0
-            pauseTime = 1
             while i and count <4:
                 try:
-                    if pauseTime < 5: pauseTime += 2
-                    if i != '0': msgList, contractList = self.__get_msg()
-                    if contractList: self.__update_chatrooms(contractList)
-                    if msgList:
-                        msgList = self.__produce_msg(msgList)
-                        for msg in msgList: self.msgList.insert(0, msg)
-                        pauseTime = 1
-                    time.sleep(pauseTime)
+                    if i != '0':
+                        msgList, contactList = self.__get_msg()
+                        if contactList: self.__update_chatrooms(contactList)
+                        if msgList:
+                            msgList = self.__produce_msg(msgList)
+                            for msg in msgList: self.msgList.insert(0, msg)
                     i = self.__sync_check()
                     count = 0
                 except requests.exceptions.RequestException as e:
@@ -268,33 +283,33 @@ class client(object):
         maintainThread.setDaemon(True)
         maintainThread.start()
     def __sync_check(self):
-        url = '%s/synccheck'%self.loginInfo['url']
-        payloads = {
-            'r': int(time.time()),
-            'skey': self.loginInfo['skey'],
-            'sid': self.loginInfo['wxsid'],
-            'uin': self.loginInfo['wxuin'],
-            'deviceid': self.loginInfo['pass_ticket'],
-            'synckey': self.loginInfo['synckey'], }
-        r = self.s.get(url, params = payloads)
-
+        url = '%s/synccheck' % self.loginInfo.get('syncUrl', self.loginInfo['url'])
+        params = {
+            'r'        : int(time.time()),
+            'skey'     : self.loginInfo['skey'],
+            'sid'      : self.loginInfo['wxsid'],
+            'uin'      : self.loginInfo['wxuin'],
+            'deviceid' : self.loginInfo['pass_ticket'],
+            'synckey'  : self.loginInfo['synckey'],
+            '_'        : int(time.time()),}
+        r = self.s.get(url, params=params)
         regx = r'window.synccheck={retcode:"(\d+)",selector:"(\d+)"}'
         pm = re.search(regx, r.text)
-
-        if pm.group(1) != '0' : return None
+        if pm is None or pm.group(1) != '0' : return None
         return pm.group(2)
     def __get_msg(self):
-        url = '%s/webwxsync?sid=%s&skey=%s'%(
-            self.loginInfo['url'], self.loginInfo['wxsid'], self.loginInfo['skey'])
+        url = '%s/webwxsync?sid=%s&skey=%s&pass_ticket=%s'%(
+            self.loginInfo['url'], self.loginInfo['wxsid'], self.loginInfo['skey'],self.loginInfo['pass_ticket'])
         payloads = {
             'BaseRequest': self.loginInfo['BaseRequest'],
             'SyncKey': self.loginInfo['SyncKey'],
             'rr': int(time.time()), }
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
-
         dic = json.loads(r.content.decode('utf-8', 'replace'))
+        if dic['BaseResponse']['Ret'] != 0: return None, None
         self.loginInfo['SyncKey'] = dic['SyncKey']
+        self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val']) for item in dic['SyncKey']['List']])
         return dic['AddMsgList'], dic['ModContactList']
     def __update_chatrooms(self, l):
         oldUsernameList = []
@@ -328,7 +343,7 @@ class client(object):
                 # ready for deletion
                 oldUsernameList.append(oldChatroom['UserName'])
             # update OwnerUin
-            if 'ChatRoomOwner' in chatroom:
+            if chatroom.get('ChatRoomOwner'):
                 chatroom['OwnerUin'] = tools.search_dict_list(
                     chatroom['MemberList'], 'UserName', chatroom['ChatRoomOwner'])['Uin']
             # update isAdmin
@@ -524,29 +539,28 @@ class client(object):
             in msg['Content']
             or
             msg['Content'].endswith(atFlag))
-    def send_msg(self, msg ='Test Message', toUserName = None):
+    def send_raw_msg(self, msgType, content, toUserName):
         url = '%s/webwxsendmsg'%self.loginInfo['url']
         payloads = {
             'BaseRequest': self.loginInfo['BaseRequest'],
             'Msg': {
-                'Type': 1,
-                'Content': msg,
+                'Type': msgType,
+                'Content': content,
                 'FromUserName': self.storageClass.userName,
                 'ToUserName': (toUserName if toUserName else self.storageClass.userName),
                 'LocalID': int(time.time()),
                 'ClientMsgId': int(time.time()),
                 }, }
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
-        r = self.s.post(url, data = json.dumps(payloads, ensure_ascii = False).encode('utf8'), headers = headers)
-        return r.json()['BaseResponse']['Ret'] == 0
+        r = self.s.post(url, data=json.dumps(payloads, ensure_ascii=False).encode('utf8'), headers=headers)
+        return r.json()
+    def send_msg(self, msg='Test Message', toUserName=None):
+        r = self.send_raw_msg(1, msg, toUserName)
+        return r['BaseResponse']['Ret'] == 0
     def __upload_file(self, fileDir, isPicture = False, isVideo = False):
         if not tools.check_file(fileDir): return
-        url = '/cgi-bin/mmwebwx-bin/webwxuploadmedia?f=json'
-        if 'web.wechat.com' in self.loginInfo['url']:
-            url = 'https://file.web%s.wechat.com' + url
-        else:
-            url = 'https://file%s.wx.qq.com' + url
-        url = url % ('2' if '2' in self.loginInfo['url'] else '')
+        url = self.loginInfo.get('fileUrl', self.loginInfo['url']) + \
+            '/webwxuploadmedia?f=json'
         # save it on server
         fileSize = str(os.path.getsize(fileDir))
         cookiesList = {name:data for name,data in self.s.cookies.items()}
