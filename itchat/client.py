@@ -539,21 +539,24 @@ class client(object):
             in msg['Content']
             or
             msg['Content'].endswith(atFlag))
-    def send_msg(self, msg ='Test Message', toUserName = None):
+    def send_raw_msg(self, msgType, content, toUserName):
         url = '%s/webwxsendmsg'%self.loginInfo['url']
         payloads = {
             'BaseRequest': self.loginInfo['BaseRequest'],
             'Msg': {
-                'Type': 1,
-                'Content': msg,
+                'Type': msgType,
+                'Content': content,
                 'FromUserName': self.storageClass.userName,
                 'ToUserName': (toUserName if toUserName else self.storageClass.userName),
                 'LocalID': int(time.time()),
                 'ClientMsgId': int(time.time()),
                 }, }
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
-        r = self.s.post(url, data = json.dumps(payloads, ensure_ascii = False).encode('utf8'), headers = headers)
-        return r.json()['BaseResponse']['Ret'] == 0
+        r = self.s.post(url, data=json.dumps(payloads, ensure_ascii=False).encode('utf8'), headers=headers)
+        return r.json()
+    def send_msg(self, msg='Test Message', toUserName=None):
+        r = self.send_raw_msg(1, msg, toUserName)
+        return r['BaseResponse']['Ret'] == 0
     def __upload_file(self, fileDir, isPicture = False, isVideo = False):
         if not tools.check_file(fileDir): return
         url = self.loginInfo.get('fileUrl', self.loginInfo['url']) + \
