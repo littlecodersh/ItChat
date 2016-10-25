@@ -27,6 +27,7 @@ class client(object):
         
     def dump_login_status(self, fileDir):
         self.pkifileDir = fileDir
+        self.dump_login_status_to_file()
         
     def dump_login_status_to_file(self):
         try:
