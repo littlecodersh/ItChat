@@ -23,17 +23,23 @@ class client(object):
         self.s = requests.Session()
         self.uuid = None
         self.debug = False
+        self.pkifileDir = None
+        
     def dump_login_status(self, fileDir):
+        self.pkifileDir = fileDir
+        self.dump_login_status_to_file()
+        
+    def dump_login_status_to_file(self):
         try:
-            with open(fileDir, 'w') as f: f.write('DELETE THIS')
-            os.remove(fileDir)
+            with open(self.pkifileDir, 'w') as f: f.write('DELETE THIS')
+            os.remove(self.pkifileDir)
         except:
             raise Exception('Incorrect fileDir')
         status = {
             'loginInfo' : self.loginInfo,
             'cookies'   : self.s.cookies.get_dict(),
             'storage'   : self.storageClass.dumps()}
-        with open(fileDir, 'wb') as f:
+        with open(self.pkifileDir, 'wb') as f:
             pickle.dump(status, f)
     def load_login_status(self, fileDir):
         try:
@@ -308,8 +314,10 @@ class client(object):
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
         dic = json.loads(r.content.decode('utf-8', 'replace'))
         if dic['BaseResponse']['Ret'] != 0: return None, None
-        self.loginInfo['SyncKey'] = dic['SyncKey']
-        self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val']) for item in dic['SyncKey']['List']])
+        if self.loginInfo['SyncKey'] != dic['SyncKey']:
+            self.loginInfo['SyncKey'] = dic['SyncKey']
+            self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val']) for item in dic['SyncKey']['List']])
+            if self.pkifileDir: self.dump_login_status_to_file()
         return dic['AddMsgList'], dic['ModContactList']
     def __update_chatrooms(self, l):
         oldUsernameList = []
