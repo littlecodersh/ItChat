@@ -749,7 +749,7 @@ class client(object):
         if not useInvitation:
             chatroom = self.storageClass.search_chatrooms(userName=chatroomUserName)
             if not chatroom: chatroom = self.update_chatroom(chatroomUserName)
-            if len(chatroom['MemberList']) > 40: useInvitation = True
+            if len(chatroom['MemberList']) + len(memberList) > 39: useInvitation = True
         if useInvitation:
             fun, memberKeyName = 'invitemember', 'InviteMemberList'
         else:
