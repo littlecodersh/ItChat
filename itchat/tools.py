@@ -1,5 +1,7 @@
 import re, os, sys, subprocess, copy
 
+import requests
+
 try:
     from HTMLParser import HTMLParser
 except ImportError:
@@ -113,3 +115,36 @@ def search_dict_list(l, key, value):
         * return dict with specific value & key '''
     for i in l:
         if i.get(key) == value: return i
+
+
+def guess_img_keyword(img_bytes):
+    """
+    Read img bytes,use baidu non-public api guess image keyword
+    :type img_bytes: bytes
+    :rtype: str
+    """
+    files = {
+        'fileheight': "0",
+        'newfilesize': str(len(img_bytes)),
+        'compresstime': "0",
+        'Filename': "image.png",
+        'filewidth': "0",
+        'filesize': str(len(img_bytes)),
+        'filetype': 'image/png',
+        'Upload': "Submit Query",
+        'filedata': ("image.png", img_bytes)
+    }
+    s = requests.Session()
+
+    s.headers['User-Agent'] = \
+        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.101 Safari/537.36'
+    r = s.post('http://image.baidu.com/pictureup/uploadshitu?fr=flash&fm=index&pos=upload', files=files)
+    r = s.get('http://image.baidu.com' + r.text)
+    ret = re.search(r"'multitags':\s*'(.*?)'", r.text)
+    if not ret:
+        return ''
+    ret = ret.group(1)
+    ret = re.sub(r'\s+', ',', ret).split(',')
+    if ret:
+        return ret[0]
+    return ''
