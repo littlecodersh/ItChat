@@ -58,20 +58,20 @@ class client(object):
             out.print_line('Login successfully as %s\n'%self.storageClass.nickName, True)
             self.start_receiving()
             return True
-    def auto_login(self, enableCmdQR = False):
+    def auto_login(self, enableCmdQR=False, picDir=None):
         def open_QR():
             for get_count in range(10):
                 out.print_line('Getting uuid', True)
                 while not self.get_QRuuid(): time.sleep(1)
                 out.print_line('Getting QR Code', True)
-                if self.get_QR(enableCmdQR = enableCmdQR): break
+                if self.get_QR(enableCmdQR=enableCmdQR, picDir=picDir): break
                 elif 9 <= get_count:
                     out.print_line('Failed to get QR Code, please restart the program')
                     sys.exit()
             out.print_line('Please scan the QR Code', True)
         open_QR()
         while 1:
-            status = self.check_login()
+            status = self.check_login(picDir=picDir)
             if status == '200':
                 break
             elif status == '201':
@@ -96,20 +96,21 @@ class client(object):
         if data and data.group(1) == '200':
             self.uuid = data.group(2)
             return self.uuid
-    def get_QR(self, uuid = None, enableCmdQR = False):
+    def get_QR(self, uuid=None, enableCmdQR=False, picDir=None):
         try:
             if uuid == None: uuid = self.uuid
             url = '%s/qrcode/%s'%(BASE_URL, uuid)
             r = self.s.get(url, stream = True)
-            with open(QR_DIR, 'wb') as f: f.write(r.content)
-            if enableCmdQR:
-                tools.print_cmd_qr(QR_DIR, enableCmdQR = enableCmdQR)
-            else:
-                tools.print_qr(QR_DIR)
-            return True
+            picDir = picDir or QR_DIR
+            with open(picDir, 'wb') as f: f.write(r.content)
         except:
             return False
-    def check_login(self, uuid = None):
+        if enableCmdQR:
+            tools.print_cmd_qr(picDir, enableCmdQR = enableCmdQR)
+        else:
+            tools.print_qr(picDir)
+        return True
+    def check_login(self, uuid=None, picDir=None):
         if uuid is None: uuid = self.uuid
         url = '%s/cgi-bin/mmwebwx-bin/login'%BASE_URL
         payloads = 'tip=1&uuid=%s&_=%s'%(uuid, int(time.time()))
@@ -117,7 +118,7 @@ class client(object):
         regx = r'window.code=(\d+)'
         data = re.search(regx, r.text)
         if data and data.group(1) == '200':
-            os.remove(QR_DIR)
+            os.remove(picDir or QR_DIR)
             regx = r'window.redirect_uri="(\S+)";'
             self.loginInfo['url'] = re.search(regx, r.text).group(1)
             r = self.s.get(self.loginInfo['url'], allow_redirects=False)
@@ -749,7 +750,7 @@ class client(object):
         if not useInvitation:
             chatroom = self.storageClass.search_chatrooms(userName=chatroomUserName)
             if not chatroom: chatroom = self.update_chatroom(chatroomUserName)
-            if len(chatroom['MemberList']) + len(memberList) > 39: useInvitation = True
+            if len(chatroom['MemberList']) > 40: useInvitation = True
         if useInvitation:
             fun, memberKeyName = 'invitemember', 'InviteMemberList'
         else:
