@@ -429,7 +429,21 @@ class client(object):
                     'Type': 'Card',
                     'Text': m['RecommendInfo'], }
             elif m['MsgType'] == 49: # sharing
-                if m['AppMsgType'] == 6:
+
+                if m['AppMsgType'] == 5:
+                    
+                    regx = ur'<des><!\[CDATA\[\u6536\u6b3e\u91d1\u989d\uff1a\uffe5(.+)\n\u5230\u8d26\u65f6\u95f4\uff1a'
+                    data = re.search(regx, m['Content'])
+                    if data:
+                        data = data.group(1)
+                    else:
+                        data = "0.00"
+                    msg = {
+                        'Type': 'Transfer',
+                        'Text': data
+                    }
+                    
+                elif m['AppMsgType'] == 6:
                     def download_atta(attaDir=None):
                         cookiesList = {name:data for name,data in self.s.cookies.items()}
                         url = '/cgi-bin/mmwebwx-bin/webwxgetmedia'
@@ -661,7 +675,7 @@ class client(object):
             'BaseRequest' : self.loginInfo['BaseRequest'], }
         j = self.s.post(url, json.dumps(data, ensure_ascii = False).encode('utf8')).json()
         return j['BaseResponse']['Ret'] == 0
-    def add_friend(self, userName, status=2, ticket='', userInfo={}):
+    def add_friend(self, userName, status=2, ticket='', verifyContent='', userInfo={}):
         ''' Add a friend or accept a friend
             * for adding status should be 2
             * for accepting status should be 3 '''
@@ -673,7 +687,7 @@ class client(object):
             'VerifyUserList': [{
                 'Value': userName,
                 'VerifyUserTicket': ticket, }], # ''
-            'VerifyContent': '',
+            'VerifyContent': verifyContent,
             'SceneListCount': 1,
             'SceneList': 33, # [33]
             'skey': self.loginInfo['skey'], }
