@@ -2,7 +2,7 @@
 import os, sys, time, re, io
 import threading, subprocess
 import json, xml.dom.minidom, mimetypes
-import copy, pickle
+import copy, pickle, random
 import traceback
 
 import requests
@@ -123,12 +123,12 @@ class client(object):
             self.loginInfo['url'] = re.search(regx, r.text).group(1)
             r = self.s.get(self.loginInfo['url'], allow_redirects=False)
             self.loginInfo['url'] = self.loginInfo['url'][:self.loginInfo['url'].rfind('/')]
-            for indexUrl, detailedUrl in {
-                    "wx2.qq.com": ("file.wx2.qq.com", "webpush.wx2.qq.com"),
-                    "wx8.qq.com": ("file.wx8.qq.com", "webpush.wx8.qq.com"),
-                    "qq.com": ("file.wx.qq.com", "webpush.wx.qq.com"),
-                    "web2.wechat.com": ("file.web2.wechat.com", "webpush.web2.wechat.com"),
-                    "wechat.com": ("file.web.wechat.com", "webpush.web.wechat.com"), }.items():
+            for indexUrl, detailedUrl in (
+                    ("wx2.qq.com"      , ("file.wx2.qq.com", "webpush.wx2.qq.com")),
+                    ("wx8.qq.com"      , ("file.wx8.qq.com", "webpush.wx8.qq.com")),
+                    ("qq.com"          , ("file.wx.qq.com", "webpush.wx.qq.com")),
+                    ("web2.wechat.com" , ("file.web2.wechat.com", "webpush.web2.wechat.com")),
+                    ("wechat.com"      , ("file.web.wechat.com", "webpush.web.wechat.com"))):
                 fileUrl, syncUrl = ['https://%s/cgi-bin/mmwebwx-bin' % url for url in detailedUrl]
                 if indexUrl in self.loginInfo['url']:
                     self.loginInfo['fileUrl'], self.loginInfo['syncUrl'] = \
@@ -136,6 +136,7 @@ class client(object):
                     break
             else:
                 self.loginInfo['fileUrl'] = self.loginInfo['syncUrl'] = self.loginInfo['url']
+            self.loginInfo['deviceid'] = 'e' + repr(random.random())[2:17]
             self.loginInfo['BaseRequest'] = {}
             for node in xml.dom.minidom.parseString(r.text).documentElement.childNodes:
                 if node.nodeName == 'skey':
@@ -286,13 +287,13 @@ class client(object):
     def __sync_check(self):
         url = '%s/synccheck' % self.loginInfo.get('syncUrl', self.loginInfo['url'])
         params = {
-            'r'        : int(time.time()),
+            'r'        : int(time.time() * 1000),
             'skey'     : self.loginInfo['skey'],
             'sid'      : self.loginInfo['wxsid'],
             'uin'      : self.loginInfo['wxuin'],
-            'deviceid' : self.loginInfo['pass_ticket'],
+            'deviceid' : self.loginInfo['deviceid'],
             'synckey'  : self.loginInfo['synckey'],
-            '_'        : int(time.time()),}
+            '_'        : int(time.time() * 1000),}
         r = self.s.get(url, params=params)
         regx = r'window.synccheck={retcode:"(\d+)",selector:"(\d+)"}'
         pm = re.search(regx, r.text)
