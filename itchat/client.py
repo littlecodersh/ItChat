@@ -364,6 +364,18 @@ class client(object):
         # add new chatrooms
         for chatroom in l:
             self.chatroomList.append(chatroom)
+    def __get_download_fn(self, url, msgId):
+        def download_fn(downloadDir=None):
+            params = {
+                'msgid': msgId,
+                'skey': self.loginInfo['skey'],}
+            r = self.s.get(url, params=params, stream=True)
+            tempStorage = io.BytesIO()
+            for block in r.iter_content(1024):
+                tempStorage.write(block)
+            if downloadDir is None: return tempStorage.getvalue()
+            with open(downloadDir, 'wb') as f: f.write(tempStorage.getvalue())
+        return download_fn
     def __produce_msg(self, l):
         rl = []
         srl = [40, 43, 50, 52, 53, 9999]
@@ -386,38 +398,20 @@ class client(object):
                         'Type': 'Text',
                         'Text': m['Content'],}
             elif m['MsgType'] == 3 or m['MsgType'] == 47: # picture
-                def download_picture(picDir=None):
-                    url = '%s/webwxgetmsgimg'%self.loginInfo['url']
-                    payloads = {
-                        'MsgID': m['NewMsgId'],
-                        'skey': self.loginInfo['skey'],}
-                    r = self.s.get(url, params = payloads, stream = True)
-                    tempStorage = io.BytesIO()
-                    for block in r.iter_content(1024):
-                        tempStorage.write(block)
-                    if picDir is None: return tempStorage.getvalue()
-                    with open(picDir, 'wb') as f: f.write(tempStorage.getvalue())
+                download_fn = self.__get_download_fn(
+                    '%s/webwxgetmsgimg' % self.loginInfo['url'], m['NewMsgId'])
                 msg = {
                     'Type'     : 'Picture',
                     'FileName' : '%s.%s'%(time.strftime('%y%m%d-%H%M%S', time.localtime()),
                         'png' if m['MsgType'] == 3 else 'gif'),
-                    'Text'     : download_picture, }
+                    'Text'     : download_fn, }
             elif m['MsgType'] == 34: # voice
-                def download_voice(voiceDir=None):
-                    url = '%s/webwxgetvoice'%self.loginInfo['url']
-                    payloads = {
-                        'msgid': m['NewMsgId'],
-                        'skey': self.loginInfo['skey'],}
-                    r = self.s.get(url, params = payloads, stream = True)
-                    tempStorage = io.BytesIO()
-                    for block in r.iter_content(1024):
-                        tempStorage.write(block)
-                    if voiceDir is None: return tempStorage.getvalue()
-                    with open(voiceDir, 'wb') as f: f.write(tempStorage.getvalue())
+                download_fn = self.__get_download_fn(
+                    '%s/webwxgetvoice' % self.loginInfo['url'], m['NewMsgId'])
                 msg = {
                     'Type': 'Recording',
                     'FileName' : '%s.mp4' % time.strftime('%y%m%d-%H%M%S', time.localtime()),
-                    'Text': download_voice,}
+                    'Text': download_fn,}
             elif m['MsgType'] == 37: # friends
                 msg = {
                     'Type': 'Friends',
@@ -432,22 +426,18 @@ class client(object):
                     'Text': m['RecommendInfo'], }
             elif m['MsgType'] == 49: # sharing
                 if m['AppMsgType'] == 6:
+                    msg = m
+                    cookiesList = {name:data for name,data in self.s.cookies.items()}
                     def download_atta(attaDir=None):
-                        cookiesList = {name:data for name,data in self.s.cookies.items()}
-                        url = '/cgi-bin/mmwebwx-bin/webwxgetmedia'
-                        if 'web.wechat.com' in self.loginInfo['url']:
-                            url = 'https://file.web%s.wechat.com' + url
-                        else:
-                            url = 'https://file%s.wx.qq.com' + url
-                        url = url % ('2' if '2' in self.loginInfo['url'] else '')
-                        payloads = {
-                            'sender': m['FromUserName'],
-                            'mediaid': m['MediaId'],
-                            'filename': m['FileName'],
+                        url = self.loginInfo['fileUrl'] + '/webwxgetmedia'
+                        params = {
+                            'sender': msg['FromUserName'],
+                            'mediaid': msg['MediaId'],
+                            'filename': msg['FileName'],
                             'fromuser': self.loginInfo['wxuin'],
                             'pass_ticket': 'undefined',
                             'webwx_data_ticket': cookiesList['webwx_data_ticket'],}
-                        r = self.s.get(url, params = payloads, stream = True)
+                        r = self.s.get(url, params=params, stream=True)
                         tempStorage = io.BytesIO()
                         for block in r.iter_content(1024):
                             tempStorage.write(block)
@@ -479,13 +469,14 @@ class client(object):
                     'Type': 'Init',
                     'Text': m['ToUserName'], }
             elif m['MsgType'] == 62: # tiny video
+                msgId = m['MsgId']
                 def download_video(videoDir=None):
-                    url = '%s/webwxgetvideo'%self.loginInfo['url']
-                    payloads = {
-                        'msgid': m['MsgId'],
+                    url = '%s/webwxgetvideo' % self.loginInfo['url']
+                    params = {
+                        'msgid': msgId,
                         'skey': self.loginInfo['skey'],}
                     headers = {'Range': 'bytes=0-'}
-                    r = self.s.get(url, params = payloads, headers = headers, stream = True)
+                    r = self.s.get(url, params=params, headers=headers, stream=True)
                     tempStorage = io.BytesIO()
                     for block in r.iter_content(1024):
                         tempStorage.write(block)
