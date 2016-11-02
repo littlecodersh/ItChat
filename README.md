@@ -10,7 +10,7 @@ itchat是一个开源的微信个人号接口，使用python调用微信从未�
 
 如今微信已经成为了个人社交的很大一部分，希望这个项目能够帮助你扩展你的个人的微信号、方便自己的生活。
 
-## Installation
+## 安装
 
 可以通过本命令安装itchat：
 
@@ -18,7 +18,7 @@ itchat是一个开源的微信个人号接口，使用python调用微信从未�
 pip install itchat
 ```
 
-## Simple uses
+## 简单入门实例
 
 有了itchat，如果你想要回复发给自己的文本消息，只需要这样：
 
@@ -35,17 +35,17 @@ itchat.run()
 
 一些进阶应用可以在Advanced uses中看到，或者你也可以阅览[文档][document]。
 
-## Have a try
+## 试一试
 
 这是一个基于这一项目的[开源小机器人][robot-source-code]，百闻不如一见，有兴趣可以尝试一下。
 
 ![QRCode][robot-qr]
 
-## Screenshots
+## 截屏
 
 ![file-autoreply][robot-demo-file] ![login-page][robot-demo-login]
 
-## Advanced uses
+## 进阶应用
 
 ### 各类型消息的注册
 
@@ -158,7 +158,7 @@ def download_files(msg):
         f.write(msg['Text']())
 ```
 
-## FAQ
+## 常见问题与解答
 
 Q: 为什么中文的文件没有办法上传？
 
@@ -176,19 +176,19 @@ Q: 为什么我发送信息的时候部分信息没有成功发出来？
 
 A: 有些账号是天生无法给自己的账号发送信息的，建议使用`filehelper`代替。另外，接口调用是有频率限制，限制一下连续发送信息之间的时间间隔即可。
 
-## Author
+## 作者
 
 [LittleCoder][littlecodersh]: 整体构架及完成Python2 Python3版本。
 
 [Chyroc][Chyroc]: 完成第一版本的Python3构架。
 
-## See also
+## 参考资料
 
 [liuwons/wxBot][liuwons-wxBot]: 类似的基于Python的微信机器人
 
 [zixia/wechaty][zixia-wechaty]: 基于Javascript(ES6)的微信个人账号机器人NodeJS框架/库
 
-## Comments
+## 问题和建议
 
 如果有什么问题或者建议都可以在这个[Issue][issue#1]和我讨论
 
