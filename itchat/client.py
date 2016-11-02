@@ -137,6 +137,7 @@ class client(object):
             else:
                 self.loginInfo['fileUrl'] = self.loginInfo['syncUrl'] = self.loginInfo['url']
             self.loginInfo['deviceid'] = 'e' + repr(random.random())[2:17]
+            self.loginInfo['msgid'] = int(time.time())
             self.loginInfo['BaseRequest'] = {}
             for node in xml.dom.minidom.parseString(r.text).documentElement.childNodes:
                 if node.nodeName == 'skey':
@@ -541,9 +542,10 @@ class client(object):
                 'Content': content,
                 'FromUserName': self.storageClass.userName,
                 'ToUserName': (toUserName if toUserName else self.storageClass.userName),
-                'LocalID': int(time.time()),
-                'ClientMsgId': int(time.time()),
+                'LocalID': self.loginInfo['msgid'],
+                'ClientMsgId': self.loginInfo['msgid'],
                 }, }
+        self.loginInfo['msgid'] += 1
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
         r = self.s.post(url, data=json.dumps(payloads, ensure_ascii=False).encode('utf8'), headers=headers)
         return r.json()
@@ -578,12 +580,12 @@ class client(object):
         headers = { 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36', }
         r = self.s.post(url, files = files, headers = headers)
         return json.loads(r.text)['MediaId']
-    def send_file(self, fileDir, toUserName = None):
+    def send_file(self, fileDir, toUserName=None):
         if toUserName is None: toUserName = self.storageClass.userName
         mediaId = self.__upload_file(fileDir)
         if mediaId is None: return False
-        url = '%s/webwxsendappmsg?fun=async&f=json'%self.loginInfo['url']
-        payloads = {
+        url = '%s/webwxsendappmsg?fun=async&f=json' % self.loginInfo['url']
+        data = {
             'BaseRequest': self.loginInfo['BaseRequest'],
             'Msg': {
                 'Type': 6,
@@ -593,39 +595,41 @@ class client(object):
                     "<fileext>%s</fileext></appattach><extinfo></extinfo></appmsg>"%os.path.splitext(fileDir)[1].replace('.','')),
                 'FromUserName': self.storageClass.userName,
                 'ToUserName': toUserName,
-                'LocalID': str(time.time() * 1e7),
-                'ClientMsgId': str(time.time() * 1e7), }, }
+                'LocalID': self.loginInfo['msgid'],
+                'ClientMsgId': self.loginInfo['msgid'], }, }
+        self.loginInfo['msgid'] += 1
         headers = {
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36',
             'Content-Type': 'application/json;charset=UTF-8', }
-        r = self.s.post(url, data = json.dumps(payloads, ensure_ascii = False).encode('utf8'), headers = headers)
+        r = self.s.post(url, data=json.dumps(data, ensure_ascii=False).encode('utf8'), headers=headers)
         return True
-    def send_image(self, fileDir, toUserName = None):
+    def send_image(self, fileDir, toUserName=None):
         if toUserName is None: toUserName = self.storageClass.userName
-        mediaId = self.__upload_file(fileDir, isPicture = not fileDir[-4:] == '.gif')
+        mediaId = self.__upload_file(fileDir, isPicture=not fileDir[-4:] == '.gif')
         if mediaId is None: return False
-        url = '%s/webwxsendmsgimg?fun=async&f=json'%self.loginInfo['url']
-        payloads = {
+        url = '%s/webwxsendmsgimg?fun=async&f=json' % self.loginInfo['url']
+        data = {
             'BaseRequest': self.loginInfo['BaseRequest'],
             'Msg': {
                 'Type': 3,
                 'MediaId': mediaId,
                 'FromUserName': self.storageClass.userName,
                 'ToUserName': toUserName,
-                'LocalID': str(time.time() * 1e7),
-                'ClientMsgId': str(time.time() * 1e7), }, }
+                'LocalID': self.loginInfo['msgid'],
+                'ClientMsgId': self.loginInfo['msgid'], }, }
+        self.loginInfo['msgid'] += 1
         if fileDir[-4:] == '.gif':
-            url = '%s/webwxsendemoticon?fun=sys'%self.loginInfo['url']
-            payloads['Msg']['Type'] = 47
-            payloads['Msg']['EmojiFlag'] = 2
+            url = '%s/webwxsendemoticon?fun=sys' % self.loginInfo['url']
+            data['Msg']['Type'] = 47
+            data['Msg']['EmojiFlag'] = 2
         headers = {
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36',
             'Content-Type': 'application/json;charset=UTF-8', }
-        r = self.s.post(url, data = json.dumps(payloads, ensure_ascii = False).encode('utf8'), headers = headers)
+        r = self.s.post(url, data=json.dumps(data, ensure_ascii=False).encode('utf8'), headers=headers)
         return True
     def send_video(self, fileDir, toUserName = None):
         if toUserName is None: toUserName = self.storageClass.userName
-        mediaId = self.__upload_file(fileDir, isVideo = True)
+        mediaId = self.__upload_file(fileDir, isVideo=True)
         if mediaId is None: return False
         url = '%s/webwxsendvideomsg?fun=async&f=json&pass_ticket=%s' % (
             self.loginInfo['url'], self.loginInfo['pass_ticket'])
@@ -636,13 +640,14 @@ class client(object):
                 'MediaId'      : mediaId,
                 'FromUserName' : self.storageClass.userName,
                 'ToUserName'   : toUserName,
-                'LocalID'      : str(time.time() * 1e7),
-                'ClientMsgId'  : str(time.time() * 1e7), },
+                'LocalID'      : self.loginInfo['msgid'],
+                'ClientMsgId'  : self.loginInfo['msgid'], },
             'Scene': 0, }
+        self.loginInfo['msgid'] += 1
         headers = {
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36',
             'Content-Type': 'application/json;charset=UTF-8', }
-        r = self.s.post(url, data = json.dumps(payloads, ensure_ascii = False).encode('utf8'), headers = headers)
+        r = self.s.post(url, data=json.dumps(data, ensure_ascii=False).encode('utf8'), headers=headers)
         return True
     def set_alias(self, userName, alias):
         url = '%s/webwxoplog?lang=%s&pass_ticket=%s'%(
