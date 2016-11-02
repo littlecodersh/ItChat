@@ -41,7 +41,7 @@ def get_friends(update=False): return __client.get_friends(update)
 def search_friends(name=None, userName=None, remarkName=None, nickName=None, wechatAccount=None):
     return __client.storageClass.search_friends(name, userName, remarkName, nickName, wechatAccount)
 def set_alias(userName, alias): return __client.set_alias(userName, alias)
-def add_friend(userName, status=2, ticket='', userInfo={}): return __client.add_friend(userName, status, ticket, userInfo)
+def add_friend(userName, status=2, ticket='', verifyContent='', userInfo={}): return __client.add_friend(userName, status, ticket, verifyContent, userInfo)
 def get_head_img(userName=None, chatroomUserName=None, picDir=None): return __client.get_head_img(userName, chatroomUserName, picDir)
 def get_mps(update=False): return __client.get_mps(update)
 def search_mps(name=None, userName=None): return __client.storageClass.search_mps(name, userName)
