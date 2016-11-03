@@ -6,11 +6,11 @@ itchat是一个开源的微信个人号接口，使用python调用微信从未�
 
 使用不到三十行的代码，你就可以完成一个能够处理所有信息的微信机器人。
 
-当然，该api的使用远不止一个机器人，更多的功能等着你来发现。
+当然，该api的使用远不止一个机器人，更多的功能等着你来发现，比如[这些][tutorial2]。
 
 如今微信已经成为了个人社交的很大一部分，希望这个项目能够帮助你扩展你的个人的微信号、方便自己的生活。
 
-## Installation
+## 安装
 
 可以通过本命令安装itchat：
 
@@ -18,34 +18,44 @@ itchat是一个开源的微信个人号接口，使用python调用微信从未�
 pip install itchat
 ```
 
-## Simple uses
+## 简单入门实例
 
-有了itchat，如果你想要回复发给自己的文本消息，只需要这样：
+有了itchat，如果你想要给文件传输助手发一条信息，只需要这样：
+
+```python
+import itchat
+
+itchat.auto_login()
+
+itchat.send('Hello, filehelper', toUserName='filehelper')
+```
+
+如果你想要回复发给自己的文本消息，只需要这样：
 
 ```python
 import itchat
 
 @itchat.msg_register(itchat.content.TEXT)
 def text_reply(msg):
-    itchat.send(msg['Text'], msg['FromUserName'])
+    return msg['Text']
 
 itchat.auto_login()
 itchat.run()
 ```
 
-一些进阶应用可以在Advanced uses中看到，或者你也可以阅览[文档][document]。
+一些进阶应用可以在下面的开源机器人的源码和进阶应用中看到，或者你也可以阅览[文档][document]。
 
-## Have a try
+## 试一试
 
 这是一个基于这一项目的[开源小机器人][robot-source-code]，百闻不如一见，有兴趣可以尝试一下。
 
 ![QRCode][robot-qr]
 
-## Screenshots
+## 截屏
 
 ![file-autoreply][robot-demo-file] ![login-page][robot-demo-login]
 
-## Advanced uses
+## 进阶应用
 
 ### 各类型消息的注册
 
@@ -158,7 +168,7 @@ def download_files(msg):
         f.write(msg['Text']())
 ```
 
-## FAQ
+## 常见问题与解答
 
 Q: 为什么中文的文件没有办法上传？
 
@@ -176,19 +186,19 @@ Q: 为什么我发送信息的时候部分信息没有成功发出来？
 
 A: 有些账号是天生无法给自己的账号发送信息的，建议使用`filehelper`代替。另外，接口调用是有频率限制，限制一下连续发送信息之间的时间间隔即可。
 
-## Author
+## 作者
 
 [LittleCoder][littlecodersh]: 整体构架及完成Python2 Python3版本。
 
 [Chyroc][Chyroc]: 完成第一版本的Python3构架。
 
-## See also
+## 参考资料
 
 [liuwons/wxBot][liuwons-wxBot]: 类似的基于Python的微信机器人
 
 [zixia/wechaty][zixia-wechaty]: 基于Javascript(ES6)的微信个人账号机器人NodeJS框架/库
 
-## Comments
+## 问题和建议
 
 如果有什么问题或者建议都可以在这个[Issue][issue#1]和我讨论
 
@@ -202,6 +212,7 @@ A: 有些账号是天生无法给自己的账号发送信息的，建议使用`f
 [py35]: https://img.shields.io/badge/python-3.5-red.svg
 [english-version]: https://github.com/littlecodersh/ItChat/blob/master/README_EN.md
 [document]: https://itchat.readthedocs.org/zh/latest/
+[tutorial2]: http://python.jobbole.com/86532/
 [robot-source-code]: https://gist.github.com/littlecodersh/ec8ddab12364323c97d4e36459174f0d
 [robot-qr]: http://7xrip4.com1.z0.glb.clouddn.com/ItChat%2FQRCode2.jpg?imageView/2/w/400/
 [robot-demo-file]: http://7xrip4.com1.z0.glb.clouddn.com/ItChat%2FScreenshots%2F%E5%BE%AE%E4%BF%A1%E8%8E%B7%E5%8F%96%E6%96%87%E4%BB%B6%E5%9B%BE%E7%89%87.png?imageView/2/w/300/
