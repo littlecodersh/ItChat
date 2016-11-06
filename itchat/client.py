@@ -712,7 +712,7 @@ class client(object):
                     chatroom = self.update_chatroom(chatroomUserName)
                 params['chatroomid'] = chatroom['EncryChatRoomId']
         headers = { 'User-Agent' : config.USER_AGENT }
-        r = self.s.get(url, params=params, stream=True, 'User-Agent' : config.USER_AGENT)
+        r = self.s.get(url, params=params, stream=True, headers = headers)
         tempStorage = io.BytesIO()
         for block in r.iter_content(1024):
             tempStorage.write(block)
