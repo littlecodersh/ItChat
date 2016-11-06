@@ -312,7 +312,7 @@ class client(object):
         payloads = {
             'BaseRequest': self.loginInfo['BaseRequest'],
             'SyncKey': self.loginInfo['SyncKey'],
-            'rr': int(time.time()), }
+            'rr': ~int(time.time()), }
         headers = { 'ContentType': 'application/json; charset=UTF-8', 'User-Agent' : config.USER_AGENT }
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
         dic = json.loads(r.content.decode('utf-8', 'replace'))
