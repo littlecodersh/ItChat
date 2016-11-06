@@ -3,27 +3,29 @@ import time
 from .client import client
 from . import content # this is for creating pyc
 
-__version__ = '1.1.17'
+__version__ = '1.1.19'
 
 __client = client()
 HOT_RELOAD = False
 HOT_RELOAD_DIR = 'itchat.pkl'
 
-def auto_login(hotReload=False, statusStorageDir='itchat.pkl', enableCmdQR=False):
+def auto_login(hotReload=False, statusStorageDir='itchat.pkl',
+        enableCmdQR=False, picDir=None):
     global HOT_RELOAD, HOT_RELOAD_DIR
     if hotReload:
         if __client.load_login_status(statusStorageDir): return
-        __client.auto_login(enableCmdQR=enableCmdQR)
+        __client.auto_login(enableCmdQR=enableCmdQR, picDir=picDir)
         __client.dump_login_status(statusStorageDir)
         HOT_RELOAD, HOT_RELOAD_DIR = True, statusStorageDir
     else:
-        __client.auto_login(enableCmdQR=enableCmdQR)
+        __client.auto_login(enableCmdQR=enableCmdQR, picDir=picDir)
         HOT_RELOAD = False
 
 # The following method are all included in __client.auto_login >>>
 def get_QRuuid(): return __client.get_QRuuid()
-def get_QR(uuid=None, enableCmdQR=False): return __client.get_QR(uuid, enableCmdQR)
-def check_login(uuid=None): return __client.check_login(uuid)
+def get_QR(uuid=None, enableCmdQR=False, picDir=None):
+    return __client.get_QR(uuid, enableCmdQR, picDir)
+def check_login(uuid=None, picDir=None): return __client.check_login(uuid, picDir)
 def web_init(): return __client.web_init()
 def show_mobile_login(): return __client.show_mobile_login()
 def start_receiving(): return __client.start_receiving()
@@ -49,10 +51,14 @@ def update_chatroom(groupUserName, detailedMember=False): return __client.update
 def create_chatroom(memberList, topic = ''): return __client.create_chatroom(memberList, topic)
 def set_chatroom_name(chatroomUserName, name): return __client.set_chatroom_name(chatroomUserName, name)
 def delete_member_from_chatroom(chatroomUserName, memberList): return __client.delete_member_from_chatroom(chatroomUserName, memberList)
+<<<<<<< HEAD
 def add_member_into_chatroom(chatroomUserName, memberList): return __client.add_member_into_chatroom(chatroomUserName, memberList)
 def add_member_into_chatroom_less_then_40(chatroomUserName, memberList): return __client.add_member_into_chatroom_less_then_40(chatroomUserName, memberList)
 def add_member_into_chatroom_more_then_40(chatroomUserName, memberList): return __client.add_member_into_chatroom_more_then_40(chatroomUserName, memberList)
 
+=======
+def add_member_into_chatroom(chatroomUserName, memberList, useInvitation=False): return __client.add_member_into_chatroom(chatroomUserName, memberList, useInvitation)
+>>>>>>> littlecodersh/master
 # <<<
 
 # The following is the tear of age, will be deleted soon
@@ -61,6 +67,7 @@ def get_batch_contract(groupUserName): return __client.update_chatroom(groupUser
 # <<<
 
 # if toUserName is set to None, msg will be sent to yourself
+def send_raw_msg(msgType, content, toUserName): return __client.send_raw_msg(msgType, content, toUserName)
 def send_msg(msg = 'Test Message', toUserName = None): return __client.send_msg(msg, toUserName)
 def send_file(fileDir, toUserName): return __client.send_file(fileDir, toUserName)
 def send_video(fileDir, toUserName): return __client.send_video(fileDir, toUserName)
