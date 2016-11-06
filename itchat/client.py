@@ -3,6 +3,7 @@ import os, sys, time, re, io
 import threading, subprocess
 import json, xml.dom.minidom, mimetypes
 import copy, pickle, random
+import Queue
 import traceback
 
 import requests
@@ -18,7 +19,7 @@ class client(object):
         self.memberList = self.storageClass.memberList
         self.mpList = self.storageClass.mpList
         self.chatroomList = self.storageClass.chatroomList
-        self.msgList = self.storageClass.msgList
+        self.msgList = Queue.Queue(maxsize = -1)
         self.loginInfo = {}
         self.s = requests.Session()
         self.uuid = None
@@ -54,7 +55,7 @@ class client(object):
             if contactList: self.__update_chatrooms(contactList)
             if msgList:
                 msgList = self.__produce_msg(msgList)
-                for msg in msgList: self.msgList.insert(0, msg)
+                for msg in msgList: self.msgList.put(msg)
             out.print_line('Login successfully as %s\n'%self.storageClass.nickName, True)
             self.start_receiving()
             return True
@@ -276,7 +277,7 @@ class client(object):
                         if contactList: self.__update_chatrooms(contactList)
                         if msgList:
                             msgList = self.__produce_msg(msgList)
-                            for msg in msgList: self.msgList.insert(0, msg)
+                            for msg in msgList: self.msgList.put(msg)
                     i = self.__sync_check()
                     count = 0
                 except requests.exceptions.RequestException as e:

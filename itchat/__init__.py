@@ -1,4 +1,5 @@
 import time
+import Queue
 
 from .client import client
 from . import content # this is for creating pyc
@@ -86,8 +87,10 @@ def configured_reply():
         I haven't found a better solution here
         The main problem I'm worrying about is the mismatching of new friends added on phone
         If you have any good idea, pleeeease report an issue. I will be more than grateful. '''
-    if not __client.storageClass.msgList: return
-    msg = __client.storageClass.msgList.pop()
+    try:
+        msg = __client.msgList.get(timeout = 1000)
+    except Queue.Empty:
+        return
     if '@@' in msg['FromUserName']:
         replyFn = __functionDict['GroupChat'].get(msg['Type'])
         if replyFn: send(replyFn(msg), msg.get('FromUserName'))
