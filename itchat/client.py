@@ -291,7 +291,6 @@ class client(object):
         maintainThread.setDaemon(True)
         maintainThread.start()
     def __sync_check(self):
-        print 'synccheck'
         url = '%s/synccheck' % self.loginInfo.get('syncUrl', self.loginInfo['url'])
         params = {
             'r'        : int(time.time() * 1000),
@@ -308,7 +307,6 @@ class client(object):
         if pm is None or pm.group(1) != '0' : return None
         return pm.group(2)
     def __get_msg(self):
-        print 'webwxsync'
         url = '%s/webwxsync?sid=%s&skey=%s&pass_ticket=%s'%(
             self.loginInfo['url'], self.loginInfo['wxsid'], self.loginInfo['skey'],self.loginInfo['pass_ticket'])
         payloads = {
@@ -563,6 +561,7 @@ class client(object):
         self.loginInfo['msgid'] += 1
         headers = { 'ContentType': 'application/json; charset=UTF-8', 'User-Agent' : config.USER_AGENT }
         r = self.s.post(url, data=json.dumps(payloads, ensure_ascii=False).encode('utf8'), headers=headers)
+        self.__update_synckey()
         return r.json()
     def send_msg(self, msg='Test Message', toUserName=None):
         r = self.send_raw_msg(1, msg, toUserName)
