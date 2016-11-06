@@ -163,6 +163,7 @@ class client(object):
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
         dic = json.loads(r.content.decode('utf-8', 'replace'))
         tools.emoji_formatter(dic['User'], 'NickName')
+        self.loginInfo['InviteStartCount'] = int(dic['InviteStartCount'])
         self.loginInfo['User'] = tools.struct_friend_info(dic['User'])
         self.loginInfo['SyncKey'] = dic['SyncKey']
         self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val']) for item in dic['SyncKey']['List']])
@@ -747,7 +748,7 @@ class client(object):
         if not useInvitation:
             chatroom = self.storageClass.search_chatrooms(userName=chatroomUserName)
             if not chatroom: chatroom = self.update_chatroom(chatroomUserName)
-            if len(chatroom['MemberList']) > 40: useInvitation = True
+            if len(chatroom['MemberList']) > self.loginInfo['InviteStartCount']: useInvitation = True
         if useInvitation:
             fun, memberKeyName = 'invitemember', 'InviteMemberList'
         else:
