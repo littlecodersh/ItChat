@@ -312,7 +312,7 @@ class client(object):
         payloads = {
             'BaseRequest': self.loginInfo['BaseRequest'],
             'SyncKey': self.loginInfo['SyncKey'],
-            'rr': ~int(time.time()), }
+            'rr': int(time.time()), }
         headers = { 'ContentType': 'application/json; charset=UTF-8', 'User-Agent' : config.USER_AGENT }
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
         dic = json.loads(r.content.decode('utf-8', 'replace'))
@@ -320,11 +320,6 @@ class client(object):
         self.loginInfo['SyncKey'] = dic['SyncKey']
         self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val']) for item in dic['SyncKey']['List']])
         return dic['AddMsgList'], dic['ModContactList']
-    def __update_synckey(self):
-        try:
-            self.__get_msg()
-        except Exception, e:
-            pass
     def __update_chatrooms(self, l):
         oldUsernameList = []
         for chatroom in l:
@@ -561,7 +556,6 @@ class client(object):
         self.loginInfo['msgid'] += 1
         headers = { 'ContentType': 'application/json; charset=UTF-8', 'User-Agent' : config.USER_AGENT }
         r = self.s.post(url, data=json.dumps(payloads, ensure_ascii=False).encode('utf8'), headers=headers)
-        self.__update_synckey()
         return r.json()
     def send_msg(self, msg='Test Message', toUserName=None):
         r = self.send_raw_msg(1, msg, toUserName)
@@ -616,7 +610,6 @@ class client(object):
             'User-Agent': config.USER_AGENT,
             'Content-Type': 'application/json;charset=UTF-8', }
         r = self.s.post(url, data=json.dumps(data, ensure_ascii=False).encode('utf8'), headers=headers)
-        self.__update_synckey()
         return True
     def send_image(self, fileDir, toUserName=None):
         if toUserName is None: toUserName = self.storageClass.userName
@@ -641,7 +634,6 @@ class client(object):
             'User-Agent': config.USER_AGENT,
             'Content-Type': 'application/json;charset=UTF-8', }
         r = self.s.post(url, data=json.dumps(data, ensure_ascii=False).encode('utf8'), headers=headers)
-        self.__update_synckey()
         return True
     def send_video(self, fileDir, toUserName = None):
         if toUserName is None: toUserName = self.storageClass.userName
@@ -664,7 +656,6 @@ class client(object):
             'User-Agent' : config.USER_AGENT,
             'Content-Type': 'application/json;charset=UTF-8', }
         r = self.s.post(url, data=json.dumps(data, ensure_ascii=False).encode('utf8'), headers=headers)
-        self.__update_synckey()
         return True
     def set_alias(self, userName, alias):
         url = '%s/webwxoplog?lang=%s&pass_ticket=%s'%(
