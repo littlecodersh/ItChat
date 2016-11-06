@@ -266,12 +266,23 @@ class client(object):
             count = 0
             while i and count <4:
                 try:
+<<<<<<< HEAD
+                    if pauseTime < 5: pauseTime += 2
+                    if i != '0': msgList, contractList = self.__get_msg()
+                    if contractList: self.__update_chatrooms(contractList)
+                    if msgList:
+                        msgList = self.__produce_msg(msgList)
+                        for msg in msgList: self.msgList.insert(0, msg)
+                        pauseTime = 1
+                    time.sleep(pauseTime)
+=======
                     if i != '0':
                         msgList, contactList = self.__get_msg()
                         if contactList: self.__update_chatrooms(contactList)
                         if msgList:
                             msgList = self.__produce_msg(msgList)
                             for msg in msgList: self.msgList.insert(0, msg)
+>>>>>>> littlecodersh/master
                     i = self.__sync_check()
                     count = 0
                 except requests.exceptions.RequestException as e:
@@ -737,6 +748,11 @@ class client(object):
             'DelMemberList': ','.join([member['UserName'] for member in memberList]), }
         headers = {'content-type': 'application/json; charset=UTF-8'}
         return self.s.post(url, data=json.dumps(params),headers=headers).json()
+<<<<<<< HEAD
+    def add_member_into_chatroom_less_then_40(self, chatroomUserName, memberList):
+        url = ('%s/webwxupdatechatroom?fun=addmember&pass_ticket=%s'%(
+            self.loginInfo['url'], self.loginInfo['pass_ticket']))
+=======
     def add_member_into_chatroom(self, chatroomUserName, memberList,
             useInvitation=False):
         ''' add or invite member into chatroom
@@ -754,12 +770,30 @@ class client(object):
             fun, memberKeyName = 'addmember', 'AddMsgList'
         url = ('%s/webwxupdatechatroom?fun=%s&pass_ticket=%s'%(
             self.loginInfo['url'], fun, self.loginInfo['pass_ticket']))
+>>>>>>> littlecodersh/master
         params = {
             'BaseRequest'  : self.loginInfo['BaseRequest'],
             'ChatRoomName' : chatroomUserName,
             memberKeyName  : ','.join([member['UserName'] for member in memberList]), }
         headers = {'content-type': 'application/json; charset=UTF-8'}
         return self.s.post(url, data=json.dumps(params),headers=headers).json()
+    def add_member_into_chatroom_more_then_40(self, chatroomUserName, memberList):
+        url = ('%s/webwxupdatechatroom?fun=invitemember&lang=%s&pass_ticket=%s'%(
+            self.loginInfo['url'], 'zh_CN',self.loginInfo['pass_ticket']))
+        params = {
+            'BaseRequest': self.loginInfo['BaseRequest'],
+            'ChatRoomName': chatroomUserName,
+            'InviteMemberList': ','.join([member['UserName'] for member in memberList]), }
+        headers = {'content-type': 'application/json; charset=UTF-8'}
+        return self.s.post(url, data=json.dumps(params),headers=headers).json()
+    def add_member_into_chatroom(self, chatroomUserName, memberList):
+        chatroom = self.storageClass.search_chatrooms(userName = chatroomUserName)
+        if not chatroom:
+            chatroom = self.update_chatroom(chatroomUserName)
+        if len(chatroom['MemberList']) > 40:
+            return self.add_member_into_chatroom_more_then_40(chatroomUserName, memberList)
+        else:
+            return self.add_member_into_chatroom_less_then_40(chatroomUserName, memberList)
 
 if __name__ == '__main__':
     wcc = WeChatClient()
