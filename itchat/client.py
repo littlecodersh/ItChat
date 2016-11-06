@@ -125,7 +125,7 @@ class client(object):
             regx = r'window.redirect_uri="(\S+)";'
             self.loginInfo['url'] = re.search(regx, r.text).group(1)
             headers = { 'User-Agent' : config.USER_AGENT }
-            r = self.s.get(self.loginInfo['url'], ,headers = headers, allow_redirects=False)
+            r = self.s.get(self.loginInfo['url'], headers = headers, allow_redirects=False)
             self.loginInfo['url'] = self.loginInfo['url'][:self.loginInfo['url'].rfind('/')]
             for indexUrl, detailedUrl in (
                     ("wx2.qq.com"      , ("file.wx2.qq.com", "webpush.wx2.qq.com")),
