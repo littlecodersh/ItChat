@@ -1,4 +1,4 @@
-import os, time, copy
+import os, time, copy, Queue
 
 class Storage:
     def __init__(self):
@@ -7,7 +7,7 @@ class Storage:
         self.memberList        = []
         self.mpList            = []
         self.chatroomList      = []
-        self.msgList           = []
+        self.msgList           = Queue.Queue(-1)
         self.lastInputUserName = None
     def dumps(self):
         return {

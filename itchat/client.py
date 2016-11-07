@@ -3,6 +3,7 @@ import os, sys, time, re, io
 import threading, subprocess
 import json, xml.dom.minidom, mimetypes
 import copy, pickle, random
+import Queue
 import traceback
 
 import requests
@@ -54,7 +55,7 @@ class client(object):
             if contactList: self.__update_chatrooms(contactList)
             if msgList:
                 msgList = self.__produce_msg(msgList)
-                for msg in msgList: self.msgList.insert(0, msg)
+                for msg in msgList: self.msgList.put(msg)
             out.print_line('Login successfully as %s\n'%self.storageClass.nickName, True)
             self.start_receiving()
             return True
@@ -87,10 +88,11 @@ class client(object):
         self.start_receiving()
     def get_QRuuid(self):
         url = '%s/jslogin'%BASE_URL
-        payloads = {
+        params = {
             'appid' : 'wx782c26e4c19acffb',
             'fun'   : 'new', }
-        r = self.s.get(url, params = payloads)
+        headers = { 'User-Agent' : config.USER_AGENT }
+        r = self.s.get(url, params=params, headers=headers)
         regx = r'window.QRLogin.code = (\d+); window.QRLogin.uuid = "(\S+?)";'
         data = re.search(regx, r.text)
         if data and data.group(1) == '200':
@@ -100,7 +102,8 @@ class client(object):
         try:
             if uuid == None: uuid = self.uuid
             url = '%s/qrcode/%s'%(BASE_URL, uuid)
-            r = self.s.get(url, stream = True)
+            headers = { 'User-Agent' : config.USER_AGENT }
+            r = self.s.get(url, stream=True, headers=headers)
             picDir = picDir or QR_DIR
             with open(picDir, 'wb') as f: f.write(r.content)
         except:
@@ -113,15 +116,17 @@ class client(object):
     def check_login(self, uuid=None, picDir=None):
         if uuid is None: uuid = self.uuid
         url = '%s/cgi-bin/mmwebwx-bin/login'%BASE_URL
-        payloads = 'tip=1&uuid=%s&_=%s'%(uuid, int(time.time()))
-        r = self.s.get(url, params = payloads)
+        params = 'tip=1&uuid=%s&_=%s'%(uuid, int(time.time()))
+        headers = { 'User-Agent' : config.USER_AGENT }
+        r = self.s.get(url, params=params, headers=headers)
         regx = r'window.code=(\d+)'
         data = re.search(regx, r.text)
         if data and data.group(1) == '200':
             os.remove(picDir or QR_DIR)
             regx = r'window.redirect_uri="(\S+)";'
             self.loginInfo['url'] = re.search(regx, r.text).group(1)
-            r = self.s.get(self.loginInfo['url'], allow_redirects=False)
+            headers = { 'User-Agent' : config.USER_AGENT }
+            r = self.s.get(self.loginInfo['url'], headers=headers, allow_redirects=False)
             self.loginInfo['url'] = self.loginInfo['url'][:self.loginInfo['url'].rfind('/')]
             for indexUrl, detailedUrl in (
                     ("wx2.qq.com"      , ("file.wx2.qq.com", "webpush.wx2.qq.com")),
@@ -159,10 +164,11 @@ class client(object):
         url = '%s/webwxinit?r=%s' % (self.loginInfo['url'], int(time.time()))
         payloads = {
             'BaseRequest': self.loginInfo['BaseRequest'], }
-        headers = { 'ContentType': 'application/json; charset=UTF-8' }
+        headers = { 'ContentType': 'application/json; charset=UTF-8', 'User-Agent' : config.USER_AGENT }
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
         dic = json.loads(r.content.decode('utf-8', 'replace'))
         tools.emoji_formatter(dic['User'], 'NickName')
+        self.loginInfo['InviteStartCount'] = int(dic['InviteStartCount'])
         self.loginInfo['User'] = tools.struct_friend_info(dic['User'])
         self.loginInfo['SyncKey'] = dic['SyncKey']
         self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val']) for item in dic['SyncKey']['List']])
@@ -171,7 +177,7 @@ class client(object):
         return dic['User']
     def update_chatroom(self, userName, detailedMember=False):
         url = '%s/webwxbatchgetcontact?type=ex&r=%s' % (self.loginInfo['url'], int(time.time()))
-        headers = { 'ContentType': 'application/json; charset=UTF-8' }
+        headers = { 'ContentType': 'application/json; charset=UTF-8', 'User-Agent' : config.USER_AGENT }
         payloads = {
             'BaseRequest': self.loginInfo['BaseRequest'],
             'Count': 1,
@@ -184,7 +190,7 @@ class client(object):
         if detailedMember:
             def get_detailed_member_info(encryChatroomId, memberList):
                 url = '%s/webwxbatchgetcontact?type=ex&r=%s' % (self.loginInfo['url'], int(time.time()))
-                headers = { 'ContentType': 'application/json; charset=UTF-8' }
+                headers = { 'ContentType': 'application/json; charset=UTF-8', 'User-Agent' : config.USER_AGENT }
                 payloads = {
                     'BaseRequest': self.loginInfo['BaseRequest'],
                     'Count': len(j['MemberList']),
@@ -206,7 +212,7 @@ class client(object):
         if 1 < len(self.memberList) and not update: return copy.deepcopy(self.memberList)
         url = '%s/webwxgetcontact?r=%s&seq=0&skey=%s' % (self.loginInfo['url'],
             int(time.time()), self.loginInfo['skey'])
-        headers = { 'ContentType': 'application/json; charset=UTF-8' }
+        headers = { 'ContentType': 'application/json; charset=UTF-8', 'User-Agent' : config.USER_AGENT }
         r = self.s.get(url, headers=headers)
         tempList = json.loads(r.content.decode('utf-8', 'replace'))['MemberList']
         del self.memberList[:]
@@ -258,7 +264,7 @@ class client(object):
                 'ToUserName': self.storageClass.userName,
                 'ClientMsgId': int(time.time()),
                 }
-        headers = { 'ContentType': 'application/json; charset=UTF-8' }
+        headers = { 'ContentType': 'application/json; charset=UTF-8', 'User-Agent' : config.USER_AGENT }
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
     def start_receiving(self):
         def maintain_loop():
@@ -271,7 +277,7 @@ class client(object):
                         if contactList: self.__update_chatrooms(contactList)
                         if msgList:
                             msgList = self.__produce_msg(msgList)
-                            for msg in msgList: self.msgList.insert(0, msg)
+                            for msg in msgList: self.msgList.put(msg)
                     i = self.__sync_check()
                     count = 0
                 except requests.exceptions.RequestException as e:
@@ -295,7 +301,8 @@ class client(object):
             'deviceid' : self.loginInfo['deviceid'],
             'synckey'  : self.loginInfo['synckey'],
             '_'        : int(time.time() * 1000),}
-        r = self.s.get(url, params=params)
+        headers = { 'User-Agent' : config.USER_AGENT }
+        r = self.s.get(url, params=params, headers=headers)
         regx = r'window.synccheck={retcode:"(\d+)",selector:"(\d+)"}'
         pm = re.search(regx, r.text)
         if pm is None or pm.group(1) != '0' : return None
@@ -306,13 +313,13 @@ class client(object):
         payloads = {
             'BaseRequest': self.loginInfo['BaseRequest'],
             'SyncKey': self.loginInfo['SyncKey'],
-            'rr': int(time.time()), }
-        headers = { 'ContentType': 'application/json; charset=UTF-8' }
-        r = self.s.post(url, data = json.dumps(payloads), headers = headers)
+            'rr': ~int(time.time()), }
+        headers = { 'ContentType': 'application/json; charset=UTF-8', 'User-Agent' : config.USER_AGENT }
+        r = self.s.post(url, data=json.dumps(payloads), headers=headers)
         dic = json.loads(r.content.decode('utf-8', 'replace'))
         if dic['BaseResponse']['Ret'] != 0: return None, None
-        self.loginInfo['SyncKey'] = dic['SyncKey']
-        self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val']) for item in dic['SyncKey']['List']])
+        self.loginInfo['SyncKey'] = dic['SyncCheckKey']
+        self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val']) for item in dic['SyncCheckKey']['List']])
         return dic['AddMsgList'], dic['ModContactList']
     def __update_chatrooms(self, l):
         oldUsernameList = []
@@ -370,7 +377,8 @@ class client(object):
             params = {
                 'msgid': msgId,
                 'skey': self.loginInfo['skey'],}
-            r = self.s.get(url, params=params, stream=True)
+            headers = { 'User-Agent' : config.USER_AGENT }
+            r = self.s.get(url, params=params, stream=True, headers = headers)
             tempStorage = io.BytesIO()
             for block in r.iter_content(1024):
                 tempStorage.write(block)
@@ -438,7 +446,8 @@ class client(object):
                             'fromuser': self.loginInfo['wxuin'],
                             'pass_ticket': 'undefined',
                             'webwx_data_ticket': cookiesList['webwx_data_ticket'],}
-                        r = self.s.get(url, params=params, stream=True)
+                        headers = { 'User-Agent' : config.USER_AGENT }
+                        r = self.s.get(url, params=params, stream=True, headers=headers)
                         tempStorage = io.BytesIO()
                         for block in r.iter_content(1024):
                             tempStorage.write(block)
@@ -476,7 +485,7 @@ class client(object):
                     params = {
                         'msgid': msgId,
                         'skey': self.loginInfo['skey'],}
-                    headers = {'Range': 'bytes=0-'}
+                    headers = {'Range': 'bytes=0-', 'User-Agent' : config.USER_AGENT }
                     r = self.s.get(url, params=params, headers=headers, stream=True)
                     tempStorage = io.BytesIO()
                     for block in r.iter_content(1024):
@@ -546,7 +555,7 @@ class client(object):
                 'ClientMsgId': self.loginInfo['msgid'],
                 }, }
         self.loginInfo['msgid'] += 1
-        headers = { 'ContentType': 'application/json; charset=UTF-8' }
+        headers = { 'ContentType': 'application/json; charset=UTF-8', 'User-Agent' : config.USER_AGENT }
         r = self.s.post(url, data=json.dumps(payloads, ensure_ascii=False).encode('utf8'), headers=headers)
         return r.json()
     def send_msg(self, msg='Test Message', toUserName=None):
@@ -577,7 +586,7 @@ class client(object):
             'webwx_data_ticket': (None, cookiesList['webwx_data_ticket']),
             'pass_ticket': (None, 'undefined'),
             'filename' : (os.path.basename(fileDir), open(fileDir, 'rb'), fileType), }
-        headers = { 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36', }
+        headers = { 'User-Agent' : config.USER_AGENT }
         r = self.s.post(url, files = files, headers = headers)
         return json.loads(r.text)['MediaId']
     def send_file(self, fileDir, toUserName=None):
@@ -599,7 +608,7 @@ class client(object):
                 'ClientMsgId': self.loginInfo['msgid'], }, }
         self.loginInfo['msgid'] += 1
         headers = {
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36',
+            'User-Agent': config.USER_AGENT,
             'Content-Type': 'application/json;charset=UTF-8', }
         r = self.s.post(url, data=json.dumps(data, ensure_ascii=False).encode('utf8'), headers=headers)
         return True
@@ -623,7 +632,7 @@ class client(object):
             data['Msg']['Type'] = 47
             data['Msg']['EmojiFlag'] = 2
         headers = {
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36',
+            'User-Agent': config.USER_AGENT,
             'Content-Type': 'application/json;charset=UTF-8', }
         r = self.s.post(url, data=json.dumps(data, ensure_ascii=False).encode('utf8'), headers=headers)
         return True
@@ -645,7 +654,7 @@ class client(object):
             'Scene': 0, }
         self.loginInfo['msgid'] += 1
         headers = {
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36',
+            'User-Agent' : config.USER_AGENT,
             'Content-Type': 'application/json;charset=UTF-8', }
         r = self.s.post(url, data=json.dumps(data, ensure_ascii=False).encode('utf8'), headers=headers)
         return True
@@ -657,7 +666,8 @@ class client(object):
             'CmdId'       : 2,
             'RemarkName'  : alias,
             'BaseRequest' : self.loginInfo['BaseRequest'], }
-        j = self.s.post(url, json.dumps(data, ensure_ascii = False).encode('utf8')).json()
+        headers = { 'User-Agent' : config.USER_AGENT }
+        j = self.s.post(url, json.dumps(data, ensure_ascii=False).encode('utf8'), headers=headers).json()
         return j['BaseResponse']['Ret'] == 0
     def add_friend(self, userName, status=2, ticket='', userInfo={}):
         ''' Add a friend or accept a friend
@@ -675,7 +685,7 @@ class client(object):
             'SceneListCount': 1,
             'SceneList': 33, # [33]
             'skey': self.loginInfo['skey'], }
-        headers = { 'ContentType': 'application/json; charset=UTF-8' }
+        headers = { 'ContentType': 'application/json; charset=UTF-8', 'User-Agent' : config.USER_AGENT }
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
         if userInfo: # add user to storage
             self.memberList.append(tools.struct_friend_info(userInfo))
@@ -702,7 +712,8 @@ class client(object):
                 if chatroom['EncryChatRoomId'] == '':
                     chatroom = self.update_chatroom(chatroomUserName)
                 params['chatroomid'] = chatroom['EncryChatRoomId']
-        r = self.s.get(url, params=params, stream=True)
+        headers = { 'User-Agent' : config.USER_AGENT }
+        r = self.s.get(url, params=params, stream=True, headers=headers)
         tempStorage = io.BytesIO()
         for block in r.iter_content(1024):
             tempStorage.write(block)
@@ -716,7 +727,7 @@ class client(object):
             'MemberCount': len(memberList),
             'MemberList': [{'UserName': member['UserName']} for member in memberList],
             'Topic': topic, }
-        headers = {'content-type': 'application/json; charset=UTF-8'}
+        headers = {'content-type': 'application/json; charset=UTF-8', 'User-Agent' : config.USER_AGENT }
         r = self.s.post(url, data=json.dumps(data, ensure_ascii=False).encode('utf8', 'ignore'),headers=headers)
         return r.json()
     def set_chatroom_name(self, chatroomUserName, name):
@@ -726,7 +737,7 @@ class client(object):
             'BaseRequest': self.loginInfo['BaseRequest'],
             'ChatRoomName': chatroomUserName,
             'NewTopic': name, }
-        headers = {'content-type': 'application/json; charset=UTF-8'}
+        headers = {'content-type': 'application/json; charset=UTF-8', 'User-Agent' : config.USER_AGENT}
         return self.s.post(url, data=json.dumps(data, ensure_ascii=False).encode('utf8', 'ignore'), headers=headers).json()
     def delete_member_from_chatroom(self, chatroomUserName, memberList):
         url = ('%s/webwxupdatechatroom?fun=delmember&pass_ticket=%s'%(
@@ -735,7 +746,7 @@ class client(object):
             'BaseRequest': self.loginInfo['BaseRequest'],
             'ChatRoomName': chatroomUserName,
             'DelMemberList': ','.join([member['UserName'] for member in memberList]), }
-        headers = {'content-type': 'application/json; charset=UTF-8'}
+        headers = {'content-type': 'application/json; charset=UTF-8', 'User-Agent' : config.USER_AGENT}
         return self.s.post(url, data=json.dumps(params),headers=headers).json()
     def add_member_into_chatroom(self, chatroomUserName, memberList,
             useInvitation=False):
@@ -747,7 +758,7 @@ class client(object):
         if not useInvitation:
             chatroom = self.storageClass.search_chatrooms(userName=chatroomUserName)
             if not chatroom: chatroom = self.update_chatroom(chatroomUserName)
-            if len(chatroom['MemberList']) > 40: useInvitation = True
+            if len(chatroom['MemberList']) > self.loginInfo['InviteStartCount']: useInvitation = True
         if useInvitation:
             fun, memberKeyName = 'invitemember', 'InviteMemberList'
         else:
@@ -758,7 +769,7 @@ class client(object):
             'BaseRequest'  : self.loginInfo['BaseRequest'],
             'ChatRoomName' : chatroomUserName,
             memberKeyName  : ','.join([member['UserName'] for member in memberList]), }
-        headers = {'content-type': 'application/json; charset=UTF-8'}
+        headers = {'content-type': 'application/json; charset=UTF-8', 'User-Agent' : config.USER_AGENT}
         return self.s.post(url, data=json.dumps(params),headers=headers).json()
 
 if __name__ == '__main__':
