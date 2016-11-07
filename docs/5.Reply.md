@@ -12,7 +12,7 @@ send(msg='Text Message', toUserName=None)
     * '@fil@文件地址'将会被识别为传送文件，'@img@图片地址'将会被识别为传送图片，'@vid@视频地址'将会被识别为小视频
     * toUserName：发送对象，如果留空将会发送给自己
 * 返回值：发送成功->True, 失败->False
-* 程序示例：使用的素材可以在[这里](https://yunpan.cn/OcqZm3RJ9fxWdz)（提取码：6bc0）下载
+* 程序示例：使用的素材可以在[这里][attachment]下载
 
 ```python
 #coding=utf8
@@ -53,7 +53,7 @@ send_file(fileDir, toUserName=None)
     * fileDir：文件路径（不存在该文件时将打印无此文件的提醒）
     * toUserName：发送对象，如果留空将会发送给自己
 * 返回值：发送成功->True, 失败->False
-* 程序示例：使用的素材可以在[这里](https://yunpan.cn/OcqZm3RJ9fxWdz)（提取码：eaee）下载
+* 程序示例：使用的素材可以在[这里][attachment]（提取码：eaee）下载
 
 ```python
 #coding=utf8
@@ -73,7 +73,7 @@ send_img(fileDir, toUserName=None)
     * fileDir：文件路径（不存在该文件时将打印无此文件的提醒）
     * toUserName：发送对象，如果留空将会发送给自己
 * 返回值：发送成功->True, 失败->False
-* 程序示例：使用的素材可以在[这里](https://yunpan.cn/OcqZm3RJ9fxWdz)（提取码：eaee）下载
+* 程序示例：使用的素材可以在[这里][attachment]（提取码：eaee）下载
 
 ```python
 #coding=utf8
@@ -103,3 +103,5 @@ itchat.auto_login()
 # 请确保该程序目录下存在：demo.mp4
 itchat.send_file('demo.mp4')
 ```
+
+[attachment]: http://7xrip4.com1.z0.glb.clouddn.com/ItChat/%E4%B8%8A%E4%BC%A0%E7%B4%A0%E6%9D%90.zip

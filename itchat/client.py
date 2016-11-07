@@ -3,8 +3,11 @@ import os, sys, time, re, io
 import threading, subprocess
 import json, xml.dom.minidom, mimetypes
 import copy, pickle, random
-import Queue
 import traceback
+try:
+    import Queue
+except ImportError:
+    import queue as Queue
 
 import requests
 

@@ -19,7 +19,17 @@ Now Wechat is an important part of personal life, hopefully this repo can help y
 
 **Simple uses**
 
-With itchat, you only need to write this to reply personal text messages.
+With itchat, if you want to send a message to filehelper, this is how:
+
+.. code:: python
+
+    import itchat
+
+    itchat.auto_login()
+
+    itchat.send('Hello, filehelper', toUserName='filehelper')
+
+And you only need to write this to reply personal text messages.
 
 .. code:: python
     

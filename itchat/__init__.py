@@ -1,9 +1,13 @@
-import time, Queue
+import time
+try:
+    import Queue
+except ImportError:
+    import queue as Queue
 
 from .client import client
 from . import content # this is for creating pyc
 
-__version__ = '1.1.19'
+__version__ = '1.1.21'
 
 __client = client()
 HOT_RELOAD = False
@@ -87,7 +91,7 @@ def configured_reply():
         The main problem I'm worrying about is the mismatching of new friends added on phone
         If you have any good idea, pleeeease report an issue. I will be more than grateful. '''
     try:
-        msg = __client.msgList.get(timeout=1000)
+        msg = __client.msgList.get(timeout=1)
     except Queue.Empty:
         pass
     else:

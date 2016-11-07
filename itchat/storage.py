@@ -1,4 +1,8 @@
-import os, time, copy, Queue
+import os, time, copy
+try:
+    import Queue
+except ImportError:
+    import queue as Queue
 
 class Storage:
     def __init__(self):

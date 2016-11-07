@@ -20,14 +20,24 @@ pip install itchat
 
 ## Simple uses
 
-With itchat, you only need to write this to reply personal text messages.
+With itchat, if you want to send a message to filehelper, this is how:
+
+```python
+import itchat
+
+itchat.auto_login()
+
+itchat.send('Hello, filehelper', toUserName='filehelper')
+```
+
+And you only need to write this to reply personal text messages.
 
 ```python
 import itchat
 
 @itchat.msg_register(itchat.content.TEXT)
 def text_reply(msg):
-    itchat.send(msg['Text'], msg['FromUserName'])
+    return msg['Text']
 
 itchat.auto_login()
 itchat.run()
@@ -180,6 +190,8 @@ A: Some account simply can't send messages to yourself, so use `filehelper` inst
 
 [LittleCoder][littlecodersh]: Structure and py2 py3 version
 
+[tempdban][tempdban]: Structure and daily maintainance
+
 [Chyroc][Chyroc]: first py3 version
 
 ## See also
@@ -207,6 +219,7 @@ Or you may also use [![Gitter][gitter-picture]][gitter]
 [fields.py-2]: https://gist.github.com/littlecodersh/9a0c5466f442d67d910f877744011705
 [fields.py-3]: https://gist.github.com/littlecodersh/e93532d5e7ddf0ec56c336499165c4dc
 [littlecodersh]: https://github.com/littlecodersh
+[tempdban]: https://github.com/tempdban
 [Chyroc]: https://github.com/Chyroc
 [liuwons-wxBot]: https://github.com/liuwons/wxBot
 [zixia-wechaty]: https://github.com/zixia/wechaty

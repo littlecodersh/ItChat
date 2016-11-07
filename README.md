@@ -188,7 +188,9 @@ A: 有些账号是天生无法给自己的账号发送信息的，建议使用`f
 
 ## 作者
 
-[LittleCoder][littlecodersh]: 整体构架及完成Python2 Python3版本。
+[LittleCoder][littlecodersh]: 构架及维护Python2 Python3版本。
+
+[tempdban][tempdban]: 协议、构架及日常维护。
 
 [Chyroc][Chyroc]: 完成第一版本的Python3构架。
 
@@ -220,6 +222,7 @@ A: 有些账号是天生无法给自己的账号发送信息的，建议使用`f
 [fields.py-2]: https://gist.github.com/littlecodersh/9a0c5466f442d67d910f877744011705
 [fields.py-3]: https://gist.github.com/littlecodersh/e93532d5e7ddf0ec56c336499165c4dc
 [littlecodersh]: https://github.com/littlecodersh
+[tempdban]: https://github.com/tempdban
 [Chyroc]: https://github.com/Chyroc
 [liuwons-wxBot]: https://github.com/liuwons/wxBot
 [zixia-wechaty]: https://github.com/zixia/wechaty
