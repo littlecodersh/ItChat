@@ -4,14 +4,10 @@ import threading, subprocess
 import json, xml.dom.minidom, mimetypes
 import copy, pickle, random
 import traceback
-try:
-    import Queue
-except ImportError:
-    import queue as Queue
 
 import requests
 
-from . import config, storage, out, tools
+from . import config, storage, utils
 
 BASE_URL = config.BASE_URL
 QR_DIR = 'QR.jpg'
@@ -59,35 +55,35 @@ class client(object):
             if msgList:
                 msgList = self.__produce_msg(msgList)
                 for msg in msgList: self.msgList.put(msg)
-            out.print_line('Login successfully as %s\n'%self.storageClass.nickName, True)
+            utils.print_line('Login successfully as %s\n'%self.storageClass.nickName, True)
             self.start_receiving()
             return True
     def auto_login(self, enableCmdQR=False, picDir=None):
         def open_QR():
             for get_count in range(10):
-                out.print_line('Getting uuid', True)
+                utils.print_line('Getting uuid', True)
                 while not self.get_QRuuid(): time.sleep(1)
-                out.print_line('Getting QR Code', True)
+                utils.print_line('Getting QR Code', True)
                 if self.get_QR(enableCmdQR=enableCmdQR, picDir=picDir): break
                 elif 9 <= get_count:
-                    out.print_line('Failed to get QR Code, please restart the program')
+                    utils.print_line('Failed to get QR Code, please restart the program')
                     sys.exit()
-            out.print_line('Please scan the QR Code', True)
+            utils.print_line('Please scan the QR Code', True)
         open_QR()
         while 1:
             status = self.check_login(picDir=picDir)
             if status == '200':
                 break
             elif status == '201':
-                out.print_line('Please press confirm', True)
+                utils.print_line('Please press confirm', True)
             elif status == '408':
-                out.print_line('Reloading QR Code\n', True)
+                utils.print_line('Reloading QR Code\n', True)
                 open_QR()
         self.web_init()
         self.show_mobile_login()
-        tools.clear_screen()
+        utils.clear_screen()
         self.get_contact(True)
-        out.print_line('Login successfully as %s\n'%self.storageClass.nickName, False)
+        utils.print_line('Login successfully as %s\n'%self.storageClass.nickName, False)
         self.start_receiving()
     def get_QRuuid(self):
         url = '%s/jslogin'%BASE_URL
@@ -112,9 +108,9 @@ class client(object):
         except:
             return False
         if enableCmdQR:
-            tools.print_cmd_qr(picDir, enableCmdQR = enableCmdQR)
+            utils.print_cmd_qr(picDir, enableCmdQR = enableCmdQR)
         else:
-            tools.print_qr(picDir)
+            utils.print_qr(picDir)
         return True
     def check_login(self, uuid=None, picDir=None):
         if uuid is None: uuid = self.uuid
@@ -170,9 +166,9 @@ class client(object):
         headers = { 'ContentType': 'application/json; charset=UTF-8', 'User-Agent' : config.USER_AGENT }
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
         dic = json.loads(r.content.decode('utf-8', 'replace'))
-        tools.emoji_formatter(dic['User'], 'NickName')
+        utils.emoji_formatter(dic['User'], 'NickName')
         self.loginInfo['InviteStartCount'] = int(dic['InviteStartCount'])
-        self.loginInfo['User'] = tools.struct_friend_info(dic['User'])
+        self.loginInfo['User'] = utils.struct_friend_info(dic['User'])
         self.loginInfo['SyncKey'] = dic['SyncKey']
         self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val']) for item in dic['SyncKey']['List']])
         self.storageClass.userName = dic['User']['UserName']
@@ -226,7 +222,7 @@ class client(object):
         # when updating, there's not need for clearing
         self.memberList.append(self.loginInfo['User'])
         for m in tempList:
-            tools.emoji_formatter(m, 'NickName')
+            utils.emoji_formatter(m, 'NickName')
             if m['Sex'] != 0:
                 self.memberList.append(m)
             elif not (any([str(n) in m['UserName'] for n in range(10)]) and
@@ -288,9 +284,9 @@ class client(object):
                     if self.debug: traceback.print_exc()
                     time.sleep(count * 3)
                 except Exception as e:
-                    out.print_line(str(e), False)
+                    utils.print_line(str(e), False)
                     if self.debug: traceback.print_exc()
-            out.print_line('LOG OUT', False)
+            utils.print_line('LOG OUT', False)
         maintainThread = threading.Thread(target = maintain_loop)
         maintainThread.setDaemon(True)
         maintainThread.start()
@@ -328,14 +324,14 @@ class client(object):
         oldUsernameList = []
         for chatroom in l:
             # format NickName & DisplayName & self keys
-            tools.emoji_formatter(chatroom, 'NickName')
+            utils.emoji_formatter(chatroom, 'NickName')
             for member in chatroom['MemberList']:
                 if self.storageClass.userName == member['UserName']:
                     chatroom['self'] = member
-                tools.emoji_formatter(member, 'NickName')
-                tools.emoji_formatter(member, 'DisplayName')
+                utils.emoji_formatter(member, 'NickName')
+                utils.emoji_formatter(member, 'DisplayName')
             # get useful information from old version of this chatroom
-            oldChatroom = tools.search_dict_list(
+            oldChatroom = utils.search_dict_list(
                 self.chatroomList, 'UserName', chatroom['UserName'])
             if oldChatroom is not None:
                 memberList, oldMemberList = \
@@ -343,7 +339,7 @@ class client(object):
                 # update member list
                 if memberList:
                     for member in memberList:
-                        oldMember = tools.search_dict_list(
+                        oldMember = utils.search_dict_list(
                             oldMemberList, 'UserName', member['UserName'])
                         if oldMember is not None:
                             for k in oldMember:
@@ -357,7 +353,7 @@ class client(object):
                 oldUsernameList.append(oldChatroom['UserName'])
             # update OwnerUin
             if chatroom.get('ChatRoomOwner'):
-                chatroom['OwnerUin'] = tools.search_dict_list(
+                chatroom['OwnerUin'] = utils.search_dict_list(
                     chatroom['MemberList'], 'UserName', chatroom['ChatRoomOwner'])['Uin']
             # update isAdmin
             if 'OwnerUin' in chatroom and chatroom['OwnerUin'] != 0:
@@ -396,7 +392,7 @@ class client(object):
             if '@@' in m['FromUserName'] or '@@' in m['ToUserName']:
                 self.__produce_group_chat(m)
             else:
-                tools.msg_formatter(m, 'Content')
+                utils.msg_formatter(m, 'Content')
             if m['MsgType'] == 1: # words
                 if m['Url']:
                     regx = r'(.+?\(.+?\))'
@@ -515,7 +511,7 @@ class client(object):
                     'Type': 'Useless',
                     'Text': 'UselessMsg', }
             else:
-                out.print_line('MsgType Unknown: %s\n%s'%(m['MsgType'], str(m)), False)
+                utils.print_line('MsgType Unknown: %s\n%s'%(m['MsgType'], str(m)), False)
                 srl.append(m['MsgType'])
                 msg = {
                     'Type': 'Useless',
@@ -528,16 +524,16 @@ class client(object):
         if not r: return
         actualUserName, content = r.groups()
         chatroom = self.storageClass.search_chatrooms(userName=msg['FromUserName'])
-        member = tools.search_dict_list((chatroom or {}).get(
+        member = utils.search_dict_list((chatroom or {}).get(
             'MemberList') or [], 'UserName', actualUserName)
         if member is None:
             chatroom = self.update_chatroom(msg['FromUserName'])
-            member = tools.search_dict_list((chatroom or {}).get(
+            member = utils.search_dict_list((chatroom or {}).get(
                 'MemberList') or [], 'UserName', actualUserName)
         msg['ActualUserName'] = actualUserName
         msg['ActualNickName'] = member['DisplayName'] or member['NickName']
         msg['Content']        = content
-        tools.msg_formatter(msg, 'Content')
+        utils.msg_formatter(msg, 'Content')
         atFlag = '@' + (chatroom['self']['DisplayName']
             or self.storageClass.nickName)
         msg['isAt'] = (
@@ -565,7 +561,7 @@ class client(object):
         r = self.send_raw_msg(1, msg, toUserName)
         return r['BaseResponse']['Ret'] == 0
     def __upload_file(self, fileDir, isPicture = False, isVideo = False):
-        if not tools.check_file(fileDir): return
+        if not utils.check_file(fileDir): return
         url = self.loginInfo.get('fileUrl', self.loginInfo['url']) + \
             '/webwxuploadmedia?f=json'
         # save it on server
@@ -691,7 +687,7 @@ class client(object):
         headers = { 'ContentType': 'application/json; charset=UTF-8', 'User-Agent' : config.USER_AGENT }
         r = self.s.post(url, data = json.dumps(payloads), headers = headers)
         if userInfo: # add user to storage
-            self.memberList.append(tools.struct_friend_info(userInfo))
+            self.memberList.append(utils.struct_friend_info(userInfo))
         return r.json()
     def get_head_img(self, userName=None, chatroomUserName=None, picDir=None):
         ''' get head image
