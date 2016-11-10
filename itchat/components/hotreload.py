@@ -1,0 +1,56 @@
+import pickle, os
+import logging, traceback
+
+import requests
+
+from .contact import update_local_chatrooms
+from .messages import produce_msg
+
+logger = logging.getLogger('itchat')
+
+def load_hotreload(core):
+    core.dump_login_status = dump_login_status
+    core.load_login_status = load_login_status
+
+def dump_login_status(self, fileDir=None):
+    fileDir = fileDir or self.hotReloadDir
+    try:
+        with open(fileDir, 'w') as f:
+            f.write('itchat - DELETE THIS')
+        os.remove(fileDir)
+    except:
+        raise Exception('Incorrect fileDir')
+    status = {
+        'loginInfo' : self.loginInfo,
+        'cookies'   : self.s.cookies.get_dict(),
+        'storage'   : self.storageClass.dumps()}
+    with open(fileDir, 'wb') as f:
+        pickle.dump(status, f)
+    logger.debug('Dump login status for hot reload successfully.')
+
+def load_login_status(self, fileDir, callback=None):
+    try:
+        with open(fileDir, 'rb') as f:
+            j = pickle.load(f)
+    except Exception as e:
+        logger.debug('No such file, loading login status failed.')
+        return False
+    self.loginInfo = j['loginInfo']
+    self.s.cookies = requests.utils.cookiejar_from_dict(j['cookies'])
+    self.storageClass.loads(j['storage'])
+    msgList, contactList = self.get_msg()
+    if (msgList or contactList) is None:
+        self.logout()
+        logger.debug('server refused, loading login status failed.')
+        return False
+    else:
+        if contactList:
+            update_local_chatrooms(self, contactList)
+        if msgList:
+            msgList = produce_msg(self, msgList)
+            for msg in msgList: self.msgList.put(msg)
+        self.start_receiving()
+        logger.debug('loading login status succeeded.')
+        if hasattr(callback, '__call__'):
+            callback()
+        return True

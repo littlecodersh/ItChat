@@ -1,8 +1,11 @@
-from . import config, storage, out, tools
+import requests
+
+from . import config, storage, utils, log
 from .components import load_components
 
 class Core(object):
     def __init__(self):
+        self.alive = False
         self.storageClass = storage.Storage()
         self.memberList = self.storageClass.memberList
         self.mpList = self.storageClass.mpList
@@ -14,8 +17,7 @@ class Core(object):
         self.debug = False
         self.functionDict = {'FriendChat': {}, 'GroupChat': {}, 'MpChat': {}}
         self.useHotReload, self.hotReloadDir = False, 'itchat.pkl'
-    def __load_components(self):
-        load_components(self)
+        self.receivingRetryCount = 5
     def dump_login_status(self, fileDir):
         ''' place for docs
          * will be initialized in messages
@@ -177,6 +179,7 @@ class Core(object):
         '''
         raise NotImplementedError()
     def add_member_into_chatroom(self, chatroomUserName, memberList,
+            useInvitation=False):
         ''' place for docs
          * will be initialized in messages
         '''
@@ -204,8 +207,18 @@ class Core(object):
          * will be initialized in messages
         '''
         raise NotImplementedError()
-    def log_out(self)
+    def log_out(self):
         ''' place for docs
          * will be initialized in messages
         '''
         raise NotImplementedError()
+    def search_friends(self, name=None, userName=None, remarkName=None, nickName=None,
+            wechatAccount=None):
+        return self.storageClass.search_friends(name, userName, remarkName,
+            nickName, wechatAccount)
+    def search_chatrooms(self, name=None, userName=None):
+        return self.storageClass.search_chatrooms(name, userName)
+    def search_mps(self, name=None, userName=None):
+        return self.storageClass.search_mps(name, userName)
+
+load_components(Core)

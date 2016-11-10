@@ -4,7 +4,7 @@ try:
 except ImportError:
     import queue as Queue
 
-class Storage:
+class Storage(object):
     def __init__(self):
         self.userName          = None
         self.nickName          = None

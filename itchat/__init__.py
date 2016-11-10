@@ -11,3 +11,9 @@ def new_instance():
     return newInstance
 
 originInstance = new_instance()
+
+# I really want to use sys.modules[__name__] = originInstance
+# but it makes auto-fill a real mess, so forgive me for my following **
+
+import sys
+sys.modules[__name__] = originInstance
