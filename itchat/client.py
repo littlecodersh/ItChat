@@ -545,6 +545,9 @@ class client(object):
             in msg['Content']
             or
             msg['Content'].endswith(atFlag))
+        if msg['isAt']:
+            msg['Content'] = msg['Content'].replace(atFlag, '').replace(
+                u'\u2005', '')
     def send_raw_msg(self, msgType, content, toUserName):
         url = '%s/webwxsendmsg'%self.loginInfo['url']
         payloads = {
