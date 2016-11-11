@@ -645,7 +645,7 @@ class client(object):
         if mediaId is None: return False
         url = '%s/webwxsendvideomsg?fun=async&f=json&pass_ticket=%s' % (
             self.loginInfo['url'], self.loginInfo['pass_ticket'])
-        payloads = {
+        data = {
             'BaseRequest': self.loginInfo['BaseRequest'],
             'Msg': {
                 'Type'         : 43,
