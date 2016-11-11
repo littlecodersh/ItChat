@@ -3,6 +3,7 @@ import logging, traceback
 
 import requests
 
+from ..returnvalues import ReturnValue
 from .contact import update_local_chatrooms
 from .messages import produce_msg
 
@@ -34,7 +35,10 @@ def load_login_status(self, fileDir, callback=None):
             j = pickle.load(f)
     except Exception as e:
         logger.debug('No such file, loading login status failed.')
-        return False
+        return ReturnValue({'BaseResponse': {
+            'ErrMsg': 'No such file, loading login status failed.',
+            'Ret': -1002, }})
+
     self.loginInfo = j['loginInfo']
     self.s.cookies = requests.utils.cookiejar_from_dict(j['cookies'])
     self.storageClass.loads(j['storage'])
@@ -42,7 +46,9 @@ def load_login_status(self, fileDir, callback=None):
     if (msgList or contactList) is None:
         self.logout()
         logger.debug('server refused, loading login status failed.')
-        return False
+        return ReturnValue({'BaseResponse': {
+            'ErrMsg': 'server refused, loading login status failed.',
+            'Ret': -1003, }})
     else:
         if contactList:
             update_local_chatrooms(self, contactList)
@@ -53,4 +59,6 @@ def load_login_status(self, fileDir, callback=None):
         logger.debug('loading login status succeeded.')
         if hasattr(callback, '__call__'):
             callback()
-        return True
+        return ReturnValue({'BaseResponse': {
+            'ErrMsg': 'loading login status succeeded.',
+            'Ret': 0, }})

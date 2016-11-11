@@ -13,15 +13,17 @@ def load_register(core):
     core.run              = run
 
 def auto_login(self, hotReload=False, statusStorageDir='itchat.pkl',
-        enableCmdQR=False, picDir=None, callback=None):
+        enableCmdQR=False, picDir=None, callback=None, finishCallback=None):
     self.useHotReload = hotReload
     if hotReload:
         if self.load_login_status(statusStorageDir, callback=callback): return
-        self.login(enableCmdQR=enableCmdQR, picDir=picDir, callback=callback)
+        self.login(enableCmdQR=enableCmdQR, picDir=picDir,
+            callback=callback, finishCallback=finishCallback)
         self.dump_login_status(statusStorageDir)
         self.hotReloadDir = statusStorageDir
     else:
-        self.login(enableCmdQR=enableCmdQR, picDir=picDir, callback=callback)
+        self.login(enableCmdQR=enableCmdQR, picDir=picDir,
+            callback=callback, finishCallback=finishCallback)
 
 def configured_reply(self):
     ''' determine the type of message and reply if its method is defined

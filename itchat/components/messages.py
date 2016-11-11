@@ -1,10 +1,12 @@
 import os, time, re
 import json
+import mimetypes
 import traceback, logging
 
 import requests
 
 from .. import config, utils
+from ..returnvalues import ReturnValue
 
 logger = logging.getLogger('itchat')
 
@@ -15,6 +17,7 @@ def load_messages(core):
     core.send_file    = send_file
     core.send_image   = send_image
     core.send_video   = send_video
+    core.send         = send
 
 def get_download_fn(core, url, msgId):
     def download_fn(downloadDir=None):
@@ -28,6 +31,9 @@ def get_download_fn(core, url, msgId):
             tempStorage.write(block)
         if downloadDir is None: return tempStorage.getvalue()
         with open(downloadDir, 'wb') as f: f.write(tempStorage.getvalue())
+        return ReturnValue({'BaseResponse': {
+            'ErrMsg': 'Successfully downloaded',
+            'Ret': 0, }})
     return download_fn
 
 def produce_msg(core, msgList):
@@ -101,6 +107,9 @@ def produce_msg(core, msgList):
                         tempStorage.write(block)
                     if attaDir is None: return tempStorage.getvalue()
                     with open(attaDir, 'wb') as f: f.write(tempStorage.getvalue())
+                    return ReturnValue({'BaseResponse': {
+                        'ErrMsg': 'Successfully downloaded',
+                        'Ret': 0, }})
                 msg = {
                     'Type': 'Attachment',
                     'Text': download_atta, }
@@ -140,6 +149,9 @@ def produce_msg(core, msgList):
                     tempStorage.write(block)
                 if videoDir is None: return tempStorage.getvalue()
                 with open(videoDir, 'wb') as f: f.write(tempStorage.getvalue())
+                return ReturnValue({'BaseResponse': {
+                    'ErrMsg': 'Successfully downloaded',
+                    'Ret': 0, }})
             msg = {
                 'Type': 'Video',
                 'FileName' : '%s.mp4' % time.strftime('%y%m%d-%H%M%S', time.localtime()),
@@ -205,15 +217,19 @@ def send_raw_msg(self, msgType, content, toUserName):
             }, }
     self.loginInfo['msgid'] += 1
     headers = { 'ContentType': 'application/json; charset=UTF-8', 'User-Agent' : config.USER_AGENT }
-    r = self.s.post(url, data=json.dumps(payloads, ensure_ascii=False).encode('utf8'), headers=headers)
-    return r.json()
+    r = self.s.post(url, headers=headers,
+        data=json.dumps(payloads, ensure_ascii=False).encode('utf8'))
+    return ReturnValue(rawResponse=r)
 
 def send_msg(self, msg='Test Message', toUserName=None):
     r = self.send_raw_msg(1, msg, toUserName)
-    return r['BaseResponse']['Ret'] == 0
+    return r
 
-def upload_file(self, fileDir, isPicture = False, isVideo = False):
-    if not utils.check_file(fileDir): return
+def upload_file(self, fileDir, isPicture=False, isVideo=False):
+    if not utils.check_file(fileDir):
+        return ReturnValue({'BaseResponse': {
+            'ErrMsg': 'No file found in specific dir',
+            'Ret': -1002, }})
     url = self.loginInfo.get('fileUrl', self.loginInfo['url']) + \
         '/webwxuploadmedia?f=json'
     # save it on server
@@ -238,13 +254,17 @@ def upload_file(self, fileDir, isPicture = False, isVideo = False):
         'pass_ticket': (None, 'undefined'),
         'filename' : (os.path.basename(fileDir), open(fileDir, 'rb'), fileType), }
     headers = { 'User-Agent' : config.USER_AGENT }
-    r = self.s.post(url, files = files, headers = headers)
-    return json.loads(r.text)['MediaId']
+    r = self.s.post(url, files=files, headers=headers)
+    return ReturnValue(rawResponse=r)
 
-def send_file(self, fileDir, toUserName=None):
+def send_file(self, fileDir, mediaId=None, toUserName=None):
     if toUserName is None: toUserName = self.storageClass.userName
-    mediaId = self.upload_file(fileDir)
-    if mediaId is None: return False
+    if mediaId is None:
+        r = self.upload_file(fileDir)
+        if r:
+            mediaId = r['MediaId']
+        else:
+            return r
     url = '%s/webwxsendappmsg?fun=async&f=json' % self.loginInfo['url']
     data = {
         'BaseRequest': self.loginInfo['BaseRequest'],
@@ -262,13 +282,18 @@ def send_file(self, fileDir, toUserName=None):
     headers = {
         'User-Agent': config.USER_AGENT,
         'Content-Type': 'application/json;charset=UTF-8', }
-    r = self.s.post(url, data=json.dumps(data, ensure_ascii=False).encode('utf8'), headers=headers)
-    return True
+    r = self.s.post(url, headers=headers,
+        data=json.dumps(data, ensure_ascii=False).encode('utf8'))
+    return ReturnValue(rawResponse=r)
 
-def send_image(self, fileDir, toUserName=None):
+def send_image(self, fileDir=None, mediaId=None, toUserName=None):
     if toUserName is None: toUserName = self.storageClass.userName
-    mediaId = self.upload_file(fileDir, isPicture=not fileDir[-4:] == '.gif')
-    if mediaId is None: return False
+    if mediaId is None:
+        r = self.upload_file(fileDir, isPicture=not fileDir[-4:] == '.gif')
+        if r:
+            mediaId = r['MediaId']
+        else:
+            return r
     url = '%s/webwxsendmsgimg?fun=async&f=json' % self.loginInfo['url']
     data = {
         'BaseRequest': self.loginInfo['BaseRequest'],
@@ -287,16 +312,21 @@ def send_image(self, fileDir, toUserName=None):
     headers = {
         'User-Agent': config.USER_AGENT,
         'Content-Type': 'application/json;charset=UTF-8', }
-    r = self.s.post(url, data=json.dumps(data, ensure_ascii=False).encode('utf8'), headers=headers)
-    return True
+    r = self.s.post(url, headers=headers,
+        data=json.dumps(data, ensure_ascii=False).encode('utf8'))
+    return ReturnValue(rawResponse=r)
 
-def send_video(self, fileDir, toUserName = None):
+def send_video(self, fileDir=None, mediaId=None, toUserName=None):
     if toUserName is None: toUserName = self.storageClass.userName
-    mediaId = self.upload_file(fileDir, isVideo=True)
-    if mediaId is None: return False
+    if mediaId is None:
+        r = self.upload_file(fileDir, isVideo=True)
+        if r:
+            mediaId = r['MediaId']
+        else:
+            return r
     url = '%s/webwxsendvideomsg?fun=async&f=json&pass_ticket=%s' % (
         self.loginInfo['url'], self.loginInfo['pass_ticket'])
-    payloads = {
+    data = {
         'BaseRequest': self.loginInfo['BaseRequest'],
         'Msg': {
             'Type'         : 43,
@@ -310,5 +340,32 @@ def send_video(self, fileDir, toUserName = None):
     headers = {
         'User-Agent' : config.USER_AGENT,
         'Content-Type': 'application/json;charset=UTF-8', }
-    r = self.s.post(url, data=json.dumps(data, ensure_ascii=False).encode('utf8'), headers=headers)
-    return True
+    r = self.s.post(url, headers=headers,
+        data=json.dumps(data, ensure_ascii=False).encode('utf8'))
+    return ReturnValue(rawResponse=r)
+
+def send(self, msg, toUserName=None, isMediaId=False):
+    if not msg:
+        r = ReturnValue({'BaseResponse': {
+            'ErrMsg': 'No message.',
+            'Ret': -1005, }})
+    elif msg[:5] == '@fil@':
+        if isMediaId:
+            r = self.send_file(mediaId=msg, toUserName=toUserName)
+        else:
+            r = self.send_file(msg[5:], toUserName=toUserName)
+    elif msg[:5] == '@img@':
+        if isMediaId:
+            r = self.send_image(mediaId=msg, toUserName=toUserName)
+        else:
+            r = self.send_image(msg[5:], toUserName=toUserName)
+    elif msg[:5] == '@msg@':
+        r = self.send_msg(msg[5:], toUserName)
+    elif msg[:5] == '@vid@':
+        if isMediaId:
+            r = self.send_video(mediaId=msg, toUserName=toUserName)
+        else:
+            r = self.send_video(msg[5:], toUserName=toUserName)
+    else:
+        r = self.send_msg(msg, toUserName)
+    return r

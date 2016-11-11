@@ -7,6 +7,7 @@ import traceback, logging
 import requests
 
 from .. import config, utils
+from ..returnvalues import ReturnValue
 from .contact import update_local_chatrooms
 from .messages import produce_msg
 
@@ -23,8 +24,8 @@ def load_login(core):
     core.get_msg           = get_msg
     core.logout            = logout
 
-def login(self, enableCmdQR=False, picDir=None, callback=None,
-        finishCallback=None):
+def login(self, enableCmdQR=False, picDir=None,
+        callback=None, finishCallback=None):
     while 1:
         for getCount in range(10):
             logger.info('Getting uuid of QR code.')
@@ -170,17 +171,17 @@ def show_mobile_login(self):
         'ContentType': 'application/json; charset=UTF-8',
         'User-Agent' : config.USER_AGENT, }
     r = self.s.post(url, data=json.dumps(data), headers=headers)
-    return r
+    return ReturnValue(rawResponse=r)
 
 def start_receiving(self, finishCallback=None):
     self.alive = True
     def maintain_loop():
         retryCount = 0
-        while 1:
+        while self.alive:
             try:
                 i = sync_check(self)
                 if i is None:
-                    break
+                    self.alive = False
                 elif i == '0':
                     continue
                 else:
@@ -195,10 +196,9 @@ def start_receiving(self, finishCallback=None):
                 retryCount += 1
                 logger.debug(traceback.format_exc())
                 if self.receivingRetryCount < retryCount:
-                    break
+                    self.alive = False
                 else:
                     time.sleep(1)
-        self.alive = False
         self.logout()
         if hasattr(finishCallback, '__call__'):
             finishCallback()
@@ -248,7 +248,7 @@ def get_msg(self):
 
 def logout(self):
     if self.alive:
-        url = '%s/webwxlogout'
+        url = '%s/webwxlogout' % self.loginInfo['url']
         params = {
             'redirect' : 1,
             'type'     : 1,
@@ -259,4 +259,6 @@ def logout(self):
     self.s.cookies.clear()
     del self.chatroomList[:]
     # other info will be automatically cleared
-    return True
+    return ReturnValue({'BaseResponse': {
+        'ErrMsg': 'logout successfully.',
+        'Ret': 0, }})

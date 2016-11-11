@@ -5,6 +5,7 @@ import traceback, logging
 import requests
 
 from .. import config, utils
+from ..returnvalues import ReturnValue
 
 logger = logging.getLogger('itchat')
 
@@ -34,8 +35,14 @@ def update_chatroom(self, userName, detailedMember=False):
         'List': [{
             'UserName': userName,
             'ChatRoomId': '', }], }
-    j = json.loads(self.s.post(url, data=json.dumps(data), headers=headers
-            ).content.decode('utf8', 'replace'))['ContactList'][0]
+    contactList = json.loads(self.s.post(url, data=json.dumps(data), headers=headers
+            ).content.decode('utf8', 'replace')).get('ContactList')
+    if not contactList:
+        return ReturnValue({'BaseResponse': {
+                'ErrMsg': 'No chatroom found',
+                'Ret': -1001, }})
+    else:
+        j = contactList[0]
 
     if detailedMember:
         def get_detailed_member_info(encryChatroomId, memberList):
@@ -60,7 +67,7 @@ def update_chatroom(self, userName, detailedMember=False):
             totalMemberList += get_detailed_member_info(j['EncryChatRoomId'], memberList)
         j['MemberList'] = totalMemberList
 
-    update_local_chatrooms(core, [j])
+    update_local_chatrooms(self, [j])
     return self.storageClass.search_chatrooms(userName=j['UserName'])
 
 def update_local_chatrooms(core, l):
@@ -86,7 +93,7 @@ def update_local_chatrooms(core, l):
                         oldMemberList, 'UserName', member['UserName'])
                     if oldMember is not None:
                         for k in oldMember:
-                            member[k] = member[k] or oldMember[k]
+                            member[k] = member.get(k) or oldMember[k]
             else:
                 chatroom['MemberList'] = oldMemberList
             # update other info
@@ -149,7 +156,7 @@ def get_contact(self, update=False):
                 self.memberList.append(m)
             else:
                 self.mpList.append(m)
-    if chatroomList: update_local_chatrooms(core, chatroomList)
+    if chatroomList: update_local_chatrooms(self, chatroomList)
     return copy.deepcopy(chatroomList)
 
 def get_friends(self, update=False):
@@ -176,9 +183,9 @@ def set_alias(self, userName, alias):
         'RemarkName'  : alias,
         'BaseRequest' : self.loginInfo['BaseRequest'], }
     headers = { 'User-Agent' : config.USER_AGENT }
-    j = self.s.post(url, json.dumps(data, ensure_ascii=False).encode('utf8'),
-        headers=headers).json()
-    return j['BaseResponse']['Ret'] == 0
+    r = self.s.post(url, json.dumps(data, ensure_ascii=False).encode('utf8'),
+        headers=headers)
+    return ReturnValue(rawResponse=r)
 
 def add_friend(self, userName, status=2, ticket='', userInfo={}):
     ''' Add a friend or accept a friend
@@ -204,7 +211,7 @@ def add_friend(self, userName, status=2, ticket='', userInfo={}):
     r = self.s.post(url, data=json.dumps(data), headers=headers)
     if userInfo: # add user to storage
         self.memberList.append(utils.struct_friend_info(userInfo))
-    return r.json()
+    return ReturnValue(rawResponse=r)
 
 def get_head_img(self, userName=None, chatroomUserName=None, picDir=None):
     ''' get head image
@@ -218,13 +225,19 @@ def get_head_img(self, userName=None, chatroomUserName=None, picDir=None):
     url = '%s/webwxgeticon' % self.loginInfo['url']
     if chatroomUserName is None:
         infoDict = self.storageClass.search_friends(userName=userName)
-        if infoDict is None: return None
+        if infoDict is None:
+            return ReturnValue({'BaseResponse': {
+                'ErrMsg': 'No friend found',
+                'Ret': -1001, }})
     else:
         if userName is None:
             url = '%s/webwxgetheadimg' % self.loginInfo['url']
         else:
             chatroom = self.storageClass.search_chatrooms(userName=chatroomUserName)
-            if chatroomUserName is None: return None
+            if chatroomUserName is None:
+                return ReturnValue({'BaseResponse': {
+                    'ErrMsg': 'No chatroom found',
+                    'Ret': -1001, }})
             if chatroom['EncryChatRoomId'] == '':
                 chatroom = self.update_chatroom(chatroomUserName)
             params['chatroomid'] = chatroom['EncryChatRoomId']
@@ -233,10 +246,14 @@ def get_head_img(self, userName=None, chatroomUserName=None, picDir=None):
     tempStorage = io.BytesIO()
     for block in r.iter_content(1024):
         tempStorage.write(block)
-    if picDir is None: return tempStorage.getvalue()
+    if picDir is None:
+        return tempStorage.getvalue()
     with open(picDir, 'wb') as f: f.write(tempStorage.getvalue())
+    return ReturnValue({'BaseResponse': {
+        'ErrMsg': 'Successfully downloaded',
+        'Ret': 0, }})
 
-def create_chatroom(self, memberList, topic = ''):
+def create_chatroom(self, memberList, topic=''):
     url = '%s/webwxcreatechatroom?pass_ticket=%s&r=%s' % (
         self.loginInfo['url'], self.loginInfo['pass_ticket'], int(time.time()))
     data = {
@@ -249,7 +266,7 @@ def create_chatroom(self, memberList, topic = ''):
         'User-Agent' : config.USER_AGENT }
     r = self.s.post(url, headers=headers,
         data=json.dumps(data, ensure_ascii=False).encode('utf8', 'ignore'))
-    return r.json()
+    return ReturnValue(rawResponse=r)
 
 def set_chatroom_name(self, chatroomUserName, name):
     url = '%s/webwxupdatechatroom?fun=modtopic&pass_ticket=%s' % (
@@ -263,7 +280,7 @@ def set_chatroom_name(self, chatroomUserName, name):
         'User-Agent' : config.USER_AGENT }
     r = self.s.post(url, headers=headers,
         data=json.dumps(data, ensure_ascii=False).encode('utf8', 'ignore'))
-    return r.json()
+    return ReturnValue(rawResponse=r)
 
 def delete_member_from_chatroom(self, chatroomUserName, memberList):
     url = '%s/webwxupdatechatroom?fun=delmember&pass_ticket=%s' % (
@@ -275,7 +292,8 @@ def delete_member_from_chatroom(self, chatroomUserName, memberList):
     headers = {
         'content-type': 'application/json; charset=UTF-8',
         'User-Agent' : config.USER_AGENT}
-    return self.s.post(url, data=json.dumps(data),headers=headers).json()
+    r = self.s.post(url, data=json.dumps(data),headers=headers)
+    return ReturnValue(rawResponse=r)
 
 def add_member_into_chatroom(self, chatroomUserName, memberList,
         useInvitation=False):
@@ -302,4 +320,5 @@ def add_member_into_chatroom(self, chatroomUserName, memberList,
     headers = {
         'content-type': 'application/json; charset=UTF-8',
         'User-Agent' : config.USER_AGENT}
-    return self.s.post(url, data=json.dumps(params),headers=headers).json()
+    r = self.s.post(url, data=json.dumps(params),headers=headers)
+    return ReturnValue(rawResponse=r)

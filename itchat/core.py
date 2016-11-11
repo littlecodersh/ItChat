@@ -1,3 +1,5 @@
+import logging
+
 import requests
 
 from . import config, storage, utils, log
@@ -18,17 +20,8 @@ class Core(object):
         self.functionDict = {'FriendChat': {}, 'GroupChat': {}, 'MpChat': {}}
         self.useHotReload, self.hotReloadDir = False, 'itchat.pkl'
         self.receivingRetryCount = 5
-    def dump_login_status(self, fileDir):
-        ''' place for docs
-         * will be initialized in messages
-        '''
-        raise NotImplementedError()
-    def load_login_status(self, fileDir):
-        ''' place for docs
-         * will be initialized in messages
-        '''
-        raise NotImplementedError()
-    def auto_login(self, enableCmdQR=False, picDir=None):
+    def login(self, enableCmdQR=False, picDir=None,
+            callback=None, finishCallback=None):
         ''' place for docs
          * will be initialized in messages
         '''
@@ -43,12 +36,32 @@ class Core(object):
          * will be initialized in messages
         '''
         raise NotImplementedError()
-    def check_login(self, uuid=None, picDir=None):
+    def check_login(self, uuid=None):
         ''' place for docs
          * will be initialized in messages
         '''
         raise NotImplementedError()
     def web_init(self):
+        ''' place for docs
+         * will be initialized in messages
+        '''
+        raise NotImplementedError()
+    def show_mobile_login(self):
+        ''' place for docs
+         * will be initialized in messages
+        '''
+        raise NotImplementedError()
+    def start_receiving(self, finishCallback=None):
+        ''' place for docs
+         * will be initialized in messages
+        '''
+        raise NotImplementedError()
+    def get_msg(self):
+        ''' place for docs
+         * will be initialized in messages
+        '''
+        raise NotImplementedError()
+    def logout(self):
         ''' place for docs
          * will be initialized in messages
         '''
@@ -68,82 +81,12 @@ class Core(object):
          * will be initialized in messages
         '''
         raise NotImplementedError()
-    def get_chatrooms(self, update=False):
+    def get_chatrooms(self, update=False, contactOnly=False):
         ''' place for docs
          * will be initialized in messages
         '''
         raise NotImplementedError()
     def get_mps(self, update=False):
-        ''' place for docs
-         * will be initialized in messages
-        '''
-        raise NotImplementedError()
-    def show_mobile_login(self):
-        ''' place for docs
-         * will be initialized in messages
-        '''
-        raise NotImplementedError()
-    def start_receiving(self):
-        ''' place for docs
-         * will be initialized in messages
-        '''
-        raise NotImplementedError()
-    def __sync_check(self):
-        ''' place for docs
-         * will be initialized in messages
-        '''
-        raise NotImplementedError()
-    def __get_msg(self):
-        ''' place for docs
-         * will be initialized in messages
-        '''
-        raise NotImplementedError()
-    def __update_chatrooms(self, l):
-        ''' place for docs
-         * will be initialized in messages
-        '''
-        raise NotImplementedError()
-    def __get_download_fn(self, url, msgId):
-        ''' place for docs
-         * will be initialized in messages
-        '''
-        raise NotImplementedError()
-    def __produce_msg(self, l):
-        ''' place for docs
-         * will be initialized in messages
-        '''
-        raise NotImplementedError()
-    def __produce_group_chat(self, msg):
-        ''' place for docs
-         * will be initialized in messages
-        '''
-        raise NotImplementedError()
-    def send_raw_msg(self, msgType, content, toUserName):
-        ''' place for docs
-         * will be initialized in messages
-        '''
-        raise NotImplementedError()
-    def send_msg(self, msg='Test Message', toUserName=None):
-        ''' place for docs
-         * will be initialized in messages
-        '''
-        raise NotImplementedError()
-    def __upload_file(self, fileDir, isPicture = False, isVideo = False):
-        ''' place for docs
-         * will be initialized in messages
-        '''
-        raise NotImplementedError()
-    def send_file(self, fileDir, toUserName=None):
-        ''' place for docs
-         * will be initialized in messages
-        '''
-        raise NotImplementedError()
-    def send_image(self, fileDir, toUserName=None):
-        ''' place for docs
-         * will be initialized in messages
-        '''
-        raise NotImplementedError()
-    def send_video(self, fileDir, toUserName = None):
         ''' place for docs
          * will be initialized in messages
         '''
@@ -163,7 +106,7 @@ class Core(object):
          * will be initialized in messages
         '''
         raise NotImplementedError()
-    def create_chatroom(self, memberList, topic = ''):
+    def create_chatroom(self, memberList, topic=''):
         ''' place for docs
          * will be initialized in messages
         '''
@@ -184,7 +127,58 @@ class Core(object):
          * will be initialized in messages
         '''
         raise NotImplementedError()
-    def configured_reply():
+    def send_raw_msg(self, msgType, content, toUserName):
+        ''' place for docs
+         * will be initialized in messages
+        '''
+        raise NotImplementedError()
+    def send_msg(self, msg='Test Message', toUserName=None):
+        ''' place for docs
+         * will be initialized in messages
+        '''
+        raise NotImplementedError()
+    def upload_file(self, fileDir, isPicture=False, isVideo=False):
+        ''' place for docs
+         * will be initialized in messages
+        '''
+        raise NotImplementedError()
+    def send_file(self, fileDir, mediaId=None, toUserName=None):
+        ''' place for docs
+         * will be initialized in messages
+        '''
+        raise NotImplementedError()
+    def send_image(self, fileDir=None, mediaId=None, toUserName=None):
+        ''' place for docs
+         * will be initialized in messages
+        '''
+        raise NotImplementedError()
+    def send_video(self, fileDir=None, mediaId=None, toUserName=None):
+        ''' place for docs
+         * will be initialized in messages
+        '''
+        raise NotImplementedError()
+    def send(self, msg, toUserName=None, isMediaId=False):
+        ''' place for docs
+         * will be initialized in messages
+        '''
+        raise NotImplementedError()
+    def dump_login_status(self, fileDir=None):
+        ''' place for docs
+         * will be initialized in messages
+        '''
+        raise NotImplementedError()
+    def load_login_status(self, fileDir, callback=None):
+        ''' place for docs
+         * will be initialized in messages
+        '''
+        raise NotImplementedError()
+    def auto_login(self, hotReload=False, statusStorageDir='itchat.pkl',
+            enableCmdQR=False, picDir=None, callback=None, finishCallback=None):
+        ''' place for docs
+         * will be initialized in messages
+        '''
+        raise NotImplementedError()
+    def configured_reply(self):
         ''' determine the type of message and reply if its method is defined
             however, I use a strange way to determine whether a msg is from massive platform
             I haven't found a better solution here
@@ -192,22 +186,19 @@ class Core(object):
             If you have any good idea, pleeeease report an issue. I will be more than grateful.
         '''
         raise NotImplementedError()
-    def msg_register(msgType, isFriendChat=False, isGroupChat=False, isMpChat=False):
+    def msg_register(self, msgType,
+            isFriendChat=False, isGroupChat=False, isMpChat=False):
         ''' a decorator constructor
             return a specific decorator based on information given
         '''
         raise NotImplementedError()
-    def run(debug=True):
+    def run(self, debug=True):
         ''' place for docs
          * will be initialized in messages
         '''
         raise NotImplementedError()
-    def set_logging(self, showOnCmd=True, loggingFile=None, loggingLevel=10):
-        ''' place for docs
-         * will be initialized in messages
-        '''
-        raise NotImplementedError()
-    def log_out(self):
+    def set_logging(self, showOnCmd=True, loggingFile=None,
+            loggingLevel=logging.DEBUG):
         ''' place for docs
          * will be initialized in messages
         '''
