@@ -94,7 +94,7 @@ def check_login(self, uuid=None):
     regx = r'window.code=(\d+)'
     data = re.search(regx, r.text)
     if data and data.group(1) == '200':
-        process_login_info(self, r.content)
+        process_login_info(self, r.text)
         return '200'
     elif data and data.group(1) == '201':
         return '201'

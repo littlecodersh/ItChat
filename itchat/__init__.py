@@ -1,5 +1,6 @@
 from .core import Core
 from . import content
+from .log import set_logging
 
 __version__ = '1.1.21'
 
@@ -56,7 +57,7 @@ configured_reply            = originInstance.configured_reply
 msg_register                = originInstance.msg_register
 run                         = originInstance.run
 # other functions
-set_logging                 = originInstance.set_logging
 search_friends              = originInstance.search_friends
 search_chatrooms            = originInstance.search_chatrooms
 search_mps                  = originInstance.search_mps
+set_logging                 = set_logging

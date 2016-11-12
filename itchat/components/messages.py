@@ -286,7 +286,7 @@ def send_file(self, fileDir, mediaId=None, toUserName=None):
         data=json.dumps(data, ensure_ascii=False).encode('utf8'))
     return ReturnValue(rawResponse=r)
 
-def send_image(self, fileDir=None, mediaId=None, toUserName=None):
+def send_image(self, fileDir, mediaId=None, toUserName=None):
     if toUserName is None: toUserName = self.storageClass.userName
     if mediaId is None:
         r = self.upload_file(fileDir, isPicture=not fileDir[-4:] == '.gif')

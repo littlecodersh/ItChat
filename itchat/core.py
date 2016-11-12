@@ -147,7 +147,7 @@ class Core(object):
          * will be initialized in messages
         '''
         raise NotImplementedError()
-    def send_image(self, fileDir=None, mediaId=None, toUserName=None):
+    def send_image(self, fileDir, mediaId=None, toUserName=None):
         ''' place for docs
          * will be initialized in messages
         '''
@@ -193,12 +193,6 @@ class Core(object):
         '''
         raise NotImplementedError()
     def run(self, debug=True):
-        ''' place for docs
-         * will be initialized in messages
-        '''
-        raise NotImplementedError()
-    def set_logging(self, showOnCmd=True, loggingFile=None,
-            loggingLevel=logging.DEBUG):
         ''' place for docs
          * will be initialized in messages
         '''
