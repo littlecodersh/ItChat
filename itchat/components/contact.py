@@ -123,8 +123,7 @@ def update_local_chatrooms(core, l):
         core.chatroomList.append(chatroom)
 
 def get_contact(self, update=False):
-    if 1 < len(self.memberList) and not update:
-        return copy.deepcopy(self.memberList)
+    if not updated: return copy.deepcopy(self.chatroomList)
     url = '%s/webwxgetcontact?r=%s&seq=0&skey=%s' % (self.loginInfo['url'],
         int(time.time()), self.loginInfo['skey'])
     headers = {

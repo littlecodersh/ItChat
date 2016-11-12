@@ -7,6 +7,16 @@ from .components import load_components
 
 class Core(object):
     def __init__(self):
+        ''' init is the only method defined in core.py
+            alive is value showing whether core is running
+                - you should call logout method to change it
+                - after logout, a core object can login again
+            storageClass only uses basic python types
+                - so for advanced uses, inherit it yourself
+            receivingRetryCount is for receiving loop retry
+                - it's 5 now, but actually even 1 is enough
+                - failing is failing
+        '''
         self.alive = False
         self.storageClass = storage.Storage()
         self.memberList = self.storageClass.memberList
@@ -16,115 +26,248 @@ class Core(object):
         self.loginInfo = {}
         self.s = requests.Session()
         self.uuid = None
-        self.debug = False
         self.functionDict = {'FriendChat': {}, 'GroupChat': {}, 'MpChat': {}}
         self.useHotReload, self.hotReloadDir = False, 'itchat.pkl'
         self.receivingRetryCount = 5
     def login(self, enableCmdQR=False, picDir=None,
             callback=None, finishCallback=None):
-        ''' place for docs
-         * will be initialized in messages
+        ''' log in like web wechat does
+            for log in
+                - a QR code will be downloaded and opened
+                - then scanning status is logged, it paused for you confirm
+                - finally it logged in and show your nickName
+            for options
+                - enableCmdQR: show qrcode in command line
+                    - integers can be used to fit strange char length
+                - picDir: place for storing qrcode
+                - callback: callback after successfully logged in
+                    - if not set, screen is cleared and qrcode is deleted
+                - finishCallback: callback after logged out
+                    - it contains calling of logout
+            for usage
+                ..code::python
+
+                    import itchat
+                    itchat.login()
+
+            it is defined in components/login.py
+            and of course every single move in login can be called outside
+                - you may scan source code to see how
+                - and modified according to your own demond
         '''
         raise NotImplementedError()
     def get_QRuuid(self):
-        ''' place for docs
-         * will be initialized in messages
+        ''' get uuid for qrcode
+            uuid is the symbol of qrcode
+                - for logging in, you need to get a uuid first
+                - for downloading qrcode, you need to pass uuid to it
+                - for checking login status, uuid is also required
+            if uuid has timed out, just get another
+            it is defined in components/login.py
         '''
         raise NotImplementedError()
     def get_QR(self, uuid=None, enableCmdQR=False, picDir=None):
-        ''' place for docs
-         * will be initialized in messages
+        ''' download and show qrcode
+            for options
+                - uuid: if uuid is not set, latest uuid you fetched will be used
+                - enableCmdQR: show qrcode in cmd
+                - picDir: where to store qrcode
+            it is defined in components/login.py
         '''
         raise NotImplementedError()
     def check_login(self, uuid=None):
-        ''' place for docs
-         * will be initialized in messages
+        ''' check login status
+            for options:
+                - uuid: if uuid is not set, latest uuid you fetched will be used
+            for return values:
+                - a string will be returned
+                - for meaning of return values
+                    - 200: log in successfully
+                    - 201: waiting for press confirm
+                    - 408: uuid timed out
+                    - 0  : unknown error
+            for processing:
+                - syncUrl and fileUrl is set
+                - BaseRequest is set
+            blocks until reaches any of above status
+            it is defined in components/login.py
         '''
         raise NotImplementedError()
     def web_init(self):
-        ''' place for docs
-         * will be initialized in messages
+        ''' get info necessary for initializing
+            for processing:
+                - own account info is set
+                - inviteStartCount is set
+                - syncKey is set
+                - part of contact is fetched
+            it is defined in components/login.py
         '''
         raise NotImplementedError()
     def show_mobile_login(self):
-        ''' place for docs
-         * will be initialized in messages
+        ''' show web wechat login sign
+            the sign is on the top of mobile phone wechat
+            sign will be added after sometime even without calling this function
+            it is defined in components/login.py
         '''
         raise NotImplementedError()
     def start_receiving(self, finishCallback=None):
-        ''' place for docs
-         * will be initialized in messages
+        ''' open a thread for heart loop and receiving messages
+            for options:
+                - finishCallback: callback after logged out
+                    - it contains calling of logout
+            for processing:
+                - messages: msgs are formatted and passed on to registered fns
+                - contact : chatrooms are updated when related info is received
+            it is defined in components/login.py
         '''
         raise NotImplementedError()
     def get_msg(self):
-        ''' place for docs
-         * will be initialized in messages
+        ''' fetch messages
+            for fetching
+                - method blocks for sometime util
+                    - new messages are to be received
+                    - or anytime they like
+                - synckey is updated with returned synccheckkey
+            it is defined in components/login.py
         '''
         raise NotImplementedError()
     def logout(self):
-        ''' place for docs
-         * will be initialized in messages
+        ''' logout
+            if core is now alive
+                logout will tell wechat backstage to logout
+            and core gets ready for another login
+            it is defined in components/login.py
         '''
         raise NotImplementedError()
     def update_chatroom(self, userName, detailedMember=False):
-        ''' place for docs
-         * will be initialized in messages
+        ''' update chatroom
+            for chatroom contact
+                - a chatroom contact need updating to be detailed
+                - detailed means members, encryid, etc
+                - auto updating of heart loop is a more detailed updating
+                    - member uin will also be filled
+                - once called, updated info will be stored
+            for options
+                - userName: 'UserName' key of chatroom
+                - detailedMember: whether to get members of contact
+            it is defined in components/contact.py
         '''
         raise NotImplementedError()
     def get_contact(self, update=False):
-        ''' place for docs
-         * will be initialized in messages
+        ''' fetch part of contact
+            for part
+                - all the massive platforms and friends are fetched
+                - if update, only starred chatrooms are fetched
+            for options
+                - update: if not set, local value will be returned
+            for results
+                - chatroomList will be returned
+            it is defined in components/contact.py
         '''
         raise NotImplementedError()
     def get_friends(self, update=False):
-        ''' place for docs
-         * will be initialized in messages
+        ''' fetch friends list
+            for options
+                - update: if not set, local value will be returned
+            for results
+                - a list of friends' info dicts will be returned
+            it is defined in components/contact.py
         '''
         raise NotImplementedError()
     def get_chatrooms(self, update=False, contactOnly=False):
-        ''' place for docs
-         * will be initialized in messages
+        ''' fetch chatrooms list
+            for options
+                - update: if not set, local value will be returned
+                - contactOnly: if set, only starred chatrooms will be returned
+            for results
+                - a list of chatrooms' info dicts will be returned
+            it is defined in components/contact.py
         '''
         raise NotImplementedError()
     def get_mps(self, update=False):
-        ''' place for docs
-         * will be initialized in messages
+        ''' fetch massive platforms list
+            for options
+                - update: if not set, local value will be returned
+            for results
+                - a list of platforms' info dicts will be returned
+            it is defined in components/contact.py
         '''
         raise NotImplementedError()
     def set_alias(self, userName, alias):
-        ''' place for docs
-         * will be initialized in messages
+        ''' set alias for a friend
+            for options
+                - userName: 'UserName' key of info dict
+                - alias: new alias
+            it is defined in components/contact.py
         '''
         raise NotImplementedError()
     def add_friend(self, userName, status=2, ticket='', userInfo={}):
-        ''' place for docs
-         * will be initialized in messages
+        ''' add a friend or accept a friend
+            for options
+                - userName: 'UserName' for friend's info dict
+                - status:
+                    - for adding status should be 2
+                    - for accepting status should be 3
+                - ticket: greeting message
+                - userInfo: friend's other info for adding into local storage
+            it is defined in components/contact.py
         '''
         raise NotImplementedError()
     def get_head_img(self, userName=None, chatroomUserName=None, picDir=None):
         ''' place for docs
-         * will be initialized in messages
+            for options
+                - if you want to get chatroom header: only set chatroomUserName
+                - if you want to get friend header: only set userName
+                - if you want to get chatroom member header: set both
+            it is defined in components/contact.py
         '''
         raise NotImplementedError()
     def create_chatroom(self, memberList, topic=''):
-        ''' place for docs
-         * will be initialized in messages
+        ''' create a chatroom
+            for creating
+                - its calling frequency is strictly limited
+            for options
+                - memberList: list of member info dict
+                - topic: topic of new chatroom
+            it is defined in components/contact.py
         '''
         raise NotImplementedError()
     def set_chatroom_name(self, chatroomUserName, name):
-        ''' place for docs
-         * will be initialized in messages
+        ''' set chatroom name
+            for setting
+                - it makes an updating of chatroom
+                - which means detailed info will be returned in heart loop
+            for options
+                - chatroomUserName: 'UserName' key of chatroom info dict
+                - name: new chatroom name
+            it is defined in components/contact.py
         '''
         raise NotImplementedError()
     def delete_member_from_chatroom(self, chatroomUserName, memberList):
-        ''' place for docs
-         * will be initialized in messages
+        ''' deletes members from chatroom
+            for deleting
+                - you can't delete yourself
+                - if so, no one will be deleted
+                - strict-limited frequency
+            for options
+                - chatroomUserName: 'UserName' key of chatroom info dict
+                - memberList: list of members' info dict
+            it is defined in components/contact.py
         '''
         raise NotImplementedError()
     def add_member_into_chatroom(self, chatroomUserName, memberList,
             useInvitation=False):
-        ''' place for docs
-         * will be initialized in messages
+        ''' add members into chatroom
+            for adding
+                - you can't add yourself or member already in chatroom
+                - if so, no one will be added
+                - if member will over 40 after adding, invitation must be used
+                - strict-limited frequency
+            for options
+                - chatroomUserName: 'UserName' key of chatroom info dict
+                - memberList: list of members' info dict
+                - useInvitation: if invitation is not required, set this to use
+            it is defined in components/contact.py
         '''
         raise NotImplementedError()
     def send_raw_msg(self, msgType, content, toUserName):

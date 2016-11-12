@@ -70,7 +70,8 @@ def msg_register(self, msgType, isFriendChat=False, isGroupChat=False, isMpChat=
 
 def run(self, debug=True):
     logger.info('Start auto replying.')
-    self.debug = debug
+    if debug:
+        self.set_logging(loggingLevel=logging.DEBUG)
     try:
         while self.alive: self.configured_reply()
     except KeyboardInterrupt:

@@ -26,6 +26,9 @@ def load_login(core):
 
 def login(self, enableCmdQR=False, picDir=None,
         callback=None, finishCallback=None):
+    if self.alive:
+        logger.debug('itchat has already logged in.')
+        return
     while 1:
         for getCount in range(10):
             logger.info('Getting uuid of QR code.')
