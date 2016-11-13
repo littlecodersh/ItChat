@@ -271,54 +271,124 @@ class Core(object):
         '''
         raise NotImplementedError()
     def send_raw_msg(self, msgType, content, toUserName):
-        ''' place for docs
-         * will be initialized in messages
+        ''' many messages are sent in a common way
+            for demo
+                .. code:: python
+
+                    @itchat.msg_register(itchat.content.CARD)
+                    def reply(msg):
+                        itchat.send_raw_msg(msg['MsgType'], msg['Content'], msg['FromUserName'])
+
+            there are some little tricks here, you may discover them yourself
+            but remember they are tricks
+            it is defined in components/messages.py
         '''
         raise NotImplementedError()
     def send_msg(self, msg='Test Message', toUserName=None):
-        ''' place for docs
-         * will be initialized in messages
+        ''' send plain text message
+            for options
+                - msg: should be unicode if there's non-ascii words in msg
+                - toUserName: 'UserName' key of friend dict
+            it is defined in components/messages.py
         '''
         raise NotImplementedError()
     def upload_file(self, fileDir, isPicture=False, isVideo=False):
-        ''' place for docs
-         * will be initialized in messages
+        ''' upload file to server and get mediaId
+            for options
+                - fileDir: dir for file ready for upload
+                - isPicture: whether file is a picture
+                - isVideo: whether file is a video
+            for return values
+                will return a ReturnValue
+                if succeeded, mediaId is in r['MediaId']
+            it is defined in components/messages.py
         '''
         raise NotImplementedError()
-    def send_file(self, fileDir, mediaId=None, toUserName=None):
-        ''' place for docs
-         * will be initialized in messages
+    def send_file(self, fileDir, toUserName=None, mediaId=None):
+        ''' send attachment
+            for options
+                - fileDir: dir for file ready for upload
+                - mediaId: mediaId for file. 
+                    - if set, file will not be uploaded twice
+                - toUserName: 'UserName' key of friend dict
+            it is defined in components/messages.py
         '''
         raise NotImplementedError()
-    def send_image(self, fileDir, mediaId=None, toUserName=None):
-        ''' place for docs
-         * will be initialized in messages
+    def send_image(self, fileDir, toUserName=None, mediaId=None):
+        ''' send image
+            for options
+                - fileDir: dir for file ready for upload
+                    - if it's a gif, name it like 'xx.gif'
+                - mediaId: mediaId for file. 
+                    - if set, file will not be uploaded twice
+                - toUserName: 'UserName' key of friend dict
+            it is defined in components/messages.py
         '''
         raise NotImplementedError()
-    def send_video(self, fileDir=None, mediaId=None, toUserName=None):
-        ''' place for docs
-         * will be initialized in messages
+    def send_video(self, fileDir=None, toUserName=None, mediaId=None):
+        ''' send video
+            for options
+                - fileDir: dir for file ready for upload
+                    - if mediaId is set, it's unnecessary to set fileDir
+                - mediaId: mediaId for file. 
+                    - if set, file will not be uploaded twice
+                - toUserName: 'UserName' key of friend dict
+            it is defined in components/messages.py
         '''
         raise NotImplementedError()
-    def send(self, msg, toUserName=None, isMediaId=False):
-        ''' place for docs
-         * will be initialized in messages
+    def send(self, msg, toUserName=None, mediaId=None):
+        ''' wrapped function for all the sending functions
+            for options
+                - msg: message starts with different string indicates different type
+                    - list of type string: ['@fil@', '@img@', '@msg@', '@vid@']
+                    - they are for file, image, plain text, video
+                    - if none of them matches, it will be sent like plain text
+                - toUserName: 'UserName' key of friend dict
+                - mediaId: if set, uploading will not be repeated
+            it is defined in components/messages.py
         '''
         raise NotImplementedError()
     def dump_login_status(self, fileDir=None):
-        ''' place for docs
-         * will be initialized in messages
+        ''' dump login status to a specific file
+            for option
+                - fileDir: dir for dumping login status
+            it is defined in components/hotreload.py
         '''
         raise NotImplementedError()
     def load_login_status(self, fileDir, callback=None):
-        ''' place for docs
-         * will be initialized in messages
+        ''' load login status from a specific file
+            for option
+                - fileDir: file for loading login status
+            it is defined in components/hotreload.py
         '''
         raise NotImplementedError()
     def auto_login(self, hotReload=False, statusStorageDir='itchat.pkl',
             enableCmdQR=False, picDir=None, callback=None, finishCallback=None):
-        ''' place for docs
-         * will be initialized in messages
+        ''' log in like web wechat does
+            for log in
+                - a QR code will be downloaded and opened
+                - then scanning status is logged, it paused for you confirm
+                - finally it logged in and show your nickName
+            for options
+                - hotReload: enable hot reload
+                - statusStorageDir: dir for storing log in status
+                - enableCmdQR: show qrcode in command line
+                    - integers can be used to fit strange char length
+                - picDir: place for storing qrcode
+                - callback: callback after successfully logged in
+                    - if not set, screen is cleared and qrcode is deleted
+                - finishCallback: callback after logged out
+                    - it contains calling of logout
+            for usage
+                ..code::python
+
+                    import itchat
+                    itchat.auto_login()
+
+            it is defined in components/register.py
+            and of course every single move in login can be called outside
+                - you may scan source code to see how
+                - and modified according to your own demond
         '''
         raise NotImplementedError()
     def configured_reply(self):
@@ -336,8 +406,10 @@ class Core(object):
         '''
         raise NotImplementedError()
     def run(self, debug=True):
-        ''' place for docs
-         * will be initialized in messages
+        ''' start auto respond
+            for option
+                - debug: if set, debug info will be shown on screen
+            it is defined in components/hotreload.py
         '''
         raise NotImplementedError()
     def search_friends(self, name=None, userName=None, remarkName=None, nickName=None,

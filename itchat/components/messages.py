@@ -257,7 +257,7 @@ def upload_file(self, fileDir, isPicture=False, isVideo=False):
     r = self.s.post(url, files=files, headers=headers)
     return ReturnValue(rawResponse=r)
 
-def send_file(self, fileDir, mediaId=None, toUserName=None):
+def send_file(self, fileDir, toUserName=None, mediaId=None):
     if toUserName is None: toUserName = self.storageClass.userName
     if mediaId is None:
         r = self.upload_file(fileDir)
@@ -286,7 +286,7 @@ def send_file(self, fileDir, mediaId=None, toUserName=None):
         data=json.dumps(data, ensure_ascii=False).encode('utf8'))
     return ReturnValue(rawResponse=r)
 
-def send_image(self, fileDir, mediaId=None, toUserName=None):
+def send_image(self, fileDir, toUserName=None, mediaId=None):
     if toUserName is None: toUserName = self.storageClass.userName
     if mediaId is None:
         r = self.upload_file(fileDir, isPicture=not fileDir[-4:] == '.gif')
@@ -316,7 +316,7 @@ def send_image(self, fileDir, mediaId=None, toUserName=None):
         data=json.dumps(data, ensure_ascii=False).encode('utf8'))
     return ReturnValue(rawResponse=r)
 
-def send_video(self, fileDir=None, mediaId=None, toUserName=None):
+def send_video(self, fileDir=None, toUserName=None, mediaId=None):
     if toUserName is None: toUserName = self.storageClass.userName
     if mediaId is None:
         r = self.upload_file(fileDir, isVideo=True)
@@ -344,28 +344,28 @@ def send_video(self, fileDir=None, mediaId=None, toUserName=None):
         data=json.dumps(data, ensure_ascii=False).encode('utf8'))
     return ReturnValue(rawResponse=r)
 
-def send(self, msg, toUserName=None, isMediaId=False):
+def send(self, msg, toUserName=None, mediaId=None):
     if not msg:
         r = ReturnValue({'BaseResponse': {
             'ErrMsg': 'No message.',
             'Ret': -1005, }})
     elif msg[:5] == '@fil@':
-        if isMediaId:
-            r = self.send_file(mediaId=msg, toUserName=toUserName)
+        if mediaId is None:
+            r = self.send_file(msg[5:], toUserName)
         else:
-            r = self.send_file(msg[5:], toUserName=toUserName)
+            r = self.send_file(msg[5:], toUserName, mediaId)
     elif msg[:5] == '@img@':
-        if isMediaId:
-            r = self.send_image(mediaId=msg, toUserName=toUserName)
+        if mediaId is None:
+            r = self.send_image(msg[5:], toUserName)
         else:
-            r = self.send_image(msg[5:], toUserName=toUserName)
+            r = self.send_image(msg[5:], toUserName, mediaId)
     elif msg[:5] == '@msg@':
         r = self.send_msg(msg[5:], toUserName)
     elif msg[:5] == '@vid@':
-        if isMediaId:
-            r = self.send_video(mediaId=msg, toUserName=toUserName)
+        if mediaId is None:
+            r = self.send_video(msg[5:], toUserName)
         else:
-            r = self.send_video(msg[5:], toUserName=toUserName)
+            r = self.send_video(msg[5:], toUserName, mediaId)
     else:
         r = self.send_msg(msg, toUserName)
     return r
