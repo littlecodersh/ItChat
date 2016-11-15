@@ -30,7 +30,7 @@ class Core(object):
         self.useHotReload, self.hotReloadDir = False, 'itchat.pkl'
         self.receivingRetryCount = 5
     def login(self, enableCmdQR=False, picDir=None,
-            callback=None, finishCallback=None):
+            loginCallback=None, exitCallback=None):
         ''' log in like web wechat does
             for log in
                 - a QR code will be downloaded and opened
@@ -40,9 +40,9 @@ class Core(object):
                 - enableCmdQR: show qrcode in command line
                     - integers can be used to fit strange char length
                 - picDir: place for storing qrcode
-                - callback: callback after successfully logged in
+                - loginCallback: callback after successfully logged in
                     - if not set, screen is cleared and qrcode is deleted
-                - finishCallback: callback after logged out
+                - exitCallback: callback after logged out
                     - it contains calling of logout
             for usage
                 ..code::python
@@ -355,15 +355,21 @@ class Core(object):
             it is defined in components/hotreload.py
         '''
         raise NotImplementedError()
-    def load_login_status(self, fileDir, callback=None):
+    def load_login_status(self, fileDir,
+            loginCallback=None, exitCallback=None):
         ''' load login status from a specific file
             for option
                 - fileDir: file for loading login status
+                - loginCallback: callback after successfully logged in
+                    - if not set, screen is cleared and qrcode is deleted
+                - exitCallback: callback after logged out
+                    - it contains calling of logout
             it is defined in components/hotreload.py
         '''
         raise NotImplementedError()
     def auto_login(self, hotReload=False, statusStorageDir='itchat.pkl',
-            enableCmdQR=False, picDir=None, callback=None, finishCallback=None):
+            enableCmdQR=False, picDir=None,
+            loginCallback=None, exitCallback=None):
         ''' log in like web wechat does
             for log in
                 - a QR code will be downloaded and opened
@@ -375,9 +381,9 @@ class Core(object):
                 - enableCmdQR: show qrcode in command line
                     - integers can be used to fit strange char length
                 - picDir: place for storing qrcode
-                - callback: callback after successfully logged in
+                - loginCallback: callback after successfully logged in
                     - if not set, screen is cleared and qrcode is deleted
-                - finishCallback: callback after logged out
+                - exitCallback: callback after logged out
                     - it contains calling of logout
             for usage
                 ..code::python

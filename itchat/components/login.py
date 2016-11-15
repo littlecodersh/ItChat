@@ -25,7 +25,7 @@ def load_login(core):
     core.logout            = logout
 
 def login(self, enableCmdQR=False, picDir=None,
-        callback=None, finishCallback=None):
+        loginCallback=None, exitCallback=None):
     if self.alive:
         logger.debug('itchat has already logged in.')
         return
@@ -51,13 +51,13 @@ def login(self, enableCmdQR=False, picDir=None,
     self.web_init()
     self.show_mobile_login()
     self.get_contact(True)
-    if hasattr(callback, '__call__'):
-        r = callback()
+    if hasattr(loginCallback, '__call__'):
+        r = loginCallback()
     else:
         utils.clear_screen()
         os.remove(picDir or config.DEFAULT_QR)
         logger.info('Login successfully as %s' % self.storageClass.nickName)
-    self.start_receiving(finishCallback)
+    self.start_receiving(exitCallback)
 
 def get_QRuuid(self):
     url = '%s/jslogin' % config.BASE_URL
@@ -176,7 +176,7 @@ def show_mobile_login(self):
     r = self.s.post(url, data=json.dumps(data), headers=headers)
     return ReturnValue(rawResponse=r)
 
-def start_receiving(self, finishCallback=None):
+def start_receiving(self, exitCallback=None):
     self.alive = True
     def maintain_loop():
         retryCount = 0
@@ -203,8 +203,8 @@ def start_receiving(self, finishCallback=None):
                 else:
                     time.sleep(1)
         self.logout()
-        if hasattr(finishCallback, '__call__'):
-            finishCallback()
+        if hasattr(exitCallback, '__call__'):
+            exitCallback()
         else:
             logger.info('LOG OUT!')
     maintainThread = threading.Thread(target = maintain_loop)

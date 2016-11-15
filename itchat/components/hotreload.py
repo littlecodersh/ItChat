@@ -29,7 +29,8 @@ def dump_login_status(self, fileDir=None):
         pickle.dump(status, f)
     logger.debug('Dump login status for hot reload successfully.')
 
-def load_login_status(self, fileDir, callback=None):
+def load_login_status(self, fileDir,
+        loginCallback=None, exitCallback=None):
     try:
         with open(fileDir, 'rb') as f:
             j = pickle.load(f)
@@ -55,10 +56,10 @@ def load_login_status(self, fileDir, callback=None):
         if msgList:
             msgList = produce_msg(self, msgList)
             for msg in msgList: self.msgList.put(msg)
-        self.start_receiving()
+        self.start_receiving(exitCallback)
         logger.debug('loading login status succeeded.')
-        if hasattr(callback, '__call__'):
-            callback()
+        if hasattr(loginCallback, '__call__'):
+            loginCallback()
         return ReturnValue({'BaseResponse': {
             'ErrMsg': 'loading login status succeeded.',
             'Ret': 0, }})
