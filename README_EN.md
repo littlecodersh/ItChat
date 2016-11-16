@@ -168,6 +168,46 @@ def download_files(msg):
         f.write(msg['Text']())
 ```
 
+### Multi instance
+
+You may use the following commands to open multi instance.
+
+```python
+import itchat
+
+newInstance = itchat.new_instance()
+newInstance.auto_login(hotReload=True, statusStorageDir='newInstance.pkl')
+
+@newInstance.msg_register(TEXT)
+def reply(msg):
+    return msg['Text']
+
+newInstance.run()
+```
+
+### Set callback after login and logout
+
+Callback of login and logout are set through `loginCallback` and `exitCallback`.
+
+```python
+import time
+
+import itchat
+
+def lc():
+    print('finish login')
+def ec():
+    print('exit')
+
+itchat.auto_login(loginCallback=lc, exitCallback=ec)
+time.sleep(3)
+itchat.logout()
+```
+
+If loginCallback is not set, qr picture will be deleted and cmd will be cleared.
+
+If you exit through phone, exitCallback will also be called.
+
 ## FAQ
 
 Q: Why I can't upload files whose name is not purely english?
@@ -184,7 +224,7 @@ A: There are two ways: communicate with your own account or with filehelper.
 
 Q: Why sometimes I can't send messages?
 
-A: Some account simply can't send messages to yourself, so use `filehelper` instead. Besides, there's limitation in calling api, so set some gap between them.
+A: Some account simply can't send messages to yourself, so use `filehelper` instead.
 
 ## Author
 

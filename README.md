@@ -168,6 +168,46 @@ def download_files(msg):
         f.write(msg['Text']())
 ```
 
+### 用户多开
+
+使用如下命令可以完成多开的操作：
+
+```python
+import itchat
+
+newInstance = itchat.new_instance()
+newInstance.auto_login(hotReload=True, statusStorageDir='newInstance.pkl')
+
+@newInstance.msg_register(TEXT)
+def reply(msg):
+    return msg['Text']
+
+newInstance.run()
+```
+
+### 退出及登陆完成后调用特定方法
+
+登陆完成后的方法需要赋值在`loginCallback`中。
+
+而退出后的方法需要赋值在`exitCallback`中。
+
+```python
+import time
+
+import itchat
+
+def lc():
+    print('finish login')
+def ec():
+    print('exit')
+
+itchat.auto_login(loginCallback=lc, exitCallback=ec)
+time.sleep(3)
+itchat.logout()
+```
+
+若不设置loginCallback的值，则将会自动删除二维码图片并清空命令行显示。
+
 ## 常见问题与解答
 
 Q: 为什么中文的文件没有办法上传？
@@ -184,7 +224,7 @@ A: 有两种方式：发送、接受自己UserName的消息；发送接收文件
 
 Q: 为什么我发送信息的时候部分信息没有成功发出来？
 
-A: 有些账号是天生无法给自己的账号发送信息的，建议使用`filehelper`代替。另外，接口调用是有频率限制，限制一下连续发送信息之间的时间间隔即可。
+A: 有些账号是天生无法给自己的账号发送信息的，建议使用`filehelper`代替。
 
 ## 作者
 
