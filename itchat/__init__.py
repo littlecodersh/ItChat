@@ -2,7 +2,7 @@ from .core import Core
 from . import content
 from .log import set_logging
 
-__version__ = '1.2.0'
+__version__ = '1.2.3'
 
 instanceList = []
 
@@ -34,6 +34,7 @@ get_friends                 = originInstance.get_friends
 get_chatrooms               = originInstance.get_chatrooms
 get_mps                     = originInstance.get_mps
 set_alias                   = originInstance.set_alias
+set_pinned                  = originInstance.set_pinned
 add_friend                  = originInstance.add_friend
 get_head_img                = originInstance.get_head_img
 create_chatroom             = originInstance.create_chatroom

@@ -190,7 +190,8 @@ def start_receiving(self, exitCallback=None):
                 else:
                     msgList, contactList = self.get_msg()
                     if contactList:
-                        update_local_chatrooms(self, contactList)
+                        chatroomMsg = update_local_chatrooms(self, contactList)
+                        self.msgList.put(chatroomMsg)
                     if msgList:
                         msgList = produce_msg(self, msgList)
                         for msg in msgList: self.msgList.put(msg)

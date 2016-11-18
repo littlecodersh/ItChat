@@ -1,4 +1,4 @@
-import os, time, re
+import os, time, re, io
 import json
 import mimetypes
 import traceback, logging
@@ -7,6 +7,7 @@ import requests
 
 from .. import config, utils
 from ..returnvalues import ReturnValue
+from .contact import update_local_uin
 
 logger = logging.getLogger('itchat')
 
@@ -89,14 +90,14 @@ def produce_msg(core, msgList):
                 'Text': m['RecommendInfo'], }
         elif m['MsgType'] == 49: # sharing
             if m['AppMsgType'] == 6:
-                msg = m
+                rawMsg = m
                 cookiesList = {name:data for name,data in core.s.cookies.items()}
                 def download_atta(attaDir=None):
                     url = core.loginInfo['fileUrl'] + '/webwxgetmedia'
                     params = {
-                        'sender': msg['FromUserName'],
-                        'mediaid': msg['MediaId'],
-                        'filename': msg['FileName'],
+                        'sender': rawMsg['FromUserName'],
+                        'mediaid': rawMsg['MediaId'],
+                        'filename': rawMsg['FileName'],
                         'fromuser': core.loginInfo['wxuin'],
                         'pass_ticket': 'undefined',
                         'webwx_data_ticket': cookiesList['webwx_data_ticket'],}
@@ -132,9 +133,13 @@ def produce_msg(core, msgList):
                     'Type': 'Sharing',
                     'Text': m['FileName'], }
         elif m['MsgType'] == 51: # phone init
+            update_local_uin(core, m)
+            userNameList = filter(lambda x: '@' in x,
+                m.get('StatusNotifyUserName', '').split(','))
             msg = {
-                'Type': 'Init',
-                'Text': m['ToUserName'], }
+                'Type': 'System',
+                'Text': userNameList, 
+                'SystemInfo': 'uins', }
         elif m['MsgType'] == 62: # tiny video
             msgId = m['MsgId']
             def download_video(videoDir=None):
@@ -182,7 +187,9 @@ def produce_msg(core, msgList):
 
 def produce_group_chat(core, msg):
     r = re.match('(@[0-9a-z]*?):<br/>(.*)$', msg['Content'])
-    if not r: return
+    if not r:
+        utils.msg_formatter(msg, 'Content')
+        return
     actualUserName, content = r.groups()
     chatroom = core.storageClass.search_chatrooms(userName=msg['FromUserName'])
     member = utils.search_dict_list((chatroom or {}).get(

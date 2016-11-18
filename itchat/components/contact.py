@@ -16,6 +16,7 @@ def load_contact(core):
     core.get_chatrooms               = get_chatrooms
     core.get_mps                     = get_mps
     core.set_alias                   = set_alias
+    core.set_pinned                  = set_pinned
     core.add_friend                  = add_friend
     core.get_head_img                = get_head_img
     core.create_chatroom             = create_chatroom
@@ -102,7 +103,7 @@ def update_local_chatrooms(core, l):
             # ready for deletion
             oldUsernameList.append(oldChatroom['UserName'])
         # update OwnerUin
-        if chatroom.get('ChatRoomOwner'):
+        if chatroom.get('ChatRoomOwner') and chatroom.get('MemberList'):
             chatroom['OwnerUin'] = utils.search_dict_list(
                 chatroom['MemberList'], 'UserName', chatroom['ChatRoomOwner'])['Uin']
         # update isAdmin
@@ -121,6 +122,44 @@ def update_local_chatrooms(core, l):
     # add new chatrooms
     for chatroom in l:
         core.chatroomList.append(chatroom)
+    return {
+        'Type'         : 'System',
+        'Text'         : [chatroom['UserName'] for chatroom in l],
+        'SystemInfo'   : 'chatrooms',
+        'FromUserName' : core.storageClass.userName,
+        'ToUserName'   : core.storageClass.userName, }
+
+def update_local_uin(core, msg):
+    uins = re.search('<username>([^<]*?)<', msg['Content'])
+    if uins:
+        uins = uins.group(1).split(',')
+        usernames = msg['StatusNotifyUserName'].split(',')
+        if 0 < len(uins) == len(usernames):
+            for uin, username in zip(uins, usernames):
+                if not '@' in username: continue
+                fullContact = core.memberList + core.chatroomList + core.mpList
+                userDicts = utils.search_dict_list(fullContact,
+                    'UserName', username)
+                if userDicts:
+                    if userDicts.get('Uin', 0) not in (0, uin):
+                        logger.debug('Uin changed: %s, %s' % (
+                            userDicts['Uin'], uin))
+                    userDicts['Uin'] = uin
+                else:
+                    if '@@' in username:
+                        logger.debug('Struct username: %s' % username)
+                        structedUserDict = utils.struct_friend_info({
+                            'Uin': uin,
+                            'UserName': username, })
+                        core.chatroomList.append(structedUserDict)
+                    elif '@' in username:
+                        logger.debug('mp or friend detected but not found locally')
+        else:
+            logger.debug('Wrong length of uins & usernames: %s, %s' % (
+                len(uins), len(usernames)))
+    else:
+        logger.debug('No uins in 51 message')
+        logger.debug(msg['Content'])
 
 def get_contact(self, update=False):
     if not update: return copy.deepcopy(self.chatroomList)
@@ -184,6 +223,18 @@ def set_alias(self, userName, alias):
     headers = { 'User-Agent' : config.USER_AGENT }
     r = self.s.post(url, json.dumps(data, ensure_ascii=False).encode('utf8'),
         headers=headers)
+    return ReturnValue(rawResponse=r)
+
+def set_pinned(self, userName, isPinned=True):
+    url = '%s/webwxoplog?pass_ticket=%s' % (
+        self.loginInfo['url'], self.loginInfo['pass_ticket'])
+    data = {
+        'UserName'    : userName,
+        'CmdId'       : 3,
+        'OP'          : int(isPinned),
+        'BaseRequest' : self.loginInfo['BaseRequest'], }
+    headers = { 'User-Agent' : config.USER_AGENT }
+    r = self.s.post(url, json=data, headers=headers)
     return ReturnValue(rawResponse=r)
 
 def add_friend(self, userName, status=2, ticket='', userInfo={}):
@@ -309,7 +360,7 @@ def add_member_into_chatroom(self, chatroomUserName, memberList,
     if useInvitation:
         fun, memberKeyName = 'invitemember', 'InviteMemberList'
     else:
-        fun, memberKeyName = 'addmember', 'AddMsgList'
+        fun, memberKeyName = 'addmember', 'AddMemberList'
     url = '%s/webwxupdatechatroom?fun=%s&pass_ticket=%s' % (
         self.loginInfo['url'], fun, self.loginInfo['pass_ticket'])
     params = {

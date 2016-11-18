@@ -201,6 +201,14 @@ class Core(object):
             it is defined in components/contact.py
         '''
         raise NotImplementedError()
+    def set_pinned(self, userName, isPinned=True):
+        ''' set pinned for a friend or a chatroom
+            for options
+                - userName: 'UserName' key of info dict
+                - isPinned: whether to pin
+            it is defined in components/contact.py
+        '''
+        raise NotImplementedError()
     def add_friend(self, userName, status=2, ticket='', userInfo={}):
         ''' add a friend or accept a friend
             for options
