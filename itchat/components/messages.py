@@ -83,7 +83,7 @@ def produce_msg(core, msgList):
                     'status'        : m['Status'],
                     'userName'      : m['RecommendInfo']['UserName'],
                     'ticket'        : m['Ticket'],
-                    'userInfo' : m['RecommendInfo'], }, }
+                    'userInfo'      : m['RecommendInfo'], }, }
         elif m['MsgType'] == 42: # name card
             msg = {
                 'Type': 'Card',

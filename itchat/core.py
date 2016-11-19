@@ -148,8 +148,17 @@ class Core(object):
                     - member uin will also be filled
                 - once called, updated info will be stored
             for options
-                - userName: 'UserName' key of chatroom
+                - userName: 'UserName' key of chatroom or a list of it
                 - detailedMember: whether to get members of contact
+            it is defined in components/contact.py
+        '''
+        raise NotImplementedError()
+    def update_friend(self, userName):
+        ''' update chatroom
+            for friend contact
+                - once called, updated info will be stored
+            for options
+                - userName: 'UserName' key of a friend or a list of it
             it is defined in components/contact.py
         '''
         raise NotImplementedError()

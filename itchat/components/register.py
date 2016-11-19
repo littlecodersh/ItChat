@@ -70,7 +70,7 @@ def msg_register(self, msgType, isFriendChat=False, isGroupChat=False, isMpChat=
                 self.functionDict['FriendChat'][_msgType] = fn
     return _msg_register
 
-def run(self, debug=True):
+def run(self, debug=False):
     logger.info('Start auto replying.')
     if debug:
         set_logging(loggingLevel=logging.DEBUG)

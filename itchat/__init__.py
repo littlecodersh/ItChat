@@ -2,7 +2,7 @@ from .core import Core
 from . import content
 from .log import set_logging
 
-__version__ = '1.2.3'
+__version__ = '1.2.5'
 
 instanceList = []
 
@@ -29,6 +29,7 @@ get_msg                     = originInstance.get_msg
 logout                      = originInstance.logout
 # components.contact
 update_chatroom             = originInstance.update_chatroom
+update_friend               = originInstance.update_friend
 get_contact                 = originInstance.get_contact
 get_friends                 = originInstance.get_friends
 get_chatrooms               = originInstance.get_chatrooms
