@@ -269,7 +269,9 @@ def set_alias(self, userName, alias):
     headers = { 'User-Agent' : config.USER_AGENT }
     r = self.s.post(url, json.dumps(data, ensure_ascii=False).encode('utf8'),
         headers=headers)
-    return ReturnValue(rawResponse=r)
+    r = ReturnValue(rawResponse=r)
+    if r: oldFriendInfo['RemarkName'] = alias
+    return r
 
 def set_pinned(self, userName, isPinned=True):
     url = '%s/webwxoplog?pass_ticket=%s' % (
