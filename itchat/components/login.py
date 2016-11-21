@@ -262,7 +262,8 @@ def logout(self):
         self.alive = False
     self.s.cookies.clear()
     del self.chatroomList[:]
-    # other info will be automatically cleared
+    del self.memberList[:]
+    del self.mpList[:]
     return ReturnValue({'BaseResponse': {
         'ErrMsg': 'logout successfully.',
         'Ret': 0, }})

@@ -39,20 +39,26 @@ def configured_reply(self):
     except Queue.Empty:
         pass
     else:
-        if '@@' in msg['FromUserName']:
+        if msg['FromUserName'] == self.storageClass.userName:
+            actualOpposite = msg['ToUserName']
+        else:
+            actualOpposite = msg['FromUserName']
+        if '@@' in actualOpposite:
             replyFn = self.functionDict['GroupChat'].get(msg['Type'])
         elif self.search_mps(userName=msg['FromUserName']):
             replyFn = self.functionDict['MpChat'].get(msg['Type'])
-        else:
+        elif '@' in actualOpposite or 'filehelper' == actualOpposite:
             replyFn = self.functionDict['FriendChat'].get(msg['Type'])
+        else:
+            replyFn = self.functionDict['MpChat'].get(msg['Type'])
         if replyFn is None:
             r = None
         else:
-            r = replyFn(msg)
-        try:
-            if r is not None: self.send(r, msg.get('FromUserName'))
-        except:
-            logger.debug(traceback.format_exc())
+            try:
+                r = replyFn(msg)
+                if r is not None: self.send(r, msg.get('FromUserName'))
+            except:
+                logger.debug(traceback.format_exc())
 
 def msg_register(self, msgType, isFriendChat=False, isGroupChat=False, isMpChat=False):
     ''' a decorator constructor

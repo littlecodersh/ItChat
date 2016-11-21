@@ -156,14 +156,18 @@ def update_local_chatrooms(core, l):
         'ToUserName'   : core.storageClass.userName, }
 
 def update_local_friends(core, l):
+    fullList = core.memberList + core.mpList
     for friend in l:
         oldInfoDict = utils.search_dict_list(
-            core.memberList, 'UserName', friend['UserName'])
+            fullList, 'UserName', friend['UserName'])
         if oldInfoDict is None:
             oldInfoDict = copy.deepcopy(friend)
             utils.emoji_formatter(oldInfoDict, 'NickName')
             utils.emoji_formatter(oldInfoDict, 'DisplayName')
-            core.memberList.append(oldInfoDict)
+            if oldInfoDict['VerifyFlag'] & 8 == 0:
+                core.memberList.append(oldInfoDict)
+            else:
+                core.mpList.append(oldInfoDict)
         else:
             for k, v in friend.items():
                 if oldInfoDict.get(k) is None:
@@ -194,7 +198,10 @@ def update_local_uin(core, msg):
                             core.chatroomList, 'UserName', username)
                         newChatroomDict['Uin'] = uin
                     elif '@' in username:
-                        logger.debug('mp or friend detected but not found locally')
+                        update_friend(core, username)
+                        newFriendDict = utils.search_dict_list(
+                            core.memberList, 'UserName', username)
+                        newFriendDict['Uin'] = uin
         else:
             logger.debug('Wrong length of uins & usernames: %s, %s' % (
                 len(uins), len(usernames)))
@@ -211,31 +218,18 @@ def get_contact(self, update=False):
         'User-Agent' : config.USER_AGENT, }
     r = self.s.get(url, headers=headers)
     tempList = json.loads(r.content.decode('utf-8', 'replace'))['MemberList']
-    del self.memberList[:]
-    del self.mpList[:]
-    chatroomList = []
-    # chatroomList will not be cleared because:
-    # when initializing, it's cleared once
-    # when updating, there's not need for clearing
-    self.memberList.append(self.loginInfo['User'])
+    chatroomList, otherList = [], []
     for m in tempList:
         utils.emoji_formatter(m, 'NickName')
         if m['Sex'] != 0:
-            self.memberList.append(m)
-        elif not (any([str(n) in m['UserName'] for n in range(10)]) and
-                any([chr(n) in m['UserName'] for n in (
-                list(range(ord('a'), ord('z') + 1)) +
-                list(range(ord('A'), ord('Z') + 1)))])):
-            continue # userName have number and str
+            otherList.append(m)
         elif '@@' in m['UserName']:
-            m['isAdmin'] = None # this value will be set after update_chatroom
             chatroomList.append(m)
         elif '@' in m['UserName']:
-            if m['VerifyFlag'] & 8 == 0:
-                update_local_friends(self, [m])
-            else:
-                self.mpList.append(m)
+            # mp will be dealt in update_local_friends as well
+            otherList.append(m)
     if chatroomList: update_local_chatrooms(self, chatroomList)
+    if otherList: update_local_friends(self, otherList)
     return copy.deepcopy(chatroomList)
 
 def get_friends(self, update=False):
