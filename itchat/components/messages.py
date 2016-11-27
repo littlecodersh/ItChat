@@ -66,7 +66,7 @@ def produce_msg(core, msgList):
                 '%s/webwxgetmsgimg' % core.loginInfo['url'], m['NewMsgId'])
             msg = {
                 'Type'     : 'Picture',
-                'FileName' : '%s.%s'%(time.strftime('%y%m%d-%H%M%S', time.localtime()),
+                'FileName' : '%s.%s' % (time.strftime('%y%m%d-%H%M%S', time.localtime()),
                     'png' if m['MsgType'] == 3 else 'gif'),
                 'Text'     : download_fn, }
         elif m['MsgType'] == 34: # voice
@@ -114,6 +114,14 @@ def produce_msg(core, msgList):
                 msg = {
                     'Type': 'Attachment',
                     'Text': download_atta, }
+            elif m['AppMsgType'] == 8:
+                download_fn = get_download_fn(core, 
+                    '%s/webwxgetmsgimg' % core.loginInfo['url'], m['NewMsgId'])
+                msg = {
+                    'Type'     : 'Picture',
+                    'FileName' : '%s.gif' % (
+                        time.strftime('%y%m%d-%H%M%S', time.localtime())),
+                    'Text'     : download_fn, }
             elif m['AppMsgType'] == 17:
                 msg = {
                     'Type': 'Note',
