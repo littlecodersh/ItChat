@@ -141,13 +141,7 @@ def produce_msg(core, msgList):
                     'Type': 'Sharing',
                     'Text': m['FileName'], }
         elif m['MsgType'] == 51: # phone init
-            update_local_uin(core, m)
-            userNameList = filter(lambda x: '@' in x,
-                m.get('StatusNotifyUserName', '').split(','))
-            msg = {
-                'Type': 'System',
-                'Text': userNameList, 
-                'SystemInfo': 'uins', }
+            msg = update_local_uin(core, m)
         elif m['MsgType'] == 62: # tiny video
             msgId = m['MsgId']
             def download_video(videoDir=None):
