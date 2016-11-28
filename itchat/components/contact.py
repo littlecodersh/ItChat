@@ -177,6 +177,11 @@ def update_local_friends(core, l):
 
 def update_local_uin(core, msg):
     uins = re.search('<username>([^<]*?)<', msg['Content'])
+    usernameChangedList = []
+    r = {
+        'Type': 'System',
+        'Text': usernameChangedList, 
+        'SystemInfo': 'uins', }
     if uins:
         uins = uins.group(1).split(',')
         usernames = msg['StatusNotifyUserName'].split(',')
@@ -187,10 +192,14 @@ def update_local_uin(core, msg):
                 userDicts = utils.search_dict_list(fullContact,
                     'UserName', username)
                 if userDicts:
-                    if userDicts.get('Uin', 0) not in (0, uin):
-                        logger.debug('Uin changed: %s, %s' % (
-                            userDicts['Uin'], uin))
-                    userDicts['Uin'] = uin
+                    if userDicts.get('Uin', 0) == 0:
+                        userDicts['Uin'] = uin
+                        usernameChangedList.append(username)
+                        logger.debug('Uin fetched: %s, %s' % (username, uin))
+                    else:
+                        if userDicts['Uin'] != uin:
+                            logger.debug('Uin changed: %s, %s' % (
+                                userDicts['Uin'], uin))
                 else:
                     if '@@' in username:
                         update_chatroom(core, username)
@@ -202,12 +211,15 @@ def update_local_uin(core, msg):
                         newFriendDict = utils.search_dict_list(
                             core.memberList, 'UserName', username)
                         newFriendDict['Uin'] = uin
+                    usernameChangedList.append(username)
+                    logger.debug('Uin fetched: %s, %s' % (username, uin))
         else:
             logger.debug('Wrong length of uins & usernames: %s, %s' % (
                 len(uins), len(usernames)))
     else:
         logger.debug('No uins in 51 message')
         logger.debug(msg['Content'])
+    return r
 
 def get_contact(self, update=False):
     if not update: return copy.deepcopy(self.chatroomList)
