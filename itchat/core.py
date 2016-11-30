@@ -218,7 +218,7 @@ class Core(object):
             it is defined in components/contact.py
         '''
         raise NotImplementedError()
-    def add_friend(self, userName, status=2, ticket='', userInfo={}):
+    def add_friend(self, userName, status=2, verifyContent='', autoUpdate=True):
         ''' add a friend or accept a friend
             for options
                 - userName: 'UserName' for friend's info dict

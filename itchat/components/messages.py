@@ -82,8 +82,8 @@ def produce_msg(core, msgList):
                 'Text': {
                     'status'        : m['Status'],
                     'userName'      : m['RecommendInfo']['UserName'],
-                    'ticket'        : m['Ticket'],
-                    'userInfo'      : m['RecommendInfo'], }, }
+                    'verifyContent' : m['Ticket'],
+                    'autoUpdate'    : m['RecommendInfo'], }, }
         elif m['MsgType'] == 42: # name card
             msg = {
                 'Type': 'Card',

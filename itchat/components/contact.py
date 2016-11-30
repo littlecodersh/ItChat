@@ -291,7 +291,7 @@ def set_pinned(self, userName, isPinned=True):
     r = self.s.post(url, json=data, headers=headers)
     return ReturnValue(rawResponse=r)
 
-def add_friend(self, userName, status=2, ticket='', userInfo={}):
+def add_friend(self, userName, status=2, verifyContent='', autoUpdate=True):
     ''' Add a friend or accept a friend
         * for adding status should be 2
         * for accepting status should be 3
@@ -304,8 +304,8 @@ def add_friend(self, userName, status=2, ticket='', userInfo={}):
         'VerifyUserListSize': 1,
         'VerifyUserList': [{
             'Value': userName,
-            'VerifyUserTicket': ticket, }], # ''
-        'VerifyContent': '',
+            'VerifyUserTicket': '', }], 
+        'VerifyContent': verifyContent,
         'SceneListCount': 1,
         'SceneList': 33, # [33]
         'skey': self.loginInfo['skey'], }
@@ -313,8 +313,7 @@ def add_friend(self, userName, status=2, ticket='', userInfo={}):
         'ContentType': 'application/json; charset=UTF-8',
         'User-Agent' : config.USER_AGENT }
     r = self.s.post(url, data=json.dumps(data), headers=headers)
-    if userInfo: # add user to storage
-        self.memberList.append(utils.struct_friend_info(userInfo))
+    if autoUpdate: self.update_friend(userName)
     return ReturnValue(rawResponse=r)
 
 def get_head_img(self, userName=None, chatroomUserName=None, picDir=None):

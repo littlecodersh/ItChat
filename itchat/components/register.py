@@ -47,7 +47,8 @@ def configured_reply(self):
             replyFn = self.functionDict['GroupChat'].get(msg['Type'])
         elif self.search_mps(userName=msg['FromUserName']):
             replyFn = self.functionDict['MpChat'].get(msg['Type'])
-        elif '@' in actualOpposite or 'filehelper' == actualOpposite:
+        elif '@' in actualOpposite or \
+                actualOpposite in ('filehelper', 'fmessage'):
             replyFn = self.functionDict['FriendChat'].get(msg['Type'])
         else:
             replyFn = self.functionDict['MpChat'].get(msg['Type'])
