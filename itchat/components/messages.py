@@ -231,10 +231,13 @@ def send_raw_msg(self, msgType, content, toUserName):
     return ReturnValue(rawResponse=r)
 
 def send_msg(self, msg='Test Message', toUserName=None):
+    logger.debug('Request to send a text message to %s: %s' % (toUserName, msg))
     r = self.send_raw_msg(1, msg, toUserName)
     return r
 
 def upload_file(self, fileDir, isPicture=False, isVideo=False):
+    logger.debug('Request to upload a %s: %s' % (
+        'picture' if isPicture else 'video' if isVideo else 'file', fileDir))
     if not utils.check_file(fileDir):
         return ReturnValue({'BaseResponse': {
             'ErrMsg': 'No file found in specific dir',
@@ -267,6 +270,8 @@ def upload_file(self, fileDir, isPicture=False, isVideo=False):
     return ReturnValue(rawResponse=r)
 
 def send_file(self, fileDir, toUserName=None, mediaId=None):
+    logger.debug('Request to send a file(mediaId: %s) to %s: %s' % (
+        mediaId, toUserName, fileDir))
     if toUserName is None: toUserName = self.storageClass.userName
     if mediaId is None:
         r = self.upload_file(fileDir)
@@ -296,6 +301,8 @@ def send_file(self, fileDir, toUserName=None, mediaId=None):
     return ReturnValue(rawResponse=r)
 
 def send_image(self, fileDir, toUserName=None, mediaId=None):
+    logger.debug('Request to send a image(mediaId: %s) to %s: %s' % (
+        mediaId, toUserName, fileDir))
     if toUserName is None: toUserName = self.storageClass.userName
     if mediaId is None:
         r = self.upload_file(fileDir, isPicture=not fileDir[-4:] == '.gif')
@@ -326,6 +333,8 @@ def send_image(self, fileDir, toUserName=None, mediaId=None):
     return ReturnValue(rawResponse=r)
 
 def send_video(self, fileDir=None, toUserName=None, mediaId=None):
+    logger.debug('Request to send a video(mediaId: %s) to %s: %s' % (
+        mediaId, toUserName, fileDir))
     if toUserName is None: toUserName = self.storageClass.userName
     if mediaId is None:
         r = self.upload_file(fileDir, isVideo=True)

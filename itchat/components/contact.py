@@ -98,6 +98,10 @@ def update_friend(self, userName):
     return r if 1 < len(r) else r[0]
 
 def update_local_chatrooms(core, l):
+    '''
+        get a list of chatrooms for updating local chatrooms
+        return a list of given chatrooms with updated info
+    '''
     oldUsernameList = []
     for chatroom in l:
         # format NickName & DisplayName & self keys
@@ -119,6 +123,7 @@ def update_local_chatrooms(core, l):
                     oldMember = utils.search_dict_list(
                         oldMemberList, 'UserName', member['UserName'])
                     if oldMember is not None:
+                        #TODO
                         for k in oldMember:
                             member[k] = member.get(k) or oldMember[k]
             else:
@@ -158,12 +163,12 @@ def update_local_chatrooms(core, l):
 def update_local_friends(core, l):
     fullList = core.memberList + core.mpList
     for friend in l:
+        utils.emoji_formatter(friend, 'NickName')
+        utils.emoji_formatter(friend, 'DisplayName')
         oldInfoDict = utils.search_dict_list(
             fullList, 'UserName', friend['UserName'])
         if oldInfoDict is None:
             oldInfoDict = copy.deepcopy(friend)
-            utils.emoji_formatter(oldInfoDict, 'NickName')
-            utils.emoji_formatter(oldInfoDict, 'DisplayName')
             if oldInfoDict['VerifyFlag'] & 8 == 0:
                 core.memberList.append(oldInfoDict)
             else:
@@ -176,6 +181,10 @@ def update_local_friends(core, l):
                     oldInfoDict[k] = v
 
 def update_local_uin(core, msg):
+    '''
+        content contains uins and StatusNotifyUserName contains username
+        they are in same order, so what I do is to pair them together
+    '''
     uins = re.search('<username>([^<]*?)<', msg['Content'])
     usernameChangedList = []
     r = {
@@ -232,7 +241,6 @@ def get_contact(self, update=False):
     tempList = json.loads(r.content.decode('utf-8', 'replace'))['MemberList']
     chatroomList, otherList = [], []
     for m in tempList:
-        utils.emoji_formatter(m, 'NickName')
         if m['Sex'] != 0:
             otherList.append(m)
         elif '@@' in m['UserName']:

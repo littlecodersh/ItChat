@@ -159,6 +159,7 @@ def web_init(self):
         for item in dic['SyncKey']['List']])
     self.storageClass.userName = dic['User']['UserName']
     self.storageClass.nickName = dic['User']['NickName']
+    self.memberList.append(dic['User'])
     return dic
 
 def show_mobile_login(self):
@@ -190,7 +191,13 @@ def start_receiving(self, exitCallback=None):
                 else:
                     msgList, contactList = self.get_msg()
                     if contactList:
-                        chatroomMsg = update_local_chatrooms(self, contactList)
+                        chatroomList, otherList = [], []
+                        for contact in contactList:
+                            if '@@' in contact['UserName']:
+                                chatroomList.append(contact)
+                            else:
+                                otherList.append(contact)
+                        chatroomMsg = update_local_chatrooms(self, chatroomList)
                         self.msgList.put(chatroomMsg)
                     if msgList:
                         msgList = produce_msg(self, msgList)
