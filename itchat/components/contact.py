@@ -97,62 +97,58 @@ def update_friend(self, userName):
         for f in friendList]
     return r if 1 < len(r) else r[0]
 
+def update_info_dict(oldInfoDict, newInfoDict):
+    '''
+        only normal values will be updated here
+    '''
+    for k, v in newInfoDict.items():
+        if any((isinstance(v, t) for t in (tuple, list, dict))):
+            pass # these values will be updated somewhere else
+        elif oldInfoDict.get(k) is None or v not in (None, '', '0', 0):
+            oldInfoDict[k] = v
+
 def update_local_chatrooms(core, l):
     '''
         get a list of chatrooms for updating local chatrooms
         return a list of given chatrooms with updated info
     '''
-    oldUsernameList = []
     for chatroom in l:
-        # format NickName & DisplayName & self keys
+        # format new chatrooms
         utils.emoji_formatter(chatroom, 'NickName')
         for member in chatroom['MemberList']:
-            if core.storageClass.userName == member['UserName']:
-                chatroom['self'] = member
             utils.emoji_formatter(member, 'NickName')
             utils.emoji_formatter(member, 'DisplayName')
-        # get useful information from old version of this chatroom
+            if core.storageClass.userName == member['UserName']:
+                chatroom['self'] = member
+        # update it to old chatrooms
         oldChatroom = utils.search_dict_list(
             core.chatroomList, 'UserName', chatroom['UserName'])
-        if oldChatroom is not None:
-            memberList, oldMemberList = \
-                chatroom['MemberList'], oldChatroom['MemberList']
-            # update member list
+        if oldChatroom:
+            update_info_dict(oldChatroom, chatroom)
+            #  - update other values
+            memberList, oldMemberList = (c.get('MemberList', [])
+                    for c in (chatroom, oldChatroom))
             if memberList:
                 for member in memberList:
                     oldMember = utils.search_dict_list(
                         oldMemberList, 'UserName', member['UserName'])
-                    if oldMember is not None:
-                        #TODO
-                        for k in oldMember:
-                            member[k] = member.get(k) or oldMember[k]
-            else:
-                chatroom['MemberList'] = oldMemberList
-            # update other info
-            for k in oldChatroom:
-                chatroom[k] = chatroom.get(k) or oldChatroom[k]
-            # ready for deletion
-            oldUsernameList.append(oldChatroom['UserName'])
-        # update OwnerUin
-        if chatroom.get('ChatRoomOwner') and chatroom.get('MemberList'):
-            chatroom['OwnerUin'] = utils.search_dict_list(
-                chatroom['MemberList'], 'UserName', chatroom['ChatRoomOwner'])['Uin']
-        # update isAdmin
-        if 'OwnerUin' in chatroom and chatroom['OwnerUin'] != 0:
-            chatroom['isAdmin'] = \
-                chatroom['OwnerUin'] == int(core.loginInfo['wxuin'])
+                    if oldMember:
+                        update_info_dict(oldMember, member)
+                    else:
+                        oldMemberList.append(member)
         else:
-            chatroom['isAdmin'] = None
-    # delete old chatrooms
-    oldIndexList = []
-    for i, chatroom in enumerate(core.chatroomList):
-        if chatroom['UserName'] in oldUsernameList:
-            oldIndexList.append(i)
-    oldIndexList.sort(reverse=True)
-    for i in oldIndexList: del core.chatroomList[i]
-    # add new chatrooms
-    for chatroom in l:
-        core.chatroomList.append(chatroom)
+            oldChatroom = chatroom
+            core.chatroomList.append(chatroom)
+        #  - update OwnerUin
+        if oldChatroom.get('ChatRoomOwner') and oldChatroom.get('MemberList'):
+            oldChatroom['OwnerUin'] = utils.search_dict_list(oldChatroom['MemberList'],
+                'UserName', oldChatroom['ChatRoomOwner']).get('Uin', 0)
+        #  - update isAdmin
+        if 'OwnerUin' in oldChatroom and oldChatroom['OwnerUin'] != 0:
+            oldChatroom['isAdmin'] = \
+                oldChatroom['OwnerUin'] == int(core.loginInfo['wxuin'])
+        else:
+            oldChatroom['isAdmin'] = None
     return {
         'Type'         : 'System',
         'Text'         : [chatroom['UserName'] for chatroom in l],
@@ -174,16 +170,15 @@ def update_local_friends(core, l):
             else:
                 core.mpList.append(oldInfoDict)
         else:
-            for k, v in friend.items():
-                if oldInfoDict.get(k) is None:
-                    oldInfoDict[k] = v
-                elif v not in ('', '0', 0):
-                    oldInfoDict[k] = v
+            update_info_dict(oldInfoDict, friend)
 
 def update_local_uin(core, msg):
     '''
         content contains uins and StatusNotifyUserName contains username
         they are in same order, so what I do is to pair them together
+
+        I caught an exception in this method while not knowing why
+        but don't worry, it won't cause any problem
     '''
     uins = re.search('<username>([^<]*?)<', msg['Content'])
     usernameChangedList = []

@@ -2,7 +2,7 @@ from .core import Core
 from . import content
 from .log import set_logging
 
-__version__ = '1.2.7'
+__version__ = '1.2.9'
 
 instanceList = []
 
