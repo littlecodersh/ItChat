@@ -126,7 +126,7 @@ def update_local_chatrooms(core, l):
         if oldChatroom:
             update_info_dict(oldChatroom, chatroom)
             #  - update other values
-            oldChatroom['self'] = chatroom['self']
+            if chatroom.has_key('self'): oldChatroom['self'] = chatroom['self']
             memberList, oldMemberList = (c.get('MemberList', [])
                     for c in (chatroom, oldChatroom))
             if memberList:
