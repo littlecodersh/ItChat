@@ -1,4 +1,4 @@
-import os, sys, time, re
+import os, sys, time, re, io
 import threading
 import json, xml.dom.minidom
 import copy, pickle, random
@@ -24,7 +24,7 @@ def load_login(core):
     core.get_msg           = get_msg
     core.logout            = logout
 
-def login(self, enableCmdQR=False, picDir=None,
+def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
         loginCallback=None, exitCallback=None):
     if self.alive:
         logger.debug('itchat has already logged in.')
@@ -34,19 +34,28 @@ def login(self, enableCmdQR=False, picDir=None,
             logger.info('Getting uuid of QR code.')
             while not self.get_QRuuid(): time.sleep(1)
             logger.info('Downloading QR code.')
-            if self.get_QR(enableCmdQR=enableCmdQR, picDir=picDir):
+            qrStorage = self.get_QR(enableCmdQR=enableCmdQR,
+                picDir=picDir, qrCallback=qrCallback)
+            if qrStorage:
                 break
             elif 9 == getCount:
                 logger.info('Failed to get QR code, please restart the program.')
                 sys.exit()
         logger.info('Please scan the QR code to log in.')
-        status = self.check_login()
-        if status == '201':
-            logger.info('Please press confirm on your phone.')
-            while status == '201':
-                status = self.check_login()
-                time.sleep(1)
-        if status == '200': break
+        isLoggedIn = False
+        while not isLoggedIn:
+            status = self.check_login()
+            if hasattr(qrCallback, '__call__'):
+                qrCallback(uuid=self.uuid, status=status, qrcode=qrStorage.getvalue())
+            if status == '200':
+                isLoggedIn = True
+            elif status == '201':
+                if isLoggedIn is not None:
+                    logger.info('Please press confirm on your phone.')
+                    isLoggedIn = None
+            elif status != '408':
+                break
+        if isLoggedIn: break
         logger.info('Log in time out, reloading QR code')
     self.web_init()
     self.show_mobile_login()
@@ -72,26 +81,32 @@ def get_QRuuid(self):
         self.uuid = data.group(2)
         return self.uuid
 
-def get_QR(self, uuid=None, enableCmdQR=False, picDir=None):
+def get_QR(self, uuid=None, enableCmdQR=False, picDir=None, qrCallback=None):
+    uuid = uuid or self.uuid
+    picDir = picDir or config.DEFAULT_QR
+    url = '%s/qrcode/%s' % (config.BASE_URL, uuid)
+    headers = { 'User-Agent' : config.USER_AGENT }
     try:
-        uuid = uuid or self.uuid
-        picDir = picDir or config.DEFAULT_QR
-        url = '%s/qrcode/%s' % (config.BASE_URL, uuid)
-        headers = { 'User-Agent' : config.USER_AGENT }
         r = self.s.get(url, stream=True, headers=headers)
-        with open(picDir, 'wb') as f: f.write(r.content)
     except:
         return False
-    if enableCmdQR:
-        utils.print_cmd_qr(picDir, enableCmdQR = enableCmdQR)
+    qrStorage = io.BytesIO(r.content)
+    if hasattr(qrCallback, '__call__'):
+        qrCallback(uuid=uuid, status='0', qrcode=qrStorage.getvalue())
     else:
-        utils.print_qr(picDir)
-    return True
+        with open(picDir, 'wb') as f: f.write(r.content)
+        if enableCmdQR:
+            utils.print_cmd_qr(picDir, enableCmdQR=enableCmdQR)
+        else:
+            utils.print_qr(picDir)
+    return qrStorage
 
 def check_login(self, uuid=None):
     uuid = uuid or self.uuid
     url = '%s/cgi-bin/mmwebwx-bin/login' % config.BASE_URL
-    params = 'tip=1&uuid=%s&_=%s' % (uuid, int(time.time()))
+    localTime = int(time.time())
+    params = 'loginicon=true&uuid=%s&tip=0&r=%s&_=%s' % (
+        uuid, localTime / 1579, localTime)
     headers = { 'User-Agent' : config.USER_AGENT }
     r = self.s.get(url, params=params, headers=headers)
     regx = r'window.code=(\d+)'
@@ -99,12 +114,10 @@ def check_login(self, uuid=None):
     if data and data.group(1) == '200':
         process_login_info(self, r.text)
         return '200'
-    elif data and data.group(1) == '201':
-        return '201'
-    elif data and data.group(1) == '408':
-        return '408'
+    elif data:
+        return data.group(1)
     else:
-        return '0'
+        return '400'
 
 def process_login_info(core, loginContent):
     ''' when finish login (scanning qrcode)

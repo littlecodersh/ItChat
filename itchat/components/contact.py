@@ -118,8 +118,6 @@ def update_local_chatrooms(core, l):
         for member in chatroom['MemberList']:
             utils.emoji_formatter(member, 'NickName')
             utils.emoji_formatter(member, 'DisplayName')
-            if core.storageClass.userName == member['UserName']:
-                chatroom['self'] = member
         # update it to old chatrooms
         oldChatroom = utils.search_dict_list(
             core.chatroomList, 'UserName', chatroom['UserName'])
@@ -149,6 +147,10 @@ def update_local_chatrooms(core, l):
                 oldChatroom['OwnerUin'] == int(core.loginInfo['wxuin'])
         else:
             oldChatroom['isAdmin'] = None
+        #  - update self
+        newSelf = utils.search_dict_list(oldChatroom['MemberList'],
+            'UserName', core.storageClass.userName)
+        oldChatroom['self'] = newSelf or copy.deepcopy(core.loginInfo['User'])
     return {
         'Type'         : 'System',
         'Text'         : [chatroom['UserName'] for chatroom in l],

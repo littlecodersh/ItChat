@@ -3,6 +3,7 @@ import logging, traceback
 
 import requests
 
+from ..config import VERSION
 from ..returnvalues import ReturnValue
 from .contact import update_local_chatrooms
 from .messages import produce_msg
@@ -22,6 +23,7 @@ def dump_login_status(self, fileDir=None):
     except:
         raise Exception('Incorrect fileDir')
     status = {
+        'version'   : VERSION,
         'loginInfo' : self.loginInfo,
         'cookies'   : self.s.cookies.get_dict(),
         'storage'   : self.storageClass.dumps()}
@@ -40,6 +42,13 @@ def load_login_status(self, fileDir,
             'ErrMsg': 'No such file, loading login status failed.',
             'Ret': -1002, }})
 
+    if j.get('version', '') != VERSION:
+        logger.debug(('you have updated itchat from %s to %s, ' + 
+            'so cached status is ignored') % (
+            j.get('version', 'old version'), VERSION))
+        return ReturnValue({'BaseResponse': {
+            'ErrMsg': 'cached status ignored because of version',
+            'Ret': -1005, }})
     self.loginInfo = j['loginInfo']
     self.s.cookies = requests.utils.cookiejar_from_dict(j['cookies'])
     self.storageClass.loads(j['storage'])

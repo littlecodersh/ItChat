@@ -1,8 +1,9 @@
-from .core import Core
 from . import content
+from .core import Core
+from .config import VERSION
 from .log import set_logging
 
-__version__ = '1.2.9'
+__version__ = VERSION
 
 instanceList = []
 

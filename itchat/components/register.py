@@ -15,16 +15,19 @@ def load_register(core):
     core.run              = run
 
 def auto_login(self, hotReload=False, statusStorageDir='itchat.pkl',
-        enableCmdQR=False, picDir=None, loginCallback=None, exitCallback=None):
+        enableCmdQR=False, picDir=None, qrCallback=None,
+        loginCallback=None, exitCallback=None):
     self.useHotReload = hotReload
     if hotReload:
-        if self.load_login_status(statusStorageDir, loginCallback=loginCallback, exitCallback=exitCallback): return
-        self.login(enableCmdQR=enableCmdQR, picDir=picDir,
+        if self.load_login_status(statusStorageDir,
+                loginCallback=loginCallback, exitCallback=exitCallback):
+            return
+        self.login(enableCmdQR=enableCmdQR, picDir=picDir, qrCallback=qrCallback,
             loginCallback=loginCallback, exitCallback=exitCallback)
         self.dump_login_status(statusStorageDir)
         self.hotReloadDir = statusStorageDir
     else:
-        self.login(enableCmdQR=enableCmdQR, picDir=picDir,
+        self.login(enableCmdQR=enableCmdQR, picDir=picDir, qrCallback=qrCallback,
             loginCallback=loginCallback, exitCallback=exitCallback)
 
 def configured_reply(self):

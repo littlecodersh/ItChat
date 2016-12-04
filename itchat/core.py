@@ -29,7 +29,7 @@ class Core(object):
         self.functionDict = {'FriendChat': {}, 'GroupChat': {}, 'MpChat': {}}
         self.useHotReload, self.hotReloadDir = False, 'itchat.pkl'
         self.receivingRetryCount = 5
-    def login(self, enableCmdQR=False, picDir=None,
+    def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
             loginCallback=None, exitCallback=None):
         ''' log in like web wechat does
             for log in
@@ -40,6 +40,7 @@ class Core(object):
                 - enableCmdQR: show qrcode in command line
                     - integers can be used to fit strange char length
                 - picDir: place for storing qrcode
+                - qrCallback: method that should accept uuid, status, qrcode
                 - loginCallback: callback after successfully logged in
                     - if not set, screen is cleared and qrcode is deleted
                 - exitCallback: callback after logged out
@@ -66,12 +67,13 @@ class Core(object):
             it is defined in components/login.py
         '''
         raise NotImplementedError()
-    def get_QR(self, uuid=None, enableCmdQR=False, picDir=None):
+    def get_QR(self, uuid=None, enableCmdQR=False, picDir=None, qrCallback=None):
         ''' download and show qrcode
             for options
                 - uuid: if uuid is not set, latest uuid you fetched will be used
                 - enableCmdQR: show qrcode in cmd
                 - picDir: where to store qrcode
+                - qrCallback: method that should accept uuid, status, qrcode
             it is defined in components/login.py
         '''
         raise NotImplementedError()
@@ -385,7 +387,7 @@ class Core(object):
         '''
         raise NotImplementedError()
     def auto_login(self, hotReload=False, statusStorageDir='itchat.pkl',
-            enableCmdQR=False, picDir=None,
+            enableCmdQR=False, picDir=None, qrCallback=None,
             loginCallback=None, exitCallback=None):
         ''' log in like web wechat does
             for log in
@@ -402,6 +404,7 @@ class Core(object):
                     - if not set, screen is cleared and qrcode is deleted
                 - exitCallback: callback after logged out
                     - it contains calling of logout
+                - qrCallback: method that should accept uuid, status, qrcode
             for usage
                 ..code::python
 
