@@ -1,10 +1,11 @@
-import logging, traceback
+import logging, traceback, sys
 try:
     import Queue
 except ImportError:
     import queue as Queue
 
 from ..log import set_logging
+from ..utils import test_connect
 
 logger = logging.getLogger('itchat')
 
@@ -17,6 +18,9 @@ def load_register(core):
 def auto_login(self, hotReload=False, statusStorageDir='itchat.pkl',
         enableCmdQR=False, picDir=None, qrCallback=None,
         loginCallback=None, exitCallback=None):
+    if not test_connect():
+        logger.info("You don't have access to internet or wechat domain, so exit.")
+        sys.exit()
     self.useHotReload = hotReload
     if hotReload:
         if self.load_login_status(statusStorageDir,

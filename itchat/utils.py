@@ -5,6 +5,8 @@ try:
 except ImportError:
     from html.parser import HTMLParser
 
+import requests
+
 from . import config
 
 emojiRegex = re.compile(r'<span class="emoji emoji(.{1,10})"></span>')
@@ -123,3 +125,11 @@ def print_line(msg, oneLine = False):
     sys.stdout.write(msg.encode(sys.stdin.encoding or 'utf8', 'replace'
         ).decode(sys.stdin.encoding or 'utf8', 'replace'))
     sys.stdout.flush()
+
+def test_connect(retryTime=5):
+    for i in range(retryTime):
+        try:
+            r = requests.get(config.BASE_URL)
+        except:
+            if i == retryTime-1: return False
+    return True
