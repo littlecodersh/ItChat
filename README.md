@@ -240,6 +240,8 @@ A: 有些账号是天生无法给自己的账号发送信息的，建议使用`f
 
 [zixia/wechaty][zixia-wechaty]: 基于Javascript(ES6)的微信个人账号机器人NodeJS框架/库
 
+[sjdy521/Mojo-Weixin][Mojo-Weixin]: 使用Perl语言编写的微信客户端框架，可通过插件提供基于HTTP协议的api接口供其他语言调用
+
 ## 问题和建议
 
 如果有什么问题或者建议都可以在这个[Issue][issue#1]和我讨论
@@ -267,3 +269,4 @@ A: 有些账号是天生无法给自己的账号发送信息的，建议使用`f
 [liuwons-wxBot]: https://github.com/liuwons/wxBot
 [zixia-wechaty]: https://github.com/zixia/wechaty
 [issue#1]: https://github.com/littlecodersh/ItChat/issues/1
+[Mojo-Weixin]: https://github.com/sjdy521/Mojo-Weixin
