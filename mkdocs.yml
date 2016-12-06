@@ -1,0 +1,21 @@
+site_name: 'itchat'
+pages:
+- '介绍':
+    - '项目简介': 'index.md'
+    - '快速入门': 'intro/start.md'
+    - '登陆配置': 'intro/login.md'
+    - '回复方法': 'intro/reply.md'
+    - '注册方法': 'intro/handler.md'
+    - '消息内容': 'intro/messages.md'
+    - '各类账号': 'intro/contact.md'
+    - '部署程序': 'intro/deploy.md'
+- 'API列表': 'api.md'
+- 'FAQ': 'FAQ.md'
+- '教程文章':
+    - '基础新手入门': 'tutorial/tutorial0.md'
+    - '实践项目分享': 'tutorial/tutorial2.md'
+    - '抓包及原理入门': 'tutorial/tutorial1.md'
+extra_css: ['docs/bootstrap/css']
+extra_javascript: ['docs/bootstrap/js']
+theme_dir: 'docs/bootstrap'
+repo_url: 'https://github.com/littlecodersh/itchat'

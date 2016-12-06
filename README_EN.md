@@ -238,7 +238,9 @@ A: Some account simply can't send messages to yourself, so use `filehelper` inst
 
 [liuwons/wxBot][liuwons-wxBot]: A wechat robot similiar to the robot branch
 
-[zixia/wechaty][zixia-wechaty]: wechat for bot in Javascript(ES6), Personal Account Robot Framework/Library.
+[zixia/wechaty][zixia-wechaty]: wechat for bot in Javascript(ES6), Personal Account Robot Framework/Library
+
+[sjdy521/Mojo-Weixin][Mojo-Weixin]: wechat web api in Perl, available with HTTP requests
 
 ## Comments
 
@@ -263,4 +265,5 @@ Or you may also use [![Gitter][gitter-picture]][gitter]
 [Chyroc]: https://github.com/Chyroc
 [liuwons-wxBot]: https://github.com/liuwons/wxBot
 [zixia-wechaty]: https://github.com/zixia/wechaty
+[Mojo-Weixin]: https://github.com/sjdy521/Mojo-Weixin
 [issue#1]: https://github.com/littlecodersh/ItChat/issues/1

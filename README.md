@@ -234,11 +234,13 @@ A: 有些账号是天生无法给自己的账号发送信息的，建议使用`f
 
 [Chyroc][Chyroc]: 完成第一版本的Python3构架。
 
-## 参考资料
+## 类似项目
 
 [liuwons/wxBot][liuwons-wxBot]: 类似的基于Python的微信机器人
 
 [zixia/wechaty][zixia-wechaty]: 基于Javascript(ES6)的微信个人账号机器人NodeJS框架/库
+
+[sjdy521/Mojo-Weixin][Mojo-Weixin]: 使用Perl语言编写的微信客户端框架，可通过插件提供基于HTTP协议的api接口供其他语言调用
 
 ## 问题和建议
 
@@ -266,4 +268,5 @@ A: 有些账号是天生无法给自己的账号发送信息的，建议使用`f
 [Chyroc]: https://github.com/Chyroc
 [liuwons-wxBot]: https://github.com/liuwons/wxBot
 [zixia-wechaty]: https://github.com/zixia/wechaty
+[Mojo-Weixin]: https://github.com/sjdy521/Mojo-Weixin
 [issue#1]: https://github.com/littlecodersh/ItChat/issues/1

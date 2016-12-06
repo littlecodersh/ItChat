@@ -435,7 +435,7 @@ class Core(object):
         ''' start auto respond
             for option
                 - debug: if set, debug info will be shown on screen
-            it is defined in components/hotreload.py
+            it is defined in components/register.py
         '''
         raise NotImplementedError()
     def search_friends(self, name=None, userName=None, remarkName=None, nickName=None,
