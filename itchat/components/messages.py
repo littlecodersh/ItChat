@@ -74,7 +74,7 @@ def produce_msg(core, msgList):
                 '%s/webwxgetvoice' % core.loginInfo['url'], m['NewMsgId'])
             msg = {
                 'Type': 'Recording',
-                'FileName' : '%s.mp4' % time.strftime('%y%m%d-%H%M%S', time.localtime()),
+                'FileName' : '%s.mp3' % time.strftime('%y%m%d-%H%M%S', time.localtime()),
                 'Text': download_fn,}
         elif m['MsgType'] == 37: # friends
             msg = {
