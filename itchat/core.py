@@ -311,7 +311,8 @@ class Core(object):
             it is defined in components/messages.py
         '''
         raise NotImplementedError()
-    def upload_file(self, fileDir, isPicture=False, isVideo=False):
+    def upload_file(self, fileDir, isPicture=False, isVideo=False,
+            toUserName='filehelper'):
         ''' upload file to server and get mediaId
             for options
                 - fileDir: dir for file ready for upload

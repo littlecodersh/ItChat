@@ -1,6 +1,6 @@
 import os, time, re, io
 import json
-import mimetypes
+import mimetypes, hashlib
 import traceback, logging
 
 import requests
@@ -235,39 +235,59 @@ def send_msg(self, msg='Test Message', toUserName=None):
     r = self.send_raw_msg(1, msg, toUserName)
     return r
 
-def upload_file(self, fileDir, isPicture=False, isVideo=False):
+def upload_file(self, fileDir, isPicture=False, isVideo=False,
+        toUserName='filehelper'):
     logger.debug('Request to upload a %s: %s' % (
         'picture' if isPicture else 'video' if isVideo else 'file', fileDir))
     if not utils.check_file(fileDir):
         return ReturnValue({'BaseResponse': {
             'ErrMsg': 'No file found in specific dir',
             'Ret': -1002, }})
-    url = self.loginInfo.get('fileUrl', self.loginInfo['url']) + \
+    fileSize = os.path.getsize(fileDir)
+    fileSymbol = 'pic' if isPicture else 'video' if isVideo else'doc'
+    with open(fileDir, 'rb') as f: fileMd5 = hashlib.md5(f.read()).hexdigest()
+    file = open(fileDir, 'rb')
+    chunks = int(fileSize / 524288) + 1
+    for chunk in range(chunks):
+        r = upload_chunk_file(self, fileDir, fileSymbol, fileSize,
+            fileMd5, file, toUserName, chunk, chunks)
+    file.close()
+    self.loginInfo['msgid'] += 1
+    return ReturnValue(rawResponse=r)
+
+def upload_chunk_file(core, fileDir, fileSymbol, fileSize,
+        fileMd5, file, toUserName, chunk, chunks):
+    url = core.loginInfo.get('fileUrl', core.loginInfo['url']) + \
         '/webwxuploadmedia?f=json'
     # save it on server
-    fileSize = str(os.path.getsize(fileDir))
-    cookiesList = {name:data for name,data in self.s.cookies.items()}
+    cookiesList = {name:data for name,data in core.s.cookies.items()}
     fileType = mimetypes.guess_type(fileDir)[0] or 'application/octet-stream'
     files = {
         'id': (None, 'WU_FILE_0'),
         'name': (None, os.path.basename(fileDir)),
         'type': (None, fileType),
         'lastModifiedDate': (None, time.strftime('%a %b %d %Y %H:%M:%S GMT+0800 (CST)')),
-        'size': (None, fileSize),
-        'mediatype': (None, 'pic' if isPicture else 'video' if isVideo else'doc'),
+        'size': (None, str(fileSize)),
+        'mediatype': (None, fileSymbol),
         'uploadmediarequest': (None, json.dumps({
-            'BaseRequest': self.loginInfo['BaseRequest'],
-            'ClientMediaId': int(time.time()),
+            'UploadType': (None, 2),
+            'BaseRequest': core.loginInfo['BaseRequest'],
+            'ClientMediaId': core.loginInfo['msgid'],
             'TotalLen': fileSize,
             'StartPos': 0,
             'DataLen': fileSize,
-            'MediaType': 4, }, separators = (',', ':'))),
+            'MediaType': 4,
+            'FromUserName': core.storageClass.userName,
+            'ToUserName': toUserName,
+            'FileMd5': fileMd5,
+            }, separators = (',', ':'))),
         'webwx_data_ticket': (None, cookiesList['webwx_data_ticket']),
-        'pass_ticket': (None, 'undefined'),
-        'filename' : (os.path.basename(fileDir), open(fileDir, 'rb'), fileType), }
+        'pass_ticket': (None, core.loginInfo['pass_ticket']),
+        'filename' : (os.path.basename(fileDir), file.read(524288), fileType), }
+    if chunks != 1:
+        files['chunk'], files['chunks'] = (None, str(chunk)), (None, str(chunks))
     headers = { 'User-Agent' : config.USER_AGENT }
-    r = self.s.post(url, files=files, headers=headers)
-    return ReturnValue(rawResponse=r)
+    return core.s.post(url, files=files, headers=headers)
 
 def send_file(self, fileDir, toUserName=None, mediaId=None):
     logger.debug('Request to send a file(mediaId: %s) to %s: %s' % (
