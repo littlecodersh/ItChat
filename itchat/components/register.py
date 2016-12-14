@@ -1,4 +1,4 @@
-import logging, traceback, sys
+import logging, traceback, sys, threading
 try:
     import Queue
 except ImportError:
@@ -84,14 +84,21 @@ def msg_register(self, msgType, isFriendChat=False, isGroupChat=False, isMpChat=
                 self.functionDict['FriendChat'][_msgType] = fn
     return _msg_register
 
-def run(self, debug=False):
+def run(self, debug=False, blockThread=True):
     logger.info('Start auto replying.')
     if debug:
         set_logging(loggingLevel=logging.DEBUG)
-    try:
-        while self.alive: self.configured_reply()
-    except KeyboardInterrupt:
-        if self.useHotReload: self.dump_login_status()
-        self.alive = False
-        logger.debug('itchat received an ^C and exit.')
-        print('Bye~')
+    def reply_fn():
+        try:
+            while self.alive: self.configured_reply()
+        except KeyboardInterrupt:
+            if self.useHotReload: self.dump_login_status()
+            self.alive = False
+            logger.debug('itchat received an ^C and exit.')
+            print('Bye~')
+    if blockThread:
+        reply_fn()
+    else:
+        replyThread = threading.Thread(target=reply_fn)
+        replyThread.setDaemon(True)
+        replyThread.start()

@@ -112,11 +112,12 @@ class Core(object):
             it is defined in components/login.py
         '''
         raise NotImplementedError()
-    def start_receiving(self, finishCallback=None):
+    def start_receiving(self, exitCallback=None, getReceivingFnOnly=False):
         ''' open a thread for heart loop and receiving messages
             for options:
-                - finishCallback: callback after logged out
+                - exitCallback: callback after logged out
                     - it contains calling of logout
+                - getReceivingFnOnly: if True thread will not be created and started. Instead, receive fn will be returned.
             for processing:
                 - messages: msgs are formatted and passed on to registered fns
                 - contact : chatrooms are updated when related info is received
@@ -432,7 +433,7 @@ class Core(object):
             return a specific decorator based on information given
         '''
         raise NotImplementedError()
-    def run(self, debug=True):
+    def run(self, debug=True, blockThread=True):
         ''' start auto respond
             for option
                 - debug: if set, debug info will be shown on screen
