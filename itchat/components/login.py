@@ -191,7 +191,7 @@ def show_mobile_login(self):
     r = self.s.post(url, data=json.dumps(data), headers=headers)
     return ReturnValue(rawResponse=r)
 
-def start_receiving(self, exitCallback=None):
+def start_receiving(self, exitCallback = None, management = True):
     self.alive = True
     def maintain_loop():
         retryCount = 0
@@ -229,9 +229,12 @@ def start_receiving(self, exitCallback=None):
             exitCallback()
         else:
             logger.info('LOG OUT!')
-    maintainThread = threading.Thread(target = maintain_loop)
-    maintainThread.setDaemon(True)
-    maintainThread.start()
+    if management:
+        maintainThread = threading.Thread(target = maintain_loop)
+        maintainThread.setDaemon(True)
+        maintainThread.start()
+    else:
+        maintain_loop()
 
 def sync_check(self):
     url = '%s/synccheck' % self.loginInfo.get('syncUrl', self.loginInfo['url'])
