@@ -74,7 +74,7 @@ def produce_msg(core, msgList):
                 '%s/webwxgetvoice' % core.loginInfo['url'], m['NewMsgId'])
             msg = {
                 'Type': 'Recording',
-                'FileName' : '%s.mp4' % time.strftime('%y%m%d-%H%M%S', time.localtime()),
+                'FileName' : '%s.mp3' % time.strftime('%y%m%d-%H%M%S', time.localtime()),
                 'Text': download_fn,}
         elif m['MsgType'] == 37: # friends
             msg = {
@@ -88,6 +88,27 @@ def produce_msg(core, msgList):
             msg = {
                 'Type': 'Card',
                 'Text': m['RecommendInfo'], }
+        elif m['MsgType'] in (43, 62): # tiny video
+            msgId = m['MsgId']
+            def download_video(videoDir=None):
+                url = '%s/webwxgetvideo' % core.loginInfo['url']
+                params = {
+                    'msgid': msgId,
+                    'skey': core.loginInfo['skey'],}
+                headers = {'Range': 'bytes=0-', 'User-Agent' : config.USER_AGENT }
+                r = core.s.get(url, params=params, headers=headers, stream=True)
+                tempStorage = io.BytesIO()
+                for block in r.iter_content(1024):
+                    tempStorage.write(block)
+                if videoDir is None: return tempStorage.getvalue()
+                with open(videoDir, 'wb') as f: f.write(tempStorage.getvalue())
+                return ReturnValue({'BaseResponse': {
+                    'ErrMsg': 'Successfully downloaded',
+                    'Ret': 0, }})
+            msg = {
+                'Type': 'Video',
+                'FileName' : '%s.mp4' % time.strftime('%y%m%d-%H%M%S', time.localtime()),
+                'Text': download_video, }
         elif m['MsgType'] == 49: # sharing
             if m['AppMsgType'] == 6:
                 rawMsg = m
@@ -142,27 +163,6 @@ def produce_msg(core, msgList):
                     'Text': m['FileName'], }
         elif m['MsgType'] == 51: # phone init
             msg = update_local_uin(core, m)
-        elif m['MsgType'] == 62: # tiny video
-            msgId = m['MsgId']
-            def download_video(videoDir=None):
-                url = '%s/webwxgetvideo' % core.loginInfo['url']
-                params = {
-                    'msgid': msgId,
-                    'skey': core.loginInfo['skey'],}
-                headers = {'Range': 'bytes=0-', 'User-Agent' : config.USER_AGENT }
-                r = core.s.get(url, params=params, headers=headers, stream=True)
-                tempStorage = io.BytesIO()
-                for block in r.iter_content(1024):
-                    tempStorage.write(block)
-                if videoDir is None: return tempStorage.getvalue()
-                with open(videoDir, 'wb') as f: f.write(tempStorage.getvalue())
-                return ReturnValue({'BaseResponse': {
-                    'ErrMsg': 'Successfully downloaded',
-                    'Ret': 0, }})
-            msg = {
-                'Type': 'Video',
-                'FileName' : '%s.mp4' % time.strftime('%y%m%d-%H%M%S', time.localtime()),
-                'Text': download_video, }
         elif m['MsgType'] == 10000:
             msg = {
                 'Type': 'Note',
@@ -214,7 +214,7 @@ def produce_group_chat(core, msg):
 
 def send_raw_msg(self, msgType, content, toUserName):
     url = '%s/webwxsendmsg' % self.loginInfo['url']
-    payloads = {
+    data = {
         'BaseRequest': self.loginInfo['BaseRequest'],
         'Msg': {
             'Type': msgType,
@@ -223,11 +223,12 @@ def send_raw_msg(self, msgType, content, toUserName):
             'ToUserName': (toUserName if toUserName else self.storageClass.userName),
             'LocalID': self.loginInfo['msgid'],
             'ClientMsgId': self.loginInfo['msgid'],
-            }, }
+            }, 
+        'Scene': 0, }
     self.loginInfo['msgid'] += 1
     headers = { 'ContentType': 'application/json; charset=UTF-8', 'User-Agent' : config.USER_AGENT }
     r = self.s.post(url, headers=headers,
-        data=json.dumps(payloads, ensure_ascii=False).encode('utf8'))
+        data=json.dumps(data, ensure_ascii=False).encode('utf8'))
     return ReturnValue(rawResponse=r)
 
 def send_msg(self, msg='Test Message', toUserName=None):
@@ -311,7 +312,8 @@ def send_file(self, fileDir, toUserName=None, mediaId=None):
             'FromUserName': self.storageClass.userName,
             'ToUserName': toUserName,
             'LocalID': self.loginInfo['msgid'],
-            'ClientMsgId': self.loginInfo['msgid'], }, }
+            'ClientMsgId': self.loginInfo['msgid'], },
+        'Scene': 0, }
     self.loginInfo['msgid'] += 1
     headers = {
         'User-Agent': config.USER_AGENT,
@@ -339,7 +341,8 @@ def send_image(self, fileDir, toUserName=None, mediaId=None):
             'FromUserName': self.storageClass.userName,
             'ToUserName': toUserName,
             'LocalID': self.loginInfo['msgid'],
-            'ClientMsgId': self.loginInfo['msgid'], }, }
+            'ClientMsgId': self.loginInfo['msgid'], },
+        'Scene': 0, }
     self.loginInfo['msgid'] += 1
     if fileDir[-4:] == '.gif':
         url = '%s/webwxsendemoticon?fun=sys' % self.loginInfo['url']
