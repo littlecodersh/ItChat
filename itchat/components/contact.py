@@ -65,7 +65,7 @@ def update_chatroom(self, userName, detailedMember=False):
         MAX_GET_NUMBER = 50
         for chatroom in chatroomList:
             totalMemberList = []
-            for i in range(len(chatroom['MemberList']) / MAX_GET_NUMBER + 1):
+            for i in range(int(len(chatroom['MemberList']) / MAX_GET_NUMBER + 1)):
                 memberList = chatroom['MemberList'][i*MAX_GET_NUMBER: (i+1)*MAX_GET_NUMBER]
                 totalMemberList += get_detailed_member_info(chatroom['EncryChatRoomId'], memberList)
             chatroom['MemberList'] = totalMemberList
@@ -91,7 +91,7 @@ def update_friend(self, userName):
             'EncryChatRoomId': '', } for u in userName], }
     friendList = json.loads(self.s.post(url, data=json.dumps(data), headers=headers
             ).content.decode('utf8', 'replace')).get('ContactList')
-    
+
     update_local_friends(self, friendList)
     r = [self.storageClass.search_friends(userName=f['UserName'])
         for f in friendList]
@@ -186,7 +186,7 @@ def update_local_uin(core, msg):
     usernameChangedList = []
     r = {
         'Type': 'System',
-        'Text': usernameChangedList, 
+        'Text': usernameChangedList,
         'SystemInfo': 'uins', }
     if uins:
         uins = uins.group(1).split(',')
@@ -309,7 +309,7 @@ def add_friend(self, userName, status=2, verifyContent='', autoUpdate=True):
         'VerifyUserListSize': 1,
         'VerifyUserList': [{
             'Value': userName,
-            'VerifyUserTicket': '', }], 
+            'VerifyUserTicket': '', }],
         'VerifyContent': verifyContent,
         'SceneListCount': 1,
         'SceneList': 33, # [33]
