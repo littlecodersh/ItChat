@@ -95,7 +95,7 @@ def update_friend(self, userName):
     update_local_friends(self, friendList)
     r = [self.storageClass.search_friends(userName=f['UserName'])
         for f in friendList]
-    return r if 1 < len(r) else r[0]
+    return r if len(r) != 1 else r[0]
 
 def update_info_dict(oldInfoDict, newInfoDict):
     '''

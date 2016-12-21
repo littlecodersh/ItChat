@@ -8,6 +8,8 @@ itchat是一个开源的微信个人号接口，使用python调用微信从未�
 
 当然，该api的使用远不止一个机器人，更多的功能等着你来发现，比如[这些][tutorial2]。
 
+该接口与公众号接口[itchatmp][itchatmp]共享类似的操作方式，学习一次掌握两个工具。
+
 如今微信已经成为了个人社交的很大一部分，希望这个项目能够帮助你扩展你的个人的微信号、方便自己的生活。
 
 ## 安装
@@ -255,6 +257,7 @@ A: 有些账号是天生无法给自己的账号发送信息的，建议使用`f
 [py27]: https://img.shields.io/badge/python-2.7-ff69b4.svg
 [py35]: https://img.shields.io/badge/python-3.5-red.svg
 [english-version]: https://github.com/littlecodersh/ItChat/blob/master/README_EN.md
+[itchatmp]: https://github.com/littlecodersh/itchatmp
 [document]: https://itchat.readthedocs.org/zh/latest/
 [tutorial2]: http://python.jobbole.com/86532/
 [robot-source-code]: https://gist.github.com/littlecodersh/ec8ddab12364323c97d4e36459174f0d

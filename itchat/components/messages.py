@@ -221,11 +221,10 @@ def send_raw_msg(self, msgType, content, toUserName):
             'Content': content,
             'FromUserName': self.storageClass.userName,
             'ToUserName': (toUserName if toUserName else self.storageClass.userName),
-            'LocalID': self.loginInfo['msgid'],
-            'ClientMsgId': self.loginInfo['msgid'],
+            'LocalID': int(time.time() * 1e4),
+            'ClientMsgId': int(time.time() * 1e4),
             }, 
         'Scene': 0, }
-    self.loginInfo['msgid'] += 1
     headers = { 'ContentType': 'application/json; charset=UTF-8', 'User-Agent' : config.USER_AGENT }
     r = self.s.post(url, headers=headers,
         data=json.dumps(data, ensure_ascii=False).encode('utf8'))
@@ -253,7 +252,6 @@ def upload_file(self, fileDir, isPicture=False, isVideo=False,
         r = upload_chunk_file(self, fileDir, fileSymbol, fileSize,
             fileMd5, file, toUserName, chunk, chunks)
     file.close()
-    self.loginInfo['msgid'] += 1
     return ReturnValue(rawResponse=r)
 
 def upload_chunk_file(core, fileDir, fileSymbol, fileSize,
@@ -273,7 +271,7 @@ def upload_chunk_file(core, fileDir, fileSymbol, fileSize,
         'uploadmediarequest': (None, json.dumps({
             'UploadType': (None, 2),
             'BaseRequest': core.loginInfo['BaseRequest'],
-            'ClientMediaId': core.loginInfo['msgid'],
+            'ClientMediaId': int(time.time() * 1e4),
             'TotalLen': fileSize,
             'StartPos': 0,
             'DataLen': fileSize,
@@ -311,10 +309,9 @@ def send_file(self, fileDir, toUserName=None, mediaId=None):
                 "<fileext>%s</fileext></appattach><extinfo></extinfo></appmsg>"%os.path.splitext(fileDir)[1].replace('.','')),
             'FromUserName': self.storageClass.userName,
             'ToUserName': toUserName,
-            'LocalID': self.loginInfo['msgid'],
-            'ClientMsgId': self.loginInfo['msgid'], },
+            'LocalID': int(time.time() * 1e4),
+            'ClientMsgId': int(time.time() * 1e4), },
         'Scene': 0, }
-    self.loginInfo['msgid'] += 1
     headers = {
         'User-Agent': config.USER_AGENT,
         'Content-Type': 'application/json;charset=UTF-8', }
@@ -340,10 +337,9 @@ def send_image(self, fileDir, toUserName=None, mediaId=None):
             'MediaId': mediaId,
             'FromUserName': self.storageClass.userName,
             'ToUserName': toUserName,
-            'LocalID': self.loginInfo['msgid'],
-            'ClientMsgId': self.loginInfo['msgid'], },
+            'LocalID': int(time.time() * 1e4),
+            'ClientMsgId': int(time.time() * 1e4), },
         'Scene': 0, }
-    self.loginInfo['msgid'] += 1
     if fileDir[-4:] == '.gif':
         url = '%s/webwxsendemoticon?fun=sys' % self.loginInfo['url']
         data['Msg']['Type'] = 47
@@ -374,10 +370,9 @@ def send_video(self, fileDir=None, toUserName=None, mediaId=None):
             'MediaId'      : mediaId,
             'FromUserName' : self.storageClass.userName,
             'ToUserName'   : toUserName,
-            'LocalID'      : self.loginInfo['msgid'],
-            'ClientMsgId'  : self.loginInfo['msgid'], },
+            'LocalID'      : int(time.time() * 1e4),
+            'ClientMsgId'  : int(time.time() * 1e4), },
         'Scene': 0, }
-    self.loginInfo['msgid'] += 1
     headers = {
         'User-Agent' : config.USER_AGENT,
         'Content-Type': 'application/json;charset=UTF-8', }

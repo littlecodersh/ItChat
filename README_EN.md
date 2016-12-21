@@ -8,6 +8,8 @@ Accessing your personal wechat account through itchat in python has never been e
 
 A wechat robot can handle all the basic messages with only less than 30 lines of codes.
 
+And it's similiar to itchatmp (api for wechat massive platform), learn once and get two tools.
+
 Now Wechat is an important part of personal life, hopefully this repo can help you extend your personal wechat account's functionality and enbetter user's experience with wechat.
 
 ## Installation
