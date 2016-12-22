@@ -137,6 +137,15 @@ def update_local_chatrooms(core, l):
         else:
             oldChatroom = chatroom
             core.chatroomList.append(chatroom)
+        # delete useless members
+        if len(chatroom['MemberList']) != len(oldChatroom['MemberList']) and \
+                chatroom['MemberList']:
+            existsUserNames = [member['UserName'] for member in chatroom['MemberList']]
+            delList = []
+            for i, member in enumerate(oldChatroom['MemberList']):
+                if member['UserName'] not in existsUserNames: delList.append(i)
+            delList.sort(reverse=True)
+            for i in delList: del oldChatroom['MemberList'][i]
         #  - update OwnerUin
         if oldChatroom.get('ChatRoomOwner') and oldChatroom.get('MemberList'):
             oldChatroom['OwnerUin'] = utils.search_dict_list(oldChatroom['MemberList'],
@@ -328,7 +337,7 @@ def get_head_img(self, userName=None, chatroomUserName=None, picDir=None):
      * if you want to get chatroom member header: set both
     '''
     params = {
-        'userName': userName or chatroomUserName,
+        'userName': userName or chatroomUserName or self.storageClass.userName,
         'skey': self.loginInfo['skey'], }
     url = '%s/webwxgeticon' % self.loginInfo['url']
     if chatroomUserName is None:
