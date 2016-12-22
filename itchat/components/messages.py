@@ -40,7 +40,7 @@ def get_download_fn(core, url, msgId):
 def produce_msg(core, msgList):
     ''' for messages types
      * 40 msg, 43 videochat, 50 VOIPMSG, 52 voipnotifymsg
-     * 53 webwxvoipnotifymsg, 9999 sysnotice 
+     * 53 webwxvoipnotifymsg, 9999 sysnotice
     '''
     rl = []
     srl = [40, 43, 50, 52, 53, 9999]
@@ -62,10 +62,10 @@ def produce_msg(core, msgList):
                     'Type': 'Text',
                     'Text': m['Content'],}
         elif m['MsgType'] == 3 or m['MsgType'] == 47: # picture
-            download_fn = get_download_fn(core, 
+            download_fn = get_download_fn(core,
                 '%s/webwxgetmsgimg' % core.loginInfo['url'], m['NewMsgId'])
             msg = {
-                'Type'     : 'Picture',
+                'Type'     : 'Picture' if m['MsgType'] == 3 else 'Sticker',
                 'FileName' : '%s.%s' % (time.strftime('%y%m%d-%H%M%S', time.localtime()),
                     'png' if m['MsgType'] == 3 else 'gif'),
                 'Text'     : download_fn, }
@@ -136,7 +136,7 @@ def produce_msg(core, msgList):
                     'Type': 'Attachment',
                     'Text': download_atta, }
             elif m['AppMsgType'] == 8:
-                download_fn = get_download_fn(core, 
+                download_fn = get_download_fn(core,
                     '%s/webwxgetmsgimg' % core.loginInfo['url'], m['NewMsgId'])
                 msg = {
                     'Type'     : 'Picture',
@@ -223,7 +223,7 @@ def send_raw_msg(self, msgType, content, toUserName):
             'ToUserName': (toUserName if toUserName else self.storageClass.userName),
             'LocalID': int(time.time() * 1e4),
             'ClientMsgId': int(time.time() * 1e4),
-            }, 
+            },
         'Scene': 0, }
     headers = { 'ContentType': 'application/json; charset=UTF-8', 'User-Agent' : config.USER_AGENT }
     r = self.s.post(url, headers=headers,
