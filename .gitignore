@@ -1,5 +1,10 @@
 build/*
 dist/*
+test/*
 itchat.egg-info/*
 *.pyc
 *.swp
+test.py
+itchat.pkl
+QR.jpg
+.DS_Store
