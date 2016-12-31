@@ -2,6 +2,7 @@ import os, time, re, io
 import json
 import mimetypes, hashlib
 import traceback, logging
+from collections import OrderedDict
 
 import requests
 
@@ -247,46 +248,52 @@ def upload_file(self, fileDir, isPicture=False, isVideo=False,
     fileSymbol = 'pic' if isPicture else 'video' if isVideo else'doc'
     with open(fileDir, 'rb') as f: fileMd5 = hashlib.md5(f.read()).hexdigest()
     file = open(fileDir, 'rb')
-    chunks = int(fileSize / 524288) + 1
+    chunks = int((fileSize - 1) / 524288) + 1
+    clientMediaId = int(time.time() * 1e4)
+    uploadMediaRequest = json.dumps(OrderedDict([
+        ('UploadType', 2),
+        ('BaseRequest', self.loginInfo['BaseRequest']),
+        ('ClientMediaId', clientMediaId),
+        ('TotalLen', fileSize),
+        ('StartPos', 0),
+        ('DataLen', fileSize),
+        ('MediaType', 4),
+        ('FromUserName', self.storageClass.userName),
+        ('ToUserName', toUserName),
+        ('FileMd5', fileMd5)]
+        ), separators = (',', ':'))
     for chunk in range(chunks):
         r = upload_chunk_file(self, fileDir, fileSymbol, fileSize,
-            fileMd5, file, toUserName, chunk, chunks)
+            file, chunk, chunks, uploadMediaRequest)
     file.close()
     return ReturnValue(rawResponse=r)
 
 def upload_chunk_file(core, fileDir, fileSymbol, fileSize,
-        fileMd5, file, toUserName, chunk, chunks):
+        file, chunk, chunks, uploadMediaRequest):
     url = core.loginInfo.get('fileUrl', core.loginInfo['url']) + \
         '/webwxuploadmedia?f=json'
     # save it on server
     cookiesList = {name:data for name,data in core.s.cookies.items()}
     fileType = mimetypes.guess_type(fileDir)[0] or 'application/octet-stream'
-    files = {
-        'id': (None, 'WU_FILE_0'),
-        'name': (None, os.path.basename(fileDir)),
-        'type': (None, fileType),
-        'lastModifiedDate': (None, time.strftime('%a %b %d %Y %H:%M:%S GMT+0800 (CST)')),
-        'size': (None, str(fileSize)),
-        'mediatype': (None, fileSymbol),
-        'uploadmediarequest': (None, json.dumps({
-            'UploadType': (None, 2),
-            'BaseRequest': core.loginInfo['BaseRequest'],
-            'ClientMediaId': int(time.time() * 1e4),
-            'TotalLen': fileSize,
-            'StartPos': 0,
-            'DataLen': fileSize,
-            'MediaType': 4,
-            'FromUserName': core.storageClass.userName,
-            'ToUserName': toUserName,
-            'FileMd5': fileMd5,
-            }, separators = (',', ':'))),
-        'webwx_data_ticket': (None, cookiesList['webwx_data_ticket']),
-        'pass_ticket': (None, core.loginInfo['pass_ticket']),
-        'filename' : (os.path.basename(fileDir), file.read(524288), fileType), }
-    if chunks != 1:
+    files = OrderedDict([
+        ('id', (None, 'WU_FILE_0')),
+        ('name', (None, os.path.basename(fileDir))),
+        ('type', (None, fileType)),
+        ('lastModifiedDate', (None, time.strftime('%a %b %d %Y %H:%M:%S GMT+0800 (CST)'))),
+        ('size', (None, str(fileSize))),
+        ('chunks', (None, None)),
+        ('chunk', (None, None)),
+        ('mediatype', (None, fileSymbol)),
+        ('uploadmediarequest', (None, uploadMediaRequest)),
+        ('webwx_data_ticket', (None, cookiesList['webwx_data_ticket'])),
+        ('pass_ticket', (None, core.loginInfo['pass_ticket'])),
+        ('filename' , (os.path.basename(fileDir), file.read(524288), 'application/octet-stream'))])
+    if chunks == 1:
+        del files['chunk']; del files['chunks']
+    else:
         files['chunk'], files['chunks'] = (None, str(chunk)), (None, str(chunks))
     headers = { 'User-Agent' : config.USER_AGENT }
-    return core.s.post(url, files=files, headers=headers)
+    return requests.post(url, files=files, headers=headers)
 
 def send_file(self, fileDir, toUserName=None, mediaId=None):
     logger.debug('Request to send a file(mediaId: %s) to %s: %s' % (
