@@ -168,6 +168,9 @@ def update_local_chatrooms(core, l):
         'ToUserName'   : core.storageClass.userName, }
 
 def update_local_friends(core, l):
+    '''
+        get a list of friends or mps for updating local contact
+    '''
     fullList = core.memberList + core.mpList
     for friend in l:
         utils.emoji_formatter(friend, 'NickName')
@@ -326,7 +329,8 @@ def add_friend(self, userName, status=2, verifyContent='', autoUpdate=True):
     headers = {
         'ContentType': 'application/json; charset=UTF-8',
         'User-Agent' : config.USER_AGENT }
-    r = self.s.post(url, data=json.dumps(data), headers=headers)
+    r = self.s.post(url, headers=headers,
+        data=json.dumps(data, ensure_ascii=False).encode('utf8', 'replace'))
     if autoUpdate: self.update_friend(userName)
     return ReturnValue(rawResponse=r)
 

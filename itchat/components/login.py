@@ -8,7 +8,7 @@ import requests
 
 from .. import config, utils
 from ..returnvalues import ReturnValue
-from .contact import update_local_chatrooms
+from .contact import update_local_chatrooms, update_local_friends
 from .messages import produce_msg
 
 logger = logging.getLogger('itchat')
@@ -203,6 +203,9 @@ def start_receiving(self, exitCallback=None, getReceivingFnOnly=False):
                     continue
                 else:
                     msgList, contactList = self.get_msg()
+                    if msgList:
+                        msgList = produce_msg(self, msgList)
+                        for msg in msgList: self.msgList.put(msg)
                     if contactList:
                         chatroomList, otherList = [], []
                         for contact in contactList:
@@ -212,9 +215,7 @@ def start_receiving(self, exitCallback=None, getReceivingFnOnly=False):
                                 otherList.append(contact)
                         chatroomMsg = update_local_chatrooms(self, chatroomList)
                         self.msgList.put(chatroomMsg)
-                    if msgList:
-                        msgList = produce_msg(self, msgList)
-                        for msg in msgList: self.msgList.put(msg)
+                        update_local_friends(self, otherList)
                 retryCount = 0
             except:
                 retryCount += 1
