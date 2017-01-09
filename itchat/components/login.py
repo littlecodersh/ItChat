@@ -164,6 +164,7 @@ def web_init(self):
         'User-Agent' : config.USER_AGENT, }
     r = self.s.post(url, data=json.dumps(data), headers=headers)
     dic = json.loads(r.content.decode('utf-8', 'replace'))
+    # deal with login info
     utils.emoji_formatter(dic['User'], 'NickName')
     self.loginInfo['InviteStartCount'] = int(dic['InviteStartCount'])
     self.loginInfo['User'] = utils.struct_friend_info(dic['User'])
@@ -172,7 +173,20 @@ def web_init(self):
         for item in dic['SyncKey']['List']])
     self.storageClass.userName = dic['User']['UserName']
     self.storageClass.nickName = dic['User']['NickName']
-    self.memberList.append(dic['User'])
+    # deal with contact list returned when init
+    contactList = dic.get('ContactList', [])
+    contactList.append(self.loginInfo['User'])
+    chatroomList, otherList = [], []
+    for m in contactList:
+        if m['Sex'] != 0:
+            otherList.append(m)
+        elif '@@' in m['UserName']:
+            chatroomList.append(m)
+        elif '@' in m['UserName']:
+            # mp will be dealt in update_local_friends as well
+            otherList.append(m)
+    if chatroomList: update_local_chatrooms(self, chatroomList)
+    if otherList: update_local_friends(self, otherList)
     return dic
 
 def show_mobile_login(self):
