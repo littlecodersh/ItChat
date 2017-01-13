@@ -334,7 +334,7 @@ def add_friend(self, userName, status=2, verifyContent='', autoUpdate=True):
     if autoUpdate: self.update_friend(userName)
     return ReturnValue(rawResponse=r)
 
-def get_head_img(self, userName=None, chatroomUserName=None, picDir=None):
+def get_head_img(self, userName=None, chatroomUserName=None, picPath=None):
     ''' get head image
      * if you want to get chatroom header: only set chatroomUserName
      * if you want to get friend header: only set userName
@@ -367,9 +367,9 @@ def get_head_img(self, userName=None, chatroomUserName=None, picDir=None):
     tempStorage = io.BytesIO()
     for block in r.iter_content(1024):
         tempStorage.write(block)
-    if picDir is None:
+    if picPath is None:
         return tempStorage.getvalue()
-    with open(picDir, 'wb') as f: f.write(tempStorage.getvalue())
+    with open(picPath, 'wb') as f: f.write(tempStorage.getvalue())
     return ReturnValue({'BaseResponse': {
         'ErrMsg': 'Successfully downloaded',
         'Ret': 0, }})

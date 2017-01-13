@@ -24,7 +24,7 @@ def load_login(core):
     core.get_msg           = get_msg
     core.logout            = logout
 
-def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
+def login(self, enableCmdQR=False, picPath=None, qrCallback=None,
         loginCallback=None, exitCallback=None):
     if self.alive:
         logger.debug('itchat has already logged in.')
@@ -35,7 +35,7 @@ def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
             while not self.get_QRuuid(): time.sleep(1)
             logger.info('Downloading QR code.')
             qrStorage = self.get_QR(enableCmdQR=enableCmdQR,
-                picDir=picDir, qrCallback=qrCallback)
+                picPath=picPath, qrCallback=qrCallback)
             if qrStorage:
                 break
             elif 9 == getCount:
@@ -64,8 +64,8 @@ def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
         r = loginCallback()
     else:
         utils.clear_screen()
-        if os.path.exists(picDir or config.DEFAULT_QR):
-            os.remove(picDir or config.DEFAULT_QR)
+        if os.path.exists(picPath or config.DEFAULT_QR):
+            os.remove(picPath or config.DEFAULT_QR)
         logger.info('Login successfully as %s' % self.storageClass.nickName)
     self.start_receiving(exitCallback)
 
@@ -82,9 +82,9 @@ def get_QRuuid(self):
         self.uuid = data.group(2)
         return self.uuid
 
-def get_QR(self, uuid=None, enableCmdQR=False, picDir=None, qrCallback=None):
+def get_QR(self, uuid=None, enableCmdQR=False, picPath=None, qrCallback=None):
     uuid = uuid or self.uuid
-    picDir = picDir or config.DEFAULT_QR
+    picPath = picPath or config.DEFAULT_QR
     url = '%s/qrcode/%s' % (config.BASE_URL, uuid)
     headers = { 'User-Agent' : config.USER_AGENT }
     try:
@@ -95,11 +95,11 @@ def get_QR(self, uuid=None, enableCmdQR=False, picDir=None, qrCallback=None):
     if hasattr(qrCallback, '__call__'):
         qrCallback(uuid=uuid, status='0', qrcode=qrStorage.getvalue())
     else:
-        with open(picDir, 'wb') as f: f.write(r.content)
+        with open(picPath, 'wb') as f: f.write(r.content)
         if enableCmdQR:
-            utils.print_cmd_qr(picDir, enableCmdQR=enableCmdQR)
+            utils.print_cmd_qr(picPath, enableCmdQR=enableCmdQR)
         else:
-            utils.print_qr(picDir)
+            utils.print_qr(picPath)
     return qrStorage
 
 def check_login(self, uuid=None):
