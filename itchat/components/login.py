@@ -226,6 +226,9 @@ def start_receiving(self, exitCallback=None, getReceivingFnOnly=False):
                             if '@@' in contact['UserName']:
                                 chatroomList.append(contact)
                             else:
+                                # message don't return DisplayName and Uin, set them empty
+                                contact['DisplayName'] = ''
+                                contact['Uin'] = 0
                                 otherList.append(contact)
                         chatroomMsg = update_local_chatrooms(self, chatroomList)
                         self.msgList.put(chatroomMsg)
