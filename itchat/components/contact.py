@@ -173,8 +173,10 @@ def update_local_friends(core, l):
     '''
     fullList = core.memberList + core.mpList
     for friend in l:
-        utils.emoji_formatter(friend, 'NickName')
-        utils.emoji_formatter(friend, 'DisplayName')
+        if 'NickName' in friend:
+            utils.emoji_formatter(friend, 'NickName')
+        if 'DisplayName' in friend:
+            utils.emoji_formatter(friend, 'DisplayName')
         oldInfoDict = utils.search_dict_list(
             fullList, 'UserName', friend['UserName'])
         if oldInfoDict is None:
@@ -223,7 +225,13 @@ def update_local_uin(core, msg):
                         update_chatroom(core, username)
                         newChatroomDict = utils.search_dict_list(
                             core.chatroomList, 'UserName', username)
-                        newChatroomDict['Uin'] = uin
+                        if newChatroomDict is None:
+                            newChatroomDict = utils.struct_friend_info({
+                                'UserName': username,
+                                'Uin': uin, })
+                            core.chatroomList.append(newChatroomDict)
+                        else:
+                            newChatroomDict['Uin'] = uin
                     elif '@' in username:
                         update_friend(core, username)
                         newFriendDict = utils.search_dict_list(
