@@ -66,6 +66,7 @@ def configured_reply(self):
                 r = replyFn(msg)
                 if r is not None: self.send(r, msg.get('FromUserName'))
             except:
+                logger.warning('An error occurred in registered function, use `itchat.run(debug=True)` to show detailed information')
                 logger.debug(traceback.format_exc())
 
 def msg_register(self, msgType, isFriendChat=False, isGroupChat=False, isMpChat=False):

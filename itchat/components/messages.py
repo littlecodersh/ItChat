@@ -180,7 +180,7 @@ def produce_msg(core, msgList):
                 'Type': 'Useless',
                 'Text': 'UselessMsg', }
         else:
-            logger.debug('MsgType Unknown: %s\n%s' % (m['MsgType'], str(m)))
+            logger.debug('Useless message received: %s\n%s' % (m['MsgType'], str(m)))
             msg = {
                 'Type': 'Useless',
                 'Text': 'UselessMsg', }
