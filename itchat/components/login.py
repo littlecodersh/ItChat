@@ -27,7 +27,7 @@ def load_login(core):
 def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
         loginCallback=None, exitCallback=None):
     if self.alive:
-        logger.debug('itchat has already logged in.')
+        logger.warning('itchat has already logged in.')
         return
     while 1:
         for getCount in range(10):
@@ -219,7 +219,7 @@ def start_receiving(self, exitCallback=None, getReceivingFnOnly=False):
                 retryCount = 0
             except:
                 retryCount += 1
-                logger.debug(traceback.format_exc())
+                logger.error(traceback.format_exc())
                 if self.receivingRetryCount < retryCount:
                     self.alive = False
                 else:
