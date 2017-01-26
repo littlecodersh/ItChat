@@ -3,6 +3,7 @@
 Created on Thu Jan 26 17:34:36 2017
 
 @author: Quantum Liu
+实现拜年消息自动回复，根据对话轮数不同回复不同内容
 """
 import random
 import time
