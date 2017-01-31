@@ -1,4 +1,4 @@
-import re, os, sys, subprocess, copy
+import re, os, sys, subprocess, copy, traceback, logging
 
 try:
     from HTMLParser import HTMLParser
@@ -8,6 +8,8 @@ except ImportError:
 import requests
 
 from . import config
+
+logger = logging.getLogger('itchat')
 
 emojiRegex = re.compile(r'<span class="emoji emoji(.{1,10})"></span>')
 htmlParser = HTMLParser()
@@ -131,5 +133,7 @@ def test_connect(retryTime=5):
         try:
             r = requests.get(config.BASE_URL)
         except:
-            if i == retryTime-1: return False
+            if i == retryTime-1:
+                logger.error(traceback.format_exc())
+                return False
     return True
