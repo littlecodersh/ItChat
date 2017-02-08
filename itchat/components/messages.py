@@ -198,7 +198,6 @@ def produce_group_chat(core, msg):
         content = msg['Content']
         chatroomUserName = msg['ToUserName']
     else:
-        logger.warning('New structure of groupchat detected, please report a bug.')
         return
     chatroom = core.storageClass.search_chatrooms(userName=chatroomUserName)
     member = utils.search_dict_list((chatroom or {}).get(

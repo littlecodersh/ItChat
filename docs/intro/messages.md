@@ -286,6 +286,7 @@ Content:
 ```
 
 itchat增加了三个群聊相关的键值：
+
 * isAt: 判断是否@本号
 * ActualNickName: 实际NickName
 * Content: 实际Content

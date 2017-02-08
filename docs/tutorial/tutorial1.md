@@ -35,6 +35,7 @@ Python与基本的网络基础都不困难，所以即使没有这方面基础�
 本文是这一教程的第一部分，需要配置抓包与Python环境。
 
 本教程使用的环境如下：
+
 * Windows 8.1
 * Python 2.7.11 (安装Image, requests）
 * Wireshark 2.0.2
@@ -90,12 +91,14 @@ Wireshark是常见的抓包软件，这里通过一些配置抓取微信网页�
 我们发现直接在浏览器中获取了一张二维码，所以这很有可能就是上述一、二步的过程了。
 
 那么我们是向服务器提供了哪些数据获取了二维码呢？
+
 * 每次我们登录的二维码会变化，且没有随二维码传回的标识，所以我们肯定提供了每次不同的信息
 * 网址中最后一部分看起来比较像标识：https://login.weixin.qq.com/qrcode/4ZtmDT6OPg==
 * 为了进一步验证猜想，再次抓包，发现类似292号包的请求url仅最后一部分存在区别
 * 所以我们提供了`4ZtmDT6Opg==`获取到了这一二维码。
 
 那么这一标识是随机生成的还是服务器获取的呢？
+
 * 从最近的包开始分析服务器传回的数据（Source是服务器地址的数据），发现就在上一行，286号包有我们感兴趣的数据。
 * 打开这个包，可以看到其返回的数据为`window.QRLogin.code = 200; window.QRLogin.uuid = "4ZtmDT6OPg==";`（见下方截图）
 * 显然导致服务器返回这一请求的284号包就是我们获取标识（下称uuid）所需要伪造的包。
@@ -103,6 +106,7 @@ Wireshark是常见的抓包软件，这里通过一些配置抓取微信网页�
 ![uuid返回包](http://7xrip4.com1.z0.glb.clouddn.com/ItChat%2FTutorial%2Fuuid%E8%BF%94%E5%9B%9E%E5%8C%85.png)
 
 那么284号包需要传递给服务器哪些数据？
+
 * 这是一个get请求，所以我们分析其请求的url：`https://login.weixin.qq.com/jslogin?appid=wx782c26e4c19acffb&redirect_uri=https%3A%2F%2Fwx.qq.com%2Fcgi-bin%2Fmmwebwx-bin%2Fwebwxnewloginpage&fun=new&lang=en_US&_=1453725386008`。
 * 可以发现需要给出五个量`appid, redirect_uri, fun, lang, _`。
 * 其中除了appid其余都显然是固定的量（_的格式显然为时间戳）。
@@ -113,6 +117,7 @@ Wireshark是常见的抓包软件，这里通过一些配置抓取微信网页�
 3,4部的最显著特征是在扫描成功以后会获取扫描用的微信号的头像。
 
 我们还是首先大致的浏览一下服务器返回的数据包，试图找到包含图片的数据包。
+
 * 从325号包（微信头像肯定在二维码之后获取）开始浏览。
 * 我们发现338号包中包含一个base64加密的图片，[解压](http://www.vgot.net/test/image2base64.php?)后可以看到自己的头像。
 * 所以这个数据包就是服务器返回的扫描成功的数据包了，而前面那部分`window.code=201`显然就是表示状态的代码。（见下方截图）
@@ -122,6 +127,7 @@ Wireshark是常见的抓包软件，这里通过一些配置抓取微信网页�
 ![微信扫码状态码](http://7xrip4.com1.z0.glb.clouddn.com/ItChat%2FTutorial%2F%E5%BE%AE%E4%BF%A1%E6%89%AB%E7%A0%81%E7%8A%B6%E6%80%81%E7%A0%81.png)
 
 我们很容易的找到了在登录过程当中不断出现的请求，那么要怎么模拟呢？
+
 * 首先这是一个简单的get请求，url为：https://login.weixin.qq.com/cgi-bin/mmwebwx-bin/login?loginicon=true&uuid=4ZtmDT6OPg==&tip=1&r=-2026440414&_=1453725386009
 * 可以发现需要给出五个量`loginicon, uuid, tip, r, _`
 * 通过多次抓包发现除了r以外都可以找到简单的规律，那么r的规律等待模拟时再尝试处理
@@ -297,6 +303,7 @@ print('Log in as %s'%dic['User']['NickName'])
 ```
 
 这里做一个简单的小结：
+
 * 首先需要用python初始化一个session，否则登录过程的存储将会比较麻烦。
 * 模拟数据包的时候首先区分get与post请求，对应session的get与post方法。
 * get的数据为url后半部分的内容，post是数据包最后一部分的内容。
@@ -309,6 +316,7 @@ print('Log in as %s'%dic['User']['NickName'])
 到现在为止我展示了一个完整的抓包、分析、模拟的过程完成了模拟登陆，其他一些事情其实也都是类似的过程，想清楚每一步要做些什么即可。
 
 这里用到的软件都只介绍了最简单的一些方法，进一步的内容这里给出一些建议：
+
 * wireshark可以直接浏览官方文档，有空可以做一个了解。
 * requests包的使用通过搜索引擎即可，特殊的功能建议直接阅读源码。
 

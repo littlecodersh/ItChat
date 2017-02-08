@@ -18,6 +18,7 @@
 ### 3. 课程知识点
 
 本课程项目完成过程中将学习：
+
 * 微信消息的基本获取与处理
 * 微信消息的指定发送
 
@@ -105,6 +106,7 @@ itchat.run()
 其中第三行即注册的操作，通过装饰符将`print_content`注册为处理文本消息的函数。
 
 微信有各种类型的数据，例如图片、语音、名片、分享等，也对应不同的注册参数：
+
 * 图片对应`itchat.content.PICTURE`
 * 语音对应`itchat.content.RECORDING`
 * 名片对应`itchat.content.CARD`

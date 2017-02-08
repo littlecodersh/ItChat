@@ -1,4 +1,5 @@
 在使用个人微信的过程当中主要有三种账号需要获取，分别为：
+
 * 好友
 * 公众号
 * 群聊
@@ -14,6 +15,7 @@ itchat为这三种账号都提供了整体获取方法与搜索方法。
 ## 好友
 
 好友的获取方法为`get_friends`，将会返回完整的好友列表。
+
 * 其中每个好友为一个字典
 * 列表的第一项为本人的账号信息
 * 传入update键为True将可以更新好友列表并返回
@@ -40,6 +42,7 @@ itchat.search_friends(name='LittleCoder机器人', wechatAccount='littlecodersh'
 ```
 
 更新用户信息的方法为`update_friend`。
+
 * 该方法需要传入用户的`UserName`，返回指定用户的最新信息
 * 同样也可以传入`UserName`组成的列表，那么相应的也会返回指定用户的最新信息组成的列表
 
@@ -50,6 +53,7 @@ memberList = itchat.update_friend('@abcdefg1234567')
 ## 公众号
 
 公众号的获取方法为`get_mps`，将会返回完整的公众号列表。
+
 * 其中每个公众号为一个字典
 * 传入update键为True将可以更新公众号列表并返回
 
@@ -71,6 +75,7 @@ itchat.search_mps(userName='@abcdefg1234567', name='LittleCoder')
 ## 群聊
 
 群聊的获取方法为`get_chatrooms`，将会返回完整的群聊列表。
+
 * 其中每个群聊为一个字典
 * 传入update键为True将可以更新群聊列表并返回通讯录中保存的群聊列表
 * 群聊列表为后台自动更新，如果中途意外退出存在极小的概率产生本地群聊消息与后台不同步
@@ -93,6 +98,7 @@ itchat.search_chatrooms(userName='@@abcdefg1234567', name='LittleCoder')
 ```
 
 群聊用户列表的获取方法为`update_chatroom`。
+
 * 同样，如果想要更新该群聊的其他信息也可以用该方法
 * 群聊在首次获取中不会获取群聊的用户列表，所以需要调用该命令才能获取群聊的成员
 * 该方法需要传入群聊的`UserName`，返回特定群聊的详细信息
@@ -103,6 +109,7 @@ memberList = itchat.update_chatroom('@@abcdefg1234567', detailedMember=True)
 ```
 
 创建群聊、增加、删除群聊用户的方法如下所示：
+
 * 由于之前通过群聊检测是否被好友拉黑的程序，目前这三个方法都被严格限制了使用频率
 * 删除群聊需要本账号为群管理员，否则会失败
 * 将用户加入群聊有直接加入与发送邀请，通过`useInvitation`设置

@@ -3,6 +3,7 @@
 itchat提供五种回复方法，建议直接使用`send`方法。
 
 ## send方法
+
 * 方法：
 ```python
 send(msg='Text Message', toUserName=None)
@@ -27,6 +28,7 @@ itchat.send('@vid@%s' % 'demo.mp4')
 ```
 
 ## send_msg方法
+
 * 方法：
 ```python
 send_msg(msg='Text Message', toUserName=None)
@@ -45,6 +47,7 @@ itchat.send_msg('Hello world')
 ```
 
 ## send_file方法
+
 * 方法：
 ```python
 send_file(fileDir, toUserName=None)
@@ -65,6 +68,7 @@ itchat.send_file('xlsx.xlsx')
 ```
 
 ## send_img方法
+
 * 方法：
 ```python
 send_img(fileDir, toUserName=None)
@@ -85,6 +89,7 @@ itchat.send_img('gz.gif')
 ```
 
 ## send_video方法
+
 * 方法：
 ```python
 send_video(fileDir, toUserName=None)
