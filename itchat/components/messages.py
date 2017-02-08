@@ -207,7 +207,6 @@ def produce_group_chat(core, msg):
         member = utils.search_dict_list((chatroom or {}).get(
             'MemberList') or [], 'UserName', actualUserName)
     if member is None:
-        print(chatroom['MemberList'])
         logger.debug('chatroom member fetch failed with %s' % actualUserName)
     else:
         msg['ActualUserName'] = actualUserName

@@ -64,15 +64,16 @@ def configured_reply(self):
         else:
             try:
                 r = replyFn(msg)
-                if r is not None: self.send(r, msg.get('FromUserName'))
+                if r is not None:
+                    self.send(r, msg.get('FromUserName'))
             except:
-                logger.warning('An error occurred in registered function, use `itchat.run(debug=True)` to show detailed information')
-                logger.debug(traceback.format_exc())
+                logger.warning(traceback.format_exc())
 
 def msg_register(self, msgType, isFriendChat=False, isGroupChat=False, isMpChat=False):
     ''' a decorator constructor
         return a specific decorator based on information given '''
-    if not isinstance(msgType, list): msgType = [msgType]
+    if not isinstance(msgType, list):
+        msgType = [msgType]
     def _msg_register(fn):
         for _msgType in msgType:
             if isFriendChat:
@@ -91,12 +92,14 @@ def run(self, debug=False, blockThread=True):
         set_logging(loggingLevel=logging.DEBUG)
     def reply_fn():
         try:
-            while self.alive: self.configured_reply()
+            while self.alive:
+                self.configured_reply()
         except KeyboardInterrupt:
-            if self.useHotReload: self.dump_login_status()
+            if self.useHotReload:
+                self.dump_login_status()
             self.alive = False
             logger.debug('itchat received an ^C and exit.')
-            print('Bye~')
+            logger.info('Bye~')
     if blockThread:
         reply_fn()
     else:

@@ -105,7 +105,7 @@ try:
 except ImportError:
     def print_cmd_qr(fileDir, size = 37, padding = 3,
             white = BLOCK, black = '  ', enableCmdQR = True):
-        print('pillow should be installed to use command line QRCode: pip install pillow')
+        logger.warning('pillow should be installed to use command line QRCode: pip install pillow')
         print_qr(fileDir)
 def struct_friend_info(knownInfo):
     member = copy.deepcopy(friendInfoTemplate)
