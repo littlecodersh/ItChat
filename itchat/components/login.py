@@ -168,6 +168,7 @@ def web_init(self):
     utils.emoji_formatter(dic['User'], 'NickName')
     self.loginInfo['InviteStartCount'] = int(dic['InviteStartCount'])
     self.loginInfo['User'] = utils.struct_friend_info(dic['User'])
+    self.memberList.append(self.loginInfo['User'])
     self.loginInfo['SyncKey'] = dic['SyncKey']
     self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val'])
         for item in dic['SyncKey']['List']])

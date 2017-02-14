@@ -132,8 +132,8 @@ def test_connect(retryTime=5):
     for i in range(retryTime):
         try:
             r = requests.get(config.BASE_URL)
+            return True
         except:
-            if i == retryTime-1:
+            if i == retryTime - 1:
                 logger.error(traceback.format_exc())
                 return False
-    return True
