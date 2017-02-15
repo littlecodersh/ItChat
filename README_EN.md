@@ -216,10 +216,6 @@ Q: Why I can't upload files whose name is not purely english?
 
 A: This is caused because of the encoding of `requests`, you may fix it by placing [fields.py][fields.py-2](py3 version is [here][fields.py-3]) in packages/urllib3 of requests.
 
-Q: Why I still can't show QRCode with command line after I set enableCmdQr key to True in itchat.auto_login()?
-
-A: That's because you need to install optional site-package pillow, try this script: pip install pillow
-
 Q: How to use this package to use my wechat as an monitor?
 
 A: There are two ways: communicate with your own account or with filehelper.

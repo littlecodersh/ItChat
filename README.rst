@@ -214,10 +214,6 @@ Q: Why I can't send files whose name is encoded in utf8?
 
 A: That's because of the upload setting of requests, you can put `this file <https://gist.github.com/littlecodersh/9a0c5466f442d67d910f877744011705>`__ (for py3 you need `this <https://gist.github.com/littlecodersh/e93532d5e7ddf0ec56c336499165c4dc>`__) into packages/urllib3 of requests package.
 
-Q: Why I still can't show QRCode with command line after I set enableCmdQr key to True in itchat.auto_login()?
-
-A: That's because you need to install optional site-package pillow, try this script: pip install pillow
-
 Q: How to use this package to use my wechat as an monitor?
 
 A: There are two ways: communicate with your own account or with filehelper.

@@ -5,6 +5,7 @@ import copy, pickle, random
 import traceback, logging
 
 import requests
+from pyqrcode import QRCode
 
 from .. import config, utils
 from ..returnvalues import ReturnValue
@@ -30,17 +31,12 @@ def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
         logger.warning('itchat has already logged in.')
         return
     while 1:
-        for getCount in range(10):
-            logger.info('Getting uuid of QR code.')
-            while not self.get_QRuuid(): time.sleep(1)
-            logger.info('Downloading QR code.')
-            qrStorage = self.get_QR(enableCmdQR=enableCmdQR,
-                picDir=picDir, qrCallback=qrCallback)
-            if qrStorage:
-                break
-            elif 9 == getCount:
-                logger.info('Failed to get QR code, please restart the program.')
-                sys.exit()
+        logger.info('Getting uuid of QR code.')
+        while not self.get_QRuuid():
+            time.sleep(1)
+        logger.info('Downloading QR code.')
+        qrStorage = self.get_QR(enableCmdQR=enableCmdQR,
+            picDir=picDir, qrCallback=qrCallback)
         logger.info('Please scan the QR code to log in.')
         isLoggedIn = False
         while not isLoggedIn:
@@ -55,7 +51,8 @@ def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
                     isLoggedIn = None
             elif status != '408':
                 break
-        if isLoggedIn: break
+        if isLoggedIn:
+            break
         logger.info('Log in time out, reloading QR code')
     self.web_init()
     self.show_mobile_login()
@@ -85,20 +82,17 @@ def get_QRuuid(self):
 def get_QR(self, uuid=None, enableCmdQR=False, picDir=None, qrCallback=None):
     uuid = uuid or self.uuid
     picDir = picDir or config.DEFAULT_QR
-    url = '%s/qrcode/%s' % (config.BASE_URL, uuid)
-    headers = { 'User-Agent' : config.USER_AGENT }
-    try:
-        r = self.s.get(url, stream=True, headers=headers)
-    except:
-        return False
-    qrStorage = io.BytesIO(r.content)
+    qrStorage = io.BytesIO()
+    qrCode = QRCode('https://login.weixin.qq.com/l/' + uuid)
+    qrCode.png(qrStorage)
     if hasattr(qrCallback, '__call__'):
         qrCallback(uuid=uuid, status='0', qrcode=qrStorage.getvalue())
     else:
-        with open(picDir, 'wb') as f: f.write(r.content)
         if enableCmdQR:
-            utils.print_cmd_qr(picDir, enableCmdQR=enableCmdQR)
+            utils.print_cmd_qr(qrCode.text(1), enableCmdQR=enableCmdQR)
         else:
+            with open(picDir, 'wb') as f:
+                f.write(qrStorage.getvalue())
             utils.print_qr(picDir)
     return qrStorage
 

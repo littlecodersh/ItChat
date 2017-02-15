@@ -1,12 +1,14 @@
 # itchat
 
-[![Gitter][gitter-picture]][gitter] ![py27][py27] ![py35][py35]
+![py27][py27] ![py35][py35]
 
 itchat是一个开源的微信个人号接口，使用python调用微信从未如此简单。
 
 使用不到三十行的代码，你就可以完成一个能够处理所有信息的微信机器人。
 
 当然，该api的使用远不止一个机器人，更多的功能等着你来发现，比如[这些][tutorial2]。
+
+该接口与公众号接口[itchatmp][itchatmp]共享类似的操作方式，学习一次掌握两个工具。
 
 如今微信已经成为了个人社交的很大一部分，希望这个项目能够帮助你扩展你的个人的微信号、方便自己的生活。
 
@@ -208,6 +210,36 @@ itchat.logout()
 
 若不设置loginCallback的值，则将会自动删除二维码图片并清空命令行显示。
 
+## 常见问题与解答
+
+Q: 为什么中文的文件没有办法上传？
+
+A: 这是由于`requests`的编码问题导致的。若需要支持中文文件传输，将[fields.py][fields.py-2](py3版本见[这里][fields.py-3])文件放入requests包的packages/urllib3下即可
+
+Q: 如何通过这个包将自己的微信号变为控制器？
+
+A: 有两种方式：发送、接受自己UserName的消息；发送接收文件传输助手（filehelper）的消息
+
+Q: 为什么我发送信息的时候部分信息没有成功发出来？
+
+A: 有些账号是天生无法给自己的账号发送信息的，建议使用`filehelper`代替。
+
+## 作者
+
+[LittleCoder][littlecodersh]: 构架及维护Python2 Python3版本。
+
+[tempdban][tempdban]: 协议、构架及日常维护。
+
+[Chyroc][Chyroc]: 完成第一版本的Python3构架。
+
+## 类似项目
+
+[liuwons/wxBot][liuwons-wxBot]: 类似的基于Python的微信机器人
+
+[zixia/wechaty][zixia-wechaty]: 基于Javascript(ES6)的微信个人账号机器人NodeJS框架/库
+
+[sjdy521/Mojo-Weixin][Mojo-Weixin]: 使用Perl语言编写的微信客户端框架，可通过插件提供基于HTTP协议的api接口供其他语言调用
+
 ## 问题和建议
 
 如果有什么问题或者建议都可以在这个[Issue][issue#1]和我讨论
@@ -221,6 +253,7 @@ itchat.logout()
 [py27]: https://img.shields.io/badge/python-2.7-ff69b4.svg
 [py35]: https://img.shields.io/badge/python-3.5-red.svg
 [english-version]: https://github.com/littlecodersh/ItChat/blob/master/README_EN.md
+[itchatmp]: https://github.com/littlecodersh/itchatmp
 [document]: https://itchat.readthedocs.org/zh/latest/
 [tutorial2]: http://python.jobbole.com/86532/
 [robot-source-code]: https://gist.github.com/littlecodersh/ec8ddab12364323c97d4e36459174f0d
