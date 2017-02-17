@@ -254,7 +254,11 @@ def get_contact(self, update=False):
     headers = {
         'ContentType': 'application/json; charset=UTF-8',
         'User-Agent' : config.USER_AGENT, }
-    r = self.s.get(url, headers=headers)
+    try:
+        r = self.s.get(url, headers=headers)
+    except:
+        logger.info('Failed to fetch contact, that may because of the amount of your chatrooms')
+        return []
     tempList = json.loads(r.content.decode('utf-8', 'replace'))['MemberList']
     chatroomList, otherList = [], []
     for m in tempList:
@@ -350,7 +354,8 @@ def get_head_img(self, userName=None, chatroomUserName=None, picDir=None):
     '''
     params = {
         'userName': userName or chatroomUserName or self.storageClass.userName,
-        'skey': self.loginInfo['skey'], }
+        'skey': self.loginInfo['skey'],
+        'type': 'big', }
     url = '%s/webwxgeticon' % self.loginInfo['url']
     if chatroomUserName is None:
         infoDict = self.storageClass.search_friends(userName=userName)
