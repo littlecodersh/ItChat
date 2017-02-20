@@ -46,20 +46,20 @@ class Storage(object):
             for k in ('RemarkName', 'NickName', 'Alias'):
                 if matchDict[k] is None: del matchDict[k]
             if name: # select based on name
-                contract = []
+                contact = []
                 for m in self.memberList:
                     if any([m.get(k) == name for k in ('RemarkName', 'NickName', 'Alias')]):
-                        contract.append(m)
+                        contact.append(m)
             else:
-                contract = self.memberList[:]
+                contact = self.memberList[:]
             if matchDict: # select again based on matchDict
                 friendList = []
-                for m in contract:
+                for m in contact:
                     if all([m.get(k) == v for k, v in matchDict.items()]):
                         friendList.append(m)
                 return copy.deepcopy(friendList)
             else:
-                return copy.deepcopy(contract)
+                return copy.deepcopy(contact)
     def search_chatrooms(self, name=None, userName=None):
         if userName is not None:
             for m in self.chatroomList:

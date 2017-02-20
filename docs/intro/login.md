@@ -125,7 +125,7 @@ itchat.auto_login(enableCmdQR=-1)
 
 获取微信的所有好友信息并更新。
 
-* 方法名称：`get_friends`（曾用名：`get_contract`）
+* 方法名称：`get_friends`（曾用名：`get_contact`）
 * 所需值：无
 * 返回值：存储好友信息的列表
 

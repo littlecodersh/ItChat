@@ -236,7 +236,13 @@ def update_local_uin(core, msg):
                         update_friend(core, username)
                         newFriendDict = utils.search_dict_list(
                             core.memberList, 'UserName', username)
-                        newFriendDict['Uin'] = uin
+                        if newFriendDict is None:
+                            newFriendDict = utils.struct_friend_info({
+                                'UserName': username,
+                                'Uin': uin, })
+                            core.memberList.append(newFriendDict)
+                        else:
+                            newFriendDict['Uin'] = uin
                     usernameChangedList.append(username)
                     logger.debug('Uin fetched: %s, %s' % (username, uin))
         else:
