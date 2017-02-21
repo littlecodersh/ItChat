@@ -23,11 +23,13 @@ else:
     BLOCK = b
 friendInfoTemplate = {}
 for k in ('UserName', 'City', 'DisplayName', 'PYQuanPin', 'RemarkPYInitial', 'Province',
-    'KeyWord', 'RemarkName', 'PYInitial', 'EncryChatRoomId', 'Alias', 'Signature', 
-    'NickName', 'RemarkPYQuanPin', 'HeadImgUrl'): friendInfoTemplate[k] = ''
+        'KeyWord', 'RemarkName', 'PYInitial', 'EncryChatRoomId', 'Alias', 'Signature', 
+        'NickName', 'RemarkPYQuanPin', 'HeadImgUrl'):
+    friendInfoTemplate[k] = ''
 for k in ('UniFriend', 'Sex', 'AppAccountFlag', 'VerifyFlag', 'ChatRoomId', 'HideInputBarFlag',
-    'AttrStatus', 'SnsFlag', 'MemberCount', 'OwnerUin', 'ContactFlag', 'Uin',
-    'StarFriend', 'Statues'): friendInfoTemplate[k] = 0
+        'AttrStatus', 'SnsFlag', 'MemberCount', 'OwnerUin', 'ContactFlag', 'Uin',
+        'StarFriend', 'Statues'):
+    friendInfoTemplate[k] = 0
 friendInfoTemplate['MemberList'] = []
 
 def clear_screen():
@@ -124,3 +126,7 @@ def test_connect(retryTime=5):
             if i == retryTime - 1:
                 logger.error(traceback.format_exc())
                 return False
+
+def contact_deep_copy(core, contact):
+    with core.storageClass.updateLock:
+        return copy.deepcopy(contact)

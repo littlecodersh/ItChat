@@ -6,6 +6,7 @@ import requests
 
 from .. import config, utils
 from ..returnvalues import ReturnValue
+from ..storage import contact_change
 
 logger = logging.getLogger('itchat')
 
@@ -107,6 +108,7 @@ def update_info_dict(oldInfoDict, newInfoDict):
         elif oldInfoDict.get(k) is None or v not in (None, '', '0', 0):
             oldInfoDict[k] = v
 
+@contact_change
 def update_local_chatrooms(core, l):
     '''
         get a list of chatrooms for updating local chatrooms
@@ -167,6 +169,7 @@ def update_local_chatrooms(core, l):
         'FromUserName' : core.storageClass.userName,
         'ToUserName'   : core.storageClass.userName, }
 
+@contact_change
 def update_local_friends(core, l):
     '''
         get a list of friends or mps for updating local contact
@@ -188,6 +191,7 @@ def update_local_friends(core, l):
         else:
             update_info_dict(oldInfoDict, friend)
 
+@contact_change
 def update_local_uin(core, msg):
     '''
         content contains uins and StatusNotifyUserName contains username
@@ -222,7 +226,9 @@ def update_local_uin(core, msg):
                                 userDicts['Uin'], uin))
                 else:
                     if '@@' in username:
+                        core.storageClass.updateLock.release()
                         update_chatroom(core, username)
+                        core.storageClass.updateLock.acquire()
                         newChatroomDict = utils.search_dict_list(
                             core.chatroomList, 'UserName', username)
                         if newChatroomDict is None:
@@ -233,7 +239,9 @@ def update_local_uin(core, msg):
                         else:
                             newChatroomDict['Uin'] = uin
                     elif '@' in username:
+                        core.storageClass.updateLock.release()
                         update_friend(core, username)
+                        core.storageClass.updateLock.acquire()
                         newFriendDict = utils.search_dict_list(
                             core.memberList, 'UserName', username)
                         if newFriendDict is None:
@@ -254,7 +262,8 @@ def update_local_uin(core, msg):
     return r
 
 def get_contact(self, update=False):
-    if not update: return copy.deepcopy(self.chatroomList)
+    if not update:
+        return utils.contact_deep_copy(self, self.chatroomList)
     url = '%s/webwxgetcontact?r=%s&seq=0&skey=%s' % (self.loginInfo['url'],
         int(time.time()), self.loginInfo['skey'])
     headers = {
@@ -275,24 +284,28 @@ def get_contact(self, update=False):
         elif '@' in m['UserName']:
             # mp will be dealt in update_local_friends as well
             otherList.append(m)
-    if chatroomList: update_local_chatrooms(self, chatroomList)
-    if otherList: update_local_friends(self, otherList)
-    return copy.deepcopy(chatroomList)
+    if chatroomList:
+        update_local_chatrooms(self, chatroomList)
+    if otherList:
+        update_local_friends(self, otherList)
+    return utils.contact_deep_copy(self, chatroomList)
 
 def get_friends(self, update=False):
-    if update: self.get_contact(update=True)
-    return copy.deepcopy(self.memberList)
+    if update:
+        self.get_contact(update=True)
+    return utils.contact_deep_copy(self, self.memberList)
 
 def get_chatrooms(self, update=False, contactOnly=False):
     if contactOnly:
         return self.get_contact(update=True)
     else:
-        if update: self.get_contact(True)
-        return copy.deepcopy(self.chatroomList)
+        if update:
+            self.get_contact(True)
+        return utils.contact_deep_copy(self, self.chatroomList)
 
 def get_mps(self, update=False):
     if update: self.get_contact(update=True)
-    return copy.deepcopy(self.mpList)
+    return utils.contact_deep_copy(self, self.mpList)
 
 def set_alias(self, userName, alias):
     oldFriendInfo = utils.search_dict_list(
@@ -311,7 +324,8 @@ def set_alias(self, userName, alias):
     r = self.s.post(url, json.dumps(data, ensure_ascii=False).encode('utf8'),
         headers=headers)
     r = ReturnValue(rawResponse=r)
-    if r: oldFriendInfo['RemarkName'] = alias
+    if r:
+        oldFriendInfo['RemarkName'] = alias
     return r
 
 def set_pinned(self, userName, isPinned=True):
