@@ -264,19 +264,27 @@ def update_local_uin(core, msg):
 def get_contact(self, update=False):
     if not update:
         return utils.contact_deep_copy(self, self.chatroomList)
-    url = '%s/webwxgetcontact?r=%s&seq=0&skey=%s' % (self.loginInfo['url'],
-        int(time.time()), self.loginInfo['skey'])
-    headers = {
-        'ContentType': 'application/json; charset=UTF-8',
-        'User-Agent' : config.USER_AGENT, }
-    try:
-        r = self.s.get(url, headers=headers)
-    except:
-        logger.info('Failed to fetch contact, that may because of the amount of your chatrooms')
-        return []
-    tempList = json.loads(r.content.decode('utf-8', 'replace'))['MemberList']
+    def _get_contact(seq=0):
+        url = '%s/webwxgetcontact?r=%s&seq=%s&skey=%s' % (self.loginInfo['url'],
+            int(time.time()), seq, self.loginInfo['skey'])
+        headers = {
+            'ContentType': 'application/json; charset=UTF-8',
+            'User-Agent' : config.USER_AGENT, }
+        try:
+            r = self.s.get(url, headers=headers)
+        except:
+            logger.info('Failed to fetch contact, that may because of the amount of your chatrooms')
+            return 0, []
+        j = json.loads(r.content.decode('utf-8', 'replace'))
+        return j.get('Seq', 0), j.get('MemberList')
+    seq, memberList = 0, []
+    while 1:
+        seq, batchMemberList = _get_contact(seq)
+        memberList.extend(batchMemberList)
+        if seq == 0:
+            break
     chatroomList, otherList = [], []
-    for m in tempList:
+    for m in memberList:
         if m['Sex'] != 0:
             otherList.append(m)
         elif '@@' in m['UserName']:
@@ -356,14 +364,15 @@ def add_friend(self, userName, status=2, verifyContent='', autoUpdate=True):
             'VerifyUserTicket': '', }],
         'VerifyContent': verifyContent,
         'SceneListCount': 1,
-        'SceneList': 33, # [33]
+        'SceneList': [33],
         'skey': self.loginInfo['skey'], }
     headers = {
         'ContentType': 'application/json; charset=UTF-8',
         'User-Agent' : config.USER_AGENT }
     r = self.s.post(url, headers=headers,
         data=json.dumps(data, ensure_ascii=False).encode('utf8', 'replace'))
-    if autoUpdate: self.update_friend(userName)
+    if autoUpdate:
+        self.update_friend(userName)
     return ReturnValue(rawResponse=r)
 
 def get_head_img(self, userName=None, chatroomUserName=None, picDir=None):
