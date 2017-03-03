@@ -55,6 +55,7 @@ def load_login_status(self, fileDir,
     msgList, contactList = self.get_msg()
     if (msgList or contactList) is None:
         self.logout()
+        load_last_login_status(self.s, j['cookies'])
         logger.debug('server refused, loading login status failed.')
         return ReturnValue({'BaseResponse': {
             'ErrMsg': 'server refused, loading login status failed.',
@@ -76,3 +77,20 @@ def load_login_status(self, fileDir,
         return ReturnValue({'BaseResponse': {
             'ErrMsg': 'loading login status succeeded.',
             'Ret': 0, }})
+
+def load_last_login_status(session, cookiesDict):
+    try:
+        session.cookies = requests.utils.cookiejar_from_dict({
+            'webwxuvid': cookiesDict['webwxuvid'],
+            'webwx_auth_ticket': cookiesDict['webwx_auth_ticket'],
+            'login_frequency': '2',
+            'last_wxuin': cookiesDict['wxuin'],
+            'wxloadtime': cookiesDict['wxloadtime'] + '_expired',
+            'wxpluginkey': cookiesDict['wxloadtime'],
+            'wxuin': cookiesDict['wxuin'],
+            'mm_lang': 'zh_CN',
+            'MM_WX_NOTIFY_STATE': '1',
+            'MM_WX_SOUND_STATE': '1', })
+    except:
+        logger.info('Load status for push login failed, we may have experienced a cookies change.')
+        logger.info('If you are using the newest version of itchat, you may report a bug.')
