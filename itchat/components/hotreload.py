@@ -66,7 +66,7 @@ def load_login_status(self, fileDir,
                 if '@@' in contact['UserName']:
                     update_local_chatrooms(self, [contact])
                 else:
-                    update_local_chatrooms(self, [contact])
+                    update_local_friends(self, [contact])
         if msgList:
             msgList = produce_msg(self, msgList)
             for msg in msgList: self.msgList.put(msg)
