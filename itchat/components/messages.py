@@ -256,7 +256,7 @@ def upload_file(self, fileDir, isPicture=False, isVideo=False,
     fileSize = os.path.getsize(fileDir)
     fileSymbol = 'pic' if isPicture else 'video' if isVideo else'doc'
     with open(fileDir, 'rb') as f: fileMd5 = hashlib.md5(f.read()).hexdigest()
-    file = open(fileDir, 'rb')
+    file_ = open(fileDir, 'rb')
     chunks = int((fileSize - 1) / 524288) + 1
     clientMediaId = int(time.time() * 1e4)
     uploadMediaRequest = json.dumps(OrderedDict([
@@ -271,10 +271,13 @@ def upload_file(self, fileDir, isPicture=False, isVideo=False,
         ('ToUserName', toUserName),
         ('FileMd5', fileMd5)]
         ), separators = (',', ':'))
+    r = {'BaseResponse': {'Ret': -1005, 'ErrMsg': 'Empty file detected'}}
     for chunk in range(chunks):
         r = upload_chunk_file(self, fileDir, fileSymbol, fileSize,
-            file, chunk, chunks, uploadMediaRequest)
-    file.close()
+            file_, chunk, chunks, uploadMediaRequest)
+    file_.close()
+    if isinstance(r, dict):
+        return ReturnValue(r)
     return ReturnValue(rawResponse=r)
 
 def upload_chunk_file(core, fileDir, fileSymbol, fileSize,

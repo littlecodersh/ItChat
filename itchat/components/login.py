@@ -27,12 +27,15 @@ def load_login(core):
 
 def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
         loginCallback=None, exitCallback=None):
-    if self.alive:
+    if self.alive or self.isLogging:
         logger.warning('itchat has already logged in.')
         return
-    while 1:
+    self.isLogging = True
+    while self.isLogging:
         uuid = push_login(self)
-        if not uuid:
+        if uuid:
+            qrStorage = io.BytesIO()
+        else:
             logger.info('Getting uuid of QR code.')
             while not self.get_QRuuid():
                 time.sleep(1)
@@ -56,6 +59,8 @@ def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
         if isLoggedIn:
             break
         logger.info('Log in time out, reloading QR code.')
+    else:
+        return # log in process is stopped by user
     logger.info('Loading the contact, this may take a little while.')
     self.web_init()
     self.show_mobile_login()
@@ -68,6 +73,7 @@ def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
             os.remove(picDir or config.DEFAULT_QR)
         logger.info('Login successfully as %s' % self.storageClass.nickName)
     self.start_receiving(exitCallback)
+    self.isLogging = False
 
 def push_login(core):
     cookiesDict = core.s.cookies.get_dict()
@@ -311,6 +317,7 @@ def logout(self):
         headers = { 'User-Agent' : config.USER_AGENT }
         self.s.get(url, params=params, headers=headers)
         self.alive = False
+    self.isLogging = False
     self.s.cookies.clear()
     del self.chatroomList[:]
     del self.memberList[:]
