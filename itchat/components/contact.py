@@ -403,9 +403,9 @@ def get_head_img(self, userName=None, chatroomUserName=None, picDir=None):
                 return ReturnValue({'BaseResponse': {
                     'ErrMsg': 'No chatroom found',
                     'Ret': -1001, }})
-            if chatroom['EncryChatRoomId'] == '':
-                chatroom = self.update_chatroom(chatroomUserName)
-            params['chatroomid'] = chatroom['EncryChatRoomId']
+            if 'EncryChatRoomId' in chatroom:
+                params['chatroomid'] = chatroom['EncryChatRoomId']
+            params['chatroomid'] =  params['chatroomid'] or chatroom['UserName']
     headers = { 'User-Agent' : config.USER_AGENT }
     r = self.s.get(url, params=params, stream=True, headers=headers)
     tempStorage = io.BytesIO()
