@@ -5,6 +5,10 @@ except ImportError:
     import queue as Queue
 from threading import Lock
 
+from .templates import (
+    ContactList, AbstractUserDict, User,
+    MassivePlatform, Chatroom, ChatroomMember)
+
 def contact_change(fn):
     def _contact_change(core, *args, **kwargs):
         with core.storageClass.updateLock:
@@ -12,15 +16,21 @@ def contact_change(fn):
     return _contact_change
 
 class Storage(object):
-    def __init__(self):
+    def __init__(self, core):
         self.userName          = None
         self.nickName          = None
         self.updateLock        = Lock()
-        self.memberList        = []
-        self.mpList            = []
-        self.chatroomList      = []
+        self.memberList        = ContactList()
+        self.mpList            = ContactList()
+        self.chatroomList      = ContactList()
         self.msgList           = Queue.Queue(-1)
         self.lastInputUserName = None
+        self.memberList.set_default_value(contactClass=User)
+        self.memberList.core = core
+        self.mpList.set_default_value(contactClass=MassivePlatform)
+        self.mpList.core = core
+        self.chatroomList.set_default_value(contactClass=Chatroom)
+        self.chatroomList.core = core
     def dumps(self):
         return {
             'userName'          : self.userName,
@@ -33,11 +43,14 @@ class Storage(object):
         self.userName          = j.get('userName', None)
         self.nickName          = j.get('nickName', None)
         del self.memberList[:]
-        for i in j.get('memberList', []): self.memberList.append(i)
+        for i in j.get('memberList', []):
+            self.memberList.append(i)
         del self.mpList[:]
-        for i in j.get('mpList', []): self.mpList.append(i)
+        for i in j.get('mpList', []):
+            self.mpList.append(i)
         del self.chatroomList[:]
-        for i in j.get('chatroomList', []): self.chatroomList.append(i)
+        for i in j.get('chatroomList', []):
+            self.chatroomList.append(i)
         self.lastInputUserName = j.get('lastInputUserName', None)
     def search_friends(self, name=None, userName=None, remarkName=None, nickName=None,
             wechatAccount=None):

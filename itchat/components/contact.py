@@ -6,7 +6,7 @@ import requests
 
 from .. import config, utils
 from ..returnvalues import ReturnValue
-from ..storage import contact_change
+from ..storage import contact_change, templates
 
 logger = logging.getLogger('itchat')
 
@@ -99,8 +99,8 @@ def update_friend(self, userName):
     return r if len(r) != 1 else r[0]
 
 def update_info_dict(oldInfoDict, newInfoDict):
-    '''
-        only normal values will be updated here
+    ''' only normal values will be updated here
+        because newInfoDict is normal dict, so it's not necessary to consider templates
     '''
     for k, v in newInfoDict.items():
         if any((isinstance(v, t) for t in (tuple, list, dict))):
@@ -126,8 +126,8 @@ def update_local_chatrooms(core, l):
         if oldChatroom:
             update_info_dict(oldChatroom, chatroom)
             #  - update other values
-            memberList, oldMemberList = (c.get('MemberList', [])
-                    for c in (chatroom, oldChatroom))
+            memberList = chatroom.get('MemberList', [])
+            oldMemberList = oldChatroom.memberList
             if memberList:
                 for member in memberList:
                     oldMember = utils.search_dict_list(
@@ -137,17 +137,19 @@ def update_local_chatrooms(core, l):
                     else:
                         oldMemberList.append(member)
         else:
-            oldChatroom = chatroom
-            core.chatroomList.append(chatroom)
+            oldChatroom = templates.wrap_user_dict(chatroom)
+            core.chatroomList.append(oldChatroom)
         # delete useless members
         if len(chatroom['MemberList']) != len(oldChatroom['MemberList']) and \
                 chatroom['MemberList']:
             existsUserNames = [member['UserName'] for member in chatroom['MemberList']]
             delList = []
             for i, member in enumerate(oldChatroom['MemberList']):
-                if member['UserName'] not in existsUserNames: delList.append(i)
+                if member['UserName'] not in existsUserNames:
+                    delList.append(i)
             delList.sort(reverse=True)
-            for i in delList: del oldChatroom['MemberList'][i]
+            for i in delList:
+                del oldChatroom['MemberList'][i]
         #  - update OwnerUin
         if oldChatroom.get('ChatRoomOwner') and oldChatroom.get('MemberList'):
             oldChatroom['OwnerUin'] = utils.search_dict_list(oldChatroom['MemberList'],

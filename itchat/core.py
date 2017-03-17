@@ -18,7 +18,7 @@ class Core(object):
                 - failing is failing
         '''
         self.alive, self.isLogging = False, False
-        self.storageClass = storage.Storage()
+        self.storageClass = storage.Storage(self)
         self.memberList = self.storageClass.memberList
         self.mpList = self.storageClass.mpList
         self.chatroomList = self.storageClass.chatroomList

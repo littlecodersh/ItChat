@@ -1,6 +1,6 @@
 build/*
 dist/*
-test/*
+tests/*
 itchat.egg-info/*
 *.pyc
 *.swp
