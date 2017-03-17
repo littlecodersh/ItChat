@@ -413,10 +413,13 @@ def get_head_img(self, userName=None, chatroomUserName=None, picDir=None):
         tempStorage.write(block)
     if picDir is None:
         return tempStorage.getvalue()
-    with open(picDir, 'wb') as f: f.write(tempStorage.getvalue())
+    with open(picDir, 'wb') as f:
+        f.write(tempStorage.getvalue())
+    tempStorage.seek(0)
     return ReturnValue({'BaseResponse': {
         'ErrMsg': 'Successfully downloaded',
-        'Ret': 0, }})
+        'Ret': 0, },
+        'PostFix': utils.get_image_postfix(tempStorage.read(20)), })
 
 def create_chatroom(self, memberList, topic=''):
     url = '%s/webwxcreatechatroom?pass_ticket=%s&r=%s' % (

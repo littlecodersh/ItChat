@@ -70,7 +70,8 @@ def msg_formatter(d, k):
 
 def check_file(fileDir):
     try:
-        with open(fileDir): pass
+        with open(fileDir):
+            pass
         return True
     except:
         return False
@@ -130,3 +131,13 @@ def test_connect(retryTime=5):
 def contact_deep_copy(core, contact):
     with core.storageClass.updateLock:
         return copy.deepcopy(contact)
+
+def get_image_postfix(data):
+    data = data[:20]
+    if 'GIF' in data:
+        return 'gif'
+    elif 'PNG' in data:
+        return 'png'
+    elif 'JFIF' in data:
+        return 'jpg'
+    return ''
