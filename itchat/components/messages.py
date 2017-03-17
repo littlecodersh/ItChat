@@ -31,11 +31,15 @@ def get_download_fn(core, url, msgId):
         tempStorage = io.BytesIO()
         for block in r.iter_content(1024):
             tempStorage.write(block)
-        if downloadDir is None: return tempStorage.getvalue()
-        with open(downloadDir, 'wb') as f: f.write(tempStorage.getvalue())
+        if downloadDir is None:
+            return tempStorage.getvalue()
+        with open(downloadDir, 'wb') as f:
+            f.write(tempStorage.getvalue())
+        tempStorage.seek(0)
         return ReturnValue({'BaseResponse': {
             'ErrMsg': 'Successfully downloaded',
-            'Ret': 0, }})
+            'Ret': 0, },
+            'PostFix': utils.get_image_postfix(tempStorage.read(20)), })
     return download_fn
 
 def produce_msg(core, msgList):
@@ -101,8 +105,10 @@ def produce_msg(core, msgList):
                 tempStorage = io.BytesIO()
                 for block in r.iter_content(1024):
                     tempStorage.write(block)
-                if videoDir is None: return tempStorage.getvalue()
-                with open(videoDir, 'wb') as f: f.write(tempStorage.getvalue())
+                if videoDir is None:
+                    return tempStorage.getvalue()
+                with open(videoDir, 'wb') as f:
+                    f.write(tempStorage.getvalue())
                 return ReturnValue({'BaseResponse': {
                     'ErrMsg': 'Successfully downloaded',
                     'Ret': 0, }})
@@ -128,8 +134,10 @@ def produce_msg(core, msgList):
                     tempStorage = io.BytesIO()
                     for block in r.iter_content(1024):
                         tempStorage.write(block)
-                    if attaDir is None: return tempStorage.getvalue()
-                    with open(attaDir, 'wb') as f: f.write(tempStorage.getvalue())
+                    if attaDir is None:
+                        return tempStorage.getvalue()
+                    with open(attaDir, 'wb') as f:
+                        f.write(tempStorage.getvalue())
                     return ReturnValue({'BaseResponse': {
                         'ErrMsg': 'Successfully downloaded',
                         'Ret': 0, }})
@@ -255,7 +263,8 @@ def upload_file(self, fileDir, isPicture=False, isVideo=False,
             'Ret': -1002, }})
     fileSize = os.path.getsize(fileDir)
     fileSymbol = 'pic' if isPicture else 'video' if isVideo else'doc'
-    with open(fileDir, 'rb') as f: fileMd5 = hashlib.md5(f.read()).hexdigest()
+    with open(fileDir, 'rb') as f:
+        fileMd5 = hashlib.md5(f.read()).hexdigest()
     file_ = open(fileDir, 'rb')
     chunks = int((fileSize - 1) / 524288) + 1
     clientMediaId = int(time.time() * 1e4)
