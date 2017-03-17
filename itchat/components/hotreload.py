@@ -5,6 +5,7 @@ import requests
 
 from ..config import VERSION
 from ..returnvalues import ReturnValue
+from ..storage import templates
 from .contact import update_local_chatrooms, update_local_friends
 from .messages import produce_msg
 
@@ -50,6 +51,8 @@ def load_login_status(self, fileDir,
             'ErrMsg': 'cached status ignored because of version',
             'Ret': -1005, }})
     self.loginInfo = j['loginInfo']
+    self.loginInfo['User'] = templates.User(self.loginInfo['User'])
+    self.loginInfo['User'].core = self
     self.s.cookies = requests.utils.cookiejar_from_dict(j['cookies'])
     self.storageClass.loads(j['storage'])
     msgList, contactList = self.get_msg()

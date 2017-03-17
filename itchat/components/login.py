@@ -248,6 +248,7 @@ def start_receiving(self, exitCallback=None, getReceivingFnOnly=False):
                             else:
                                 otherList.append(contact)
                         chatroomMsg = update_local_chatrooms(self, chatroomList)
+                        chatroomMsg['User'] = self.loginInfo['User']
                         self.msgList.put(chatroomMsg)
                         update_local_friends(self, otherList)
                 retryCount = 0

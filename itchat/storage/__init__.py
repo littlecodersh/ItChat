@@ -40,8 +40,8 @@ class Storage(object):
             'chatroomList'      : self.chatroomList,
             'lastInputUserName' : self.lastInputUserName, }
     def loads(self, j):
-        self.userName          = j.get('userName', None)
-        self.nickName          = j.get('nickName', None)
+        self.userName = j.get('userName', None)
+        self.nickName = j.get('nickName', None)
         del self.memberList[:]
         for i in j.get('memberList', []):
             self.memberList.append(i)
@@ -88,19 +88,23 @@ class Storage(object):
         with self.updateLock:
             if userName is not None:
                 for m in self.chatroomList:
-                    if m['UserName'] == userName: return copy.deepcopy(m)
+                    if m['UserName'] == userName:
+                        return copy.deepcopy(m)
             elif name is not None:
                 matchList = []
                 for m in self.chatroomList:
-                    if name in m['NickName']: matchList.append(copy.deepcopy(m))
+                    if name in m['NickName']:
+                        matchList.append(copy.deepcopy(m))
                 return matchList
     def search_mps(self, name=None, userName=None):
         with self.updateLock:
             if userName is not None:
                 for m in self.mpList:
-                    if m['UserName'] == userName: return copy.deepcopy(m)
+                    if m['UserName'] == userName:
+                        return copy.deepcopy(m)
             elif name is not None:
                 matchList = []
                 for m in self.mpList:
-                    if name in m['NickName']: matchList.append(copy.deepcopy(m))
+                    if name in m['NickName']:
+                        matchList.append(copy.deepcopy(m))
                 return matchList

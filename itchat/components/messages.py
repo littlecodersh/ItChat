@@ -8,6 +8,7 @@ import requests
 
 from .. import config, utils
 from ..returnvalues import ReturnValue
+from ..storage import templates
 from .contact import update_local_uin
 
 logger = logging.getLogger('itchat')
@@ -50,10 +51,29 @@ def produce_msg(core, msgList):
     rl = []
     srl = [40, 43, 50, 52, 53, 9999]
     for m in msgList:
+        # get actual opposite
+        if m['FromUserName'] == core.storageClass.userName:
+            actualOpposite = m['ToUserName']
+        else:
+            actualOpposite = m['FromUserName']
+        # produce basic message
         if '@@' in m['FromUserName'] or '@@' in m['ToUserName']:
             produce_group_chat(core, m)
         else:
             utils.msg_formatter(m, 'Content')
+        # set user of msg
+        if '@@' in actualOpposite:
+            m['User'] = core.search_chatrooms(userName=actualOpposite) or \
+                templates.Chatroom({'UserName': actualOpposite})
+            # we don't need to update chatroom here because we have
+            # updated once when producing basic message
+        elif actualOpposite in ('filehelper', 'fmessage'):
+            m['User'] = templates.MassivePlatform({'UserName': actualOpposite})
+        else:
+            m['User'] = core.search_mps(userName=actualOpposite) or \
+                core.search_friends(userName=actualOpposite) or \
+                templates.User(userName=actualOpposite)
+            # by default we think there may be a user missing not a mp
         if m['MsgType'] == 1: # words
             if m['Url']:
                 regx = r'(.+?\(.+?\))'

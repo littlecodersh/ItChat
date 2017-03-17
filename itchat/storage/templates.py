@@ -29,7 +29,7 @@ class ContactList(list):
         contact = self.contactClass(value)
         contact.core = self.core
         if self.contactInitFn is not None:
-            contact = self.contactInitFn(contact)
+            contact = self.contactInitFn(contact) or contact
         super(ContactList, self).append(contact)
     def __deepcopy__(self, memo):
         return self.__class__([copy.deepcopy(v) for v in self])
@@ -38,6 +38,11 @@ class ContactList(list):
     def __setstate__(self, state):
         for v in state:
             super(ContactList, self).append(pickle.loads(v))
+    def __str__(self):
+        return '[%s]' % ', '.join([repr(v) for v in self])
+    def __repr__(self):
+        return '<%s: %s>' % (self.__class__.__name__.split('.')[-1],
+            self.__str__())
 
 fakeContactList = ContactList
 
@@ -99,9 +104,9 @@ class AbstractUserDict(dict):
         value = value[0].upper() + value[1:]
         return self.get(value, '')
     def __deepcopy__(self, memo):
-        r = self.__class__([
-            (copy.deepcopy(k, memo), copy.deepcopy(v, memo))
-            for k, v in self.items()])
+        r = self.__class__({
+            copy.deepcopy(k, memo): copy.deepcopy(v, memo)
+            for k, v in self.items()})
         r.core = self.core
         return r
     def __getstate__(self):
@@ -109,6 +114,12 @@ class AbstractUserDict(dict):
     def __setstate__(self, state):
         for k, v in state.items():
             self[k] = v
+    def __str__(self):
+        return '{%s}' % ', '.join(
+            ['%s: %s' % (repr(k),repr(v)) for k,v in self.items()])
+    def __repr__(self):
+        return '<%s: %s>' % (self.__class__.__name__.split('.')[-1],
+            self.__str__())
         
 class User(AbstractUserDict):
     def __init__(self, *args, **kwargs):
@@ -127,7 +138,6 @@ class User(AbstractUserDict):
         r = super(User, self).__deepcopy__(memo)
         r.verifyDict = copy.deepcopy(self.verifyDict)
         return r
-
 
 class MassivePlatform(AbstractUserDict):
     def __init__(self, *args, **kwargs):

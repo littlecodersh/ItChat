@@ -6,6 +6,7 @@ except ImportError:
 
 from ..log import set_logging
 from ..utils import test_connect
+from ..storage import templates
 
 logger = logging.getLogger('itchat')
 
@@ -46,19 +47,12 @@ def configured_reply(self):
     except Queue.Empty:
         pass
     else:
-        if msg['FromUserName'] == self.storageClass.userName:
-            actualOpposite = msg['ToUserName']
-        else:
-            actualOpposite = msg['FromUserName']
-        if '@@' in actualOpposite:
-            replyFn = self.functionDict['GroupChat'].get(msg['Type'])
-        elif self.search_mps(userName=msg['FromUserName']):
-            replyFn = self.functionDict['MpChat'].get(msg['Type'])
-        elif '@' in actualOpposite or \
-                actualOpposite in ('filehelper', 'fmessage'):
+        if isinstance(msg['User'], templates.User):
             replyFn = self.functionDict['FriendChat'].get(msg['Type'])
-        else:
+        elif isinstance(msg['User'], templates.MassivePlatform):
             replyFn = self.functionDict['MpChat'].get(msg['Type'])
+        elif isinstance(msg['User'], templates.Chatroom):
+            replyFn = self.functionDict['GroupChat'].get(msg['Type'])
         if replyFn is None:
             r = None
         else:

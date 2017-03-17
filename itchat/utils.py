@@ -106,7 +106,8 @@ def search_dict_list(l, key, value):
     ''' Search a list of dict
         * return dict with specific value & key '''
     for i in l:
-        if i.get(key) == value: return i
+        if i.get(key) == value:
+            return i
 
 def print_line(msg, oneLine = False):
     if oneLine:
