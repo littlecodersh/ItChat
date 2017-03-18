@@ -1,10 +1,7 @@
 import os, time, copy
-try:
-    import Queue
-except ImportError:
-    import queue as Queue
 from threading import Lock
 
+from .messagequeue import Queue
 from .templates import (
     ContactList, AbstractUserDict, User,
     MassivePlatform, Chatroom, ChatroomMember)
@@ -23,7 +20,7 @@ class Storage(object):
         self.memberList        = ContactList()
         self.mpList            = ContactList()
         self.chatroomList      = ContactList()
-        self.msgList           = Queue.Queue(-1)
+        self.msgList           = Queue(-1)
         self.lastInputUserName = None
         self.memberList.set_default_value(contactClass=User)
         self.memberList.core = core

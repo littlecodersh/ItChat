@@ -133,7 +133,7 @@ class User(AbstractUserDict):
     def set_pinned(self, isPinned=True):
         return self.core.set_pinned(self.userName, isPinned)
     def verify(self):
-        return self.core.add_friend(**verifyDict)
+        return self.core.add_friend(**self.verifyDict)
     def __deepcopy__(self, memo):
         r = super(User, self).__deepcopy__(memo)
         r.verifyDict = copy.deepcopy(self.verifyDict)
