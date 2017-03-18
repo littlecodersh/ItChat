@@ -16,6 +16,12 @@ def load_register(core):
     core.msg_register     = msg_register
     core.run              = run
 
+def safe_append(dct, key, value):
+    if key not in dct:
+        dct[key] = [value]
+    else:
+        dct[key].append(value)
+
 def auto_login(self, hotReload=False, statusStorageDir='itchat.pkl',
         enableCmdQR=False, picDir=None, qrCallback=None,
         loginCallback=None, exitCallback=None):
@@ -47,21 +53,22 @@ def configured_reply(self):
     except Queue.Empty:
         pass
     else:
+        replyFnList = None
         if isinstance(msg['User'], templates.User):
-            replyFn = self.functionDict['FriendChat'].get(msg['Type'])
+            replyFnList = self.functionDict['FriendChat'].get(msg['Type'])
         elif isinstance(msg['User'], templates.MassivePlatform):
-            replyFn = self.functionDict['MpChat'].get(msg['Type'])
+            replyFnList = self.functionDict['MpChat'].get(msg['Type'])
         elif isinstance(msg['User'], templates.Chatroom):
-            replyFn = self.functionDict['GroupChat'].get(msg['Type'])
-        if replyFn is None:
-            r = None
-        else:
-            try:
-                r = replyFn(msg)
-                if r is not None:
-                    self.send(r, msg.get('FromUserName'))
-            except:
-                logger.warning(traceback.format_exc())
+            replyFnList = self.functionDict['GroupChat'].get(msg['Type'])
+
+        if replyFnList is not None:
+            for replyFn in replyFnList:
+                try:
+                    r = replyFn(msg)
+                    if r is not None:
+                        self.send(r, msg.get('FromUserName'))
+                except:
+                    logger.warning(traceback.format_exc())
 
 def msg_register(self, msgType, isFriendChat=False, isGroupChat=False, isMpChat=False):
     ''' a decorator constructor
@@ -71,13 +78,13 @@ def msg_register(self, msgType, isFriendChat=False, isGroupChat=False, isMpChat=
     def _msg_register(fn):
         for _msgType in msgType:
             if isFriendChat:
-                self.functionDict['FriendChat'][_msgType] = fn
+                safe_append(self.functionDict['FriendChat'], _msgType, fn)
             if isGroupChat:
-                self.functionDict['GroupChat'][_msgType] = fn
+                safe_append(self.functionDict['GroupChat'], _msgType, fn)
             if isMpChat:
-                self.functionDict['MpChat'][_msgType] = fn
+                safe_append(self.functionDict['MpChat'], _msgType, fn)
             if not any((isFriendChat, isGroupChat, isMpChat)):
-                self.functionDict['FriendChat'][_msgType] = fn
+                safe_append(self.functionDict['FriendChat'], _msgType, fn)
     return _msg_register
 
 def run(self, debug=False, blockThread=True):
