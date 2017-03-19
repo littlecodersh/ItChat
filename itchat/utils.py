@@ -134,10 +134,10 @@ def contact_deep_copy(core, contact):
 
 def get_image_postfix(data):
     data = data[:20]
-    if 'GIF' in data:
+    if b'GIF' in data:
         return 'gif'
-    elif 'PNG' in data:
+    elif b'PNG' in data:
         return 'png'
-    elif 'JFIF' in data:
+    elif b'JFIF' in data:
         return 'jpg'
     return ''
