@@ -269,3 +269,4 @@ A: 有些账号是天生无法给自己的账号发送信息的，建议使用`f
 [zixia-wechaty]: https://github.com/zixia/wechaty
 [Mojo-Weixin]: https://github.com/sjdy521/Mojo-Weixin
 [issue#1]: https://github.com/littlecodersh/ItChat/issues/1
+[Mojo-Weixin]: https://github.com/sjdy521/Mojo-Weixin
