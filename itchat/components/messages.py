@@ -74,6 +74,7 @@ def produce_msg(core, msgList):
                 core.search_friends(userName=actualOpposite) or \
                 templates.User(userName=actualOpposite)
             # by default we think there may be a user missing not a mp
+        m['User'].core = core
         if m['MsgType'] == 1: # words
             if m['Url']:
                 regx = r'(.+?\(.+?\))'
@@ -102,6 +103,7 @@ def produce_msg(core, msgList):
                 'FileName' : '%s.mp3' % time.strftime('%y%m%d-%H%M%S', time.localtime()),
                 'Text': download_fn,}
         elif m['MsgType'] == 37: # friends
+            m['User']['UserName'] = m['RecommendInfo']['UserName']
             msg = {
                 'Type': 'Friends',
                 'Text': {
