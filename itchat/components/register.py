@@ -66,7 +66,7 @@ def configured_reply(self):
 def msg_register(self, msgType, isFriendChat=False, isGroupChat=False, isMpChat=False):
     ''' a decorator constructor
         return a specific decorator based on information given '''
-    if not isinstance(msgType, list):
+    if not (isinstance(msgType, list) or isinstance(msgType, tuple)):
         msgType = [msgType]
     def _msg_register(fn):
         for _msgType in msgType:
@@ -78,6 +78,7 @@ def msg_register(self, msgType, isFriendChat=False, isGroupChat=False, isMpChat=
                 self.functionDict['MpChat'][_msgType] = fn
             if not any((isFriendChat, isGroupChat, isMpChat)):
                 self.functionDict['FriendChat'][_msgType] = fn
+        return fn
     return _msg_register
 
 def run(self, debug=False, blockThread=True):

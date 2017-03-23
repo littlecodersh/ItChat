@@ -313,7 +313,7 @@ class Core(object):
         '''
         raise NotImplementedError()
     def upload_file(self, fileDir, isPicture=False, isVideo=False,
-            toUserName='filehelper'):
+            toUserName='filehelper', file_=None, preparedFile=None):
         ''' upload file to server and get mediaId
             for options
                 - fileDir: dir for file ready for upload
@@ -325,7 +325,7 @@ class Core(object):
             it is defined in components/messages.py
         '''
         raise NotImplementedError()
-    def send_file(self, fileDir, toUserName=None, mediaId=None):
+    def send_file(self, fileDir, toUserName=None, mediaId=None, file_=None):
         ''' send attachment
             for options
                 - fileDir: dir for file ready for upload
@@ -335,7 +335,7 @@ class Core(object):
             it is defined in components/messages.py
         '''
         raise NotImplementedError()
-    def send_image(self, fileDir, toUserName=None, mediaId=None):
+    def send_image(self, fileDir=None, toUserName=None, mediaId=None, file_=None):
         ''' send image
             for options
                 - fileDir: dir for file ready for upload
@@ -346,7 +346,7 @@ class Core(object):
             it is defined in components/messages.py
         '''
         raise NotImplementedError()
-    def send_video(self, fileDir=None, toUserName=None, mediaId=None):
+    def send_video(self, fileDir=None, toUserName=None, mediaId=None, file_=None):
         ''' send video
             for options
                 - fileDir: dir for file ready for upload
