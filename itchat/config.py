@@ -1,6 +1,6 @@
 import os, platform
 
-VERSION = '1.2.33'
+VERSION = '1.3.1'
 BASE_URL = 'https://login.weixin.qq.com'
 OS = platform.system() #Windows, Linux, Darwin
 DIR = os.getcwd()
