@@ -5,6 +5,8 @@ except ImportError:
 
 class Queue(queue.Queue):
     def put(self, message):
+        if 'IsAt' in message:
+            message['isAt'] = message['IsAt']
         queue.Queue.put(self, Message(message))
 
 class Message(dict):

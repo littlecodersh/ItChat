@@ -32,9 +32,9 @@ class Storage(object):
         return {
             'userName'          : self.userName,
             'nickName'          : self.nickName,
-            'memberList'        : self.memberList,
-            'mpList'            : self.mpList,
-            'chatroomList'      : self.chatroomList,
+            'memberList'        : [dict(member) for member in self.memberList],
+            'mpList'            : [dict(mp) for mp in self.mpList],
+            'chatroomList'      : [dict(chatroom) for chatroom in self.chatroomList],
             'lastInputUserName' : self.lastInputUserName, }
     def loads(self, j):
         self.userName = j.get('userName', None)
