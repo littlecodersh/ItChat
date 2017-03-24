@@ -9,6 +9,7 @@ from pyqrcode import QRCode
 
 from .. import config, utils
 from ..returnvalues import ReturnValue
+from ..storage.templates import wrap_user_dict
 from .contact import update_local_chatrooms, update_local_friends
 from .messages import produce_msg
 
@@ -182,7 +183,7 @@ def web_init(self):
     # deal with login info
     utils.emoji_formatter(dic['User'], 'NickName')
     self.loginInfo['InviteStartCount'] = int(dic['InviteStartCount'])
-    self.loginInfo['User'] = utils.struct_friend_info(dic['User'])
+    self.loginInfo['User'] = wrap_user_dict(utils.struct_friend_info(dic['User']))
     self.memberList.append(self.loginInfo['User'])
     self.loginInfo['SyncKey'] = dic['SyncKey']
     self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val'])
@@ -247,6 +248,7 @@ def start_receiving(self, exitCallback=None, getReceivingFnOnly=False):
                             else:
                                 otherList.append(contact)
                         chatroomMsg = update_local_chatrooms(self, chatroomList)
+                        chatroomMsg['User'] = self.loginInfo['User']
                         self.msgList.put(chatroomMsg)
                         update_local_friends(self, otherList)
                 retryCount = 0

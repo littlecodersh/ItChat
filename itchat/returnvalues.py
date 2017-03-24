@@ -4,6 +4,23 @@ import sys
 TRANSLATE = 'Chinese'
 
 class ReturnValue(dict):
+    ''' turn return value of itchat into a boolean value
+    for requests:
+        ..code::python
+
+            import requests
+            r = requests.get('http://httpbin.org/get')
+            print(ReturnValue(rawResponse=r)
+    
+    for normal dict:
+        ..code::python
+
+            returnDict = {
+                'BaseResponse': {
+                    'Ret': 0,
+                    'ErrMsg': 'My error msg', }, }
+            print(ReturnValue(returnDict))
+    '''
     def __init__(self, returnValueDict={}, rawResponse=None):
         if rawResponse:
             try:
@@ -14,7 +31,8 @@ class ReturnValue(dict):
                         'Ret': -1004,
                         'ErrMsg': 'Unexpected return value', },
                     'Data': rawResponse.content, }
-        for k, v in returnValueDict.items(): self[k] = v
+        for k, v in returnValueDict.items():
+            self[k] = v
         if not 'BaseResponse' in self:
             self['BaseResponse'] = {
                 'ErrMsg': 'no BaseResponse in raw response',
@@ -45,6 +63,7 @@ TRANSLATION = {
         -1003: u'服务器拒绝连接',
         -1004: u'服务器返回异常值',
         -1005: u'参数错误',
+        -1006: u'无效操作',
         0: u'请求成功',
     },
 }

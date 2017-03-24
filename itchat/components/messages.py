@@ -8,6 +8,7 @@ import requests
 
 from .. import config, utils
 from ..returnvalues import ReturnValue
+from ..storage import templates
 from .contact import update_local_uin
 
 logger = logging.getLogger('itchat')
@@ -50,10 +51,29 @@ def produce_msg(core, msgList):
     rl = []
     srl = [40, 43, 50, 52, 53, 9999]
     for m in msgList:
+        # get actual opposite
+        if m['FromUserName'] == core.storageClass.userName:
+            actualOpposite = m['ToUserName']
+        else:
+            actualOpposite = m['FromUserName']
+        # produce basic message
         if '@@' in m['FromUserName'] or '@@' in m['ToUserName']:
             produce_group_chat(core, m)
         else:
             utils.msg_formatter(m, 'Content')
+        # set user of msg
+        if '@@' in actualOpposite:
+            m['User'] = core.search_chatrooms(userName=actualOpposite) or \
+                templates.Chatroom({'UserName': actualOpposite})
+            # we don't need to update chatroom here because we have
+            # updated once when producing basic message
+        elif actualOpposite in ('filehelper', 'fmessage'):
+            m['User'] = templates.User({'UserName': actualOpposite})
+        else:
+            m['User'] = core.search_mps(userName=actualOpposite) or \
+                core.search_friends(userName=actualOpposite) or \
+                templates.User(userName=actualOpposite)
+            # by default we think there may be a user missing not a mp
         if m['MsgType'] == 1: # words
             if m['Url']:
                 regx = r'(.+?\(.+?\))'
@@ -89,6 +109,7 @@ def produce_msg(core, msgList):
                     'userName'      : m['RecommendInfo']['UserName'],
                     'verifyContent' : m['Ticket'],
                     'autoUpdate'    : m['RecommendInfo'], }, }
+            m['User'].verifyDict = msg['Text']
         elif m['MsgType'] == 42: # name card
             msg = {
                 'Type': 'Card',
@@ -208,7 +229,7 @@ def produce_group_chat(core, msg):
     else:
         msg['ActualUserName'] = core.storageClass.userName
         msg['ActualNickName'] = core.storageClass.nickName
-        msg['isAt'] = False
+        msg['IsAt'] = False
         return
     chatroom = core.storageClass.search_chatrooms(userName=chatroomUserName)
     member = utils.search_dict_list((chatroom or {}).get(
@@ -226,7 +247,7 @@ def produce_group_chat(core, msg):
         utils.msg_formatter(msg, 'Content')
         atFlag = '@' + (chatroom['self']['DisplayName']
             or core.storageClass.nickName)
-        msg['isAt'] = (
+        msg['IsAt'] = (
             (atFlag + (u'\u2005' if u'\u2005' in msg['Content'] else ' '))
             in msg['Content'] or msg['Content'].endswith(atFlag))
 

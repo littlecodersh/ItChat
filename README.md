@@ -59,36 +59,61 @@ itchat.run()
 
 ## 进阶应用
 
+### 特殊的字典使用方式
+
+通过打印itchat的用户以及注册消息的参数，可以发现这些值都是字典。
+
+但实际上itchat精心构造了相应的消息、用户、群聊、公众号类。
+
+其所有的键值都可以通过这一方式访问：
+
+```python
+@itchat.msg_register(TEXT)
+def _(msg):
+    # equals to print(msg['FromUserName'])
+    print(msg.fromUserName)
+```
+
+属性名为键值首字母小写后的内容。
+
+```python
+author = itchat.search_friends(nickName='LittleCoder')[0]
+author.send('greeting, littlecoder!')
+```
+
 ### 各类型消息的注册
 
 通过如下代码，微信已经可以就日常的各种信息进行获取与回复。
 
 ```python
-#coding=utf8
 import itchat, time
 from itchat.content import *
 
 @itchat.msg_register([TEXT, MAP, CARD, NOTE, SHARING])
 def text_reply(msg):
-    itchat.send('%s: %s' % (msg['Type'], msg['Text']), msg['FromUserName'])
+    msg.user.send('%s: %s' % (msg.type, msg.text))
 
 @itchat.msg_register([PICTURE, RECORDING, ATTACHMENT, VIDEO])
 def download_files(msg):
-    msg['Text'](msg['FileName'])
-    return '@%s@%s' % ({'Picture': 'img', 'Video': 'vid'}.get(msg['Type'], 'fil'), msg['FileName'])
+    msg.download(msg.fileName)
+    typeSymbol = {
+        PICTURE: 'img',
+        VIDEO: 'vid', }.get(msg.type, 'fil')
+    return '@%s@%s' % (typeSymbol, msg.fileName)
 
 @itchat.msg_register(FRIENDS)
 def add_friend(msg):
-    itchat.add_friend(**msg['Text']) # 该操作会自动将新好友的消息录入，不需要重载通讯录
-    itchat.send_msg('Nice to meet you!', msg['RecommendInfo']['UserName'])
+    msg.user.verify()
+    msg.user.send('Nice to meet you!')
 
 @itchat.msg_register(TEXT, isGroupChat=True)
 def text_reply(msg):
-    if msg['isAt']:
-        itchat.send(u'@%s\u2005I received: %s' % (msg['ActualNickName'], msg['Content']), msg['FromUserName'])
+    if msg.isAt:
+        msg.user.send(u'@%s\u2005I received: %s' % (
+            msg.actualNickName, msg.text))
 
 itchat.auto_login(True)
-itchat.run()
+itchat.run(True)
 ```
 
 ### 命令行二维码
