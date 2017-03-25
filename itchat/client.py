@@ -90,7 +90,7 @@ class client(object):
         payloads = {
             'appid' : 'wx782c26e4c19acffb',
             'fun'   : 'new', }
-        r = self.s.get(url, params = payloads)
+        r = self.s.get(url, params = payloads, proxies=utils.global_proxies)
         regx = r'window.QRLogin.code = (\d+); window.QRLogin.uuid = "(\S+?)";'
         data = re.search(regx, r.text)
         if data and data.group(1) == '200':
@@ -100,7 +100,7 @@ class client(object):
         try:
             if uuid == None: uuid = self.uuid
             url = '%s/qrcode/%s'%(BASE_URL, uuid)
-            r = self.s.get(url, stream = True)
+            r = self.s.get(url, stream = True, proxies=utils.global_proxies)
             with open(QR_DIR, 'wb') as f: f.write(r.content)
             if enableCmdQR:
                 tools.print_cmd_qr(QR_DIR, enableCmdQR = enableCmdQR)
@@ -113,14 +113,14 @@ class client(object):
         if uuid is None: uuid = self.uuid
         url = '%s/cgi-bin/mmwebwx-bin/login'%BASE_URL
         payloads = 'tip=1&uuid=%s&_=%s'%(uuid, int(time.time()))
-        r = self.s.get(url, params = payloads)
+        r = self.s.get(url, params = payloads, proxies=utils.global_proxies)
         regx = r'window.code=(\d+)'
         data = re.search(regx, r.text)
         if data and data.group(1) == '200':
             os.remove(QR_DIR)
             regx = r'window.redirect_uri="(\S+)";'
             self.loginInfo['url'] = re.search(regx, r.text).group(1)
-            r = self.s.get(self.loginInfo['url'], allow_redirects=False)
+            r = self.s.get(self.loginInfo['url'], allow_redirects=False, proxies=utils.global_proxies)
             self.loginInfo['url'] = self.loginInfo['url'][:self.loginInfo['url'].rfind('/')]
             for indexUrl, detailedUrl in {
                     "wx2.qq.com": ("file.wx2.qq.com", "webpush.wx2.qq.com"),
@@ -204,7 +204,7 @@ class client(object):
         url = '%s/webwxgetcontact?r=%s&seq=0&skey=%s' % (self.loginInfo['url'],
             int(time.time()), self.loginInfo['skey'])
         headers = { 'ContentType': 'application/json; charset=UTF-8' }
-        r = self.s.get(url, headers=headers)
+        r = self.s.get(url, headers=headers, proxies=utils.global_proxies)
         tempList = json.loads(r.content.decode('utf-8', 'replace'))['MemberList']
         del self.memberList[:]
         del self.mpList[:]
@@ -292,7 +292,7 @@ class client(object):
             'deviceid' : self.loginInfo['pass_ticket'],
             'synckey'  : self.loginInfo['synckey'],
             '_'        : int(time.time()),}
-        r = self.s.get(url, params=params)
+        r = self.s.get(url, params=params, proxies=utils.global_proxies)
         regx = r'window.synccheck={retcode:"(\d+)",selector:"(\d+)"}'
         pm = re.search(regx, r.text)
         if pm is None or pm.group(1) != '0' : return None
@@ -389,7 +389,7 @@ class client(object):
                     payloads = {
                         'MsgID': m['NewMsgId'],
                         'skey': self.loginInfo['skey'],}
-                    r = self.s.get(url, params = payloads, stream = True)
+                    r = self.s.get(url, params = payloads, stream = True, proxies=utils.global_proxies)
                     tempStorage = io.BytesIO()
                     for block in r.iter_content(1024):
                         tempStorage.write(block)
@@ -406,7 +406,7 @@ class client(object):
                     payloads = {
                         'msgid': m['NewMsgId'],
                         'skey': self.loginInfo['skey'],}
-                    r = self.s.get(url, params = payloads, stream = True)
+                    r = self.s.get(url, params = payloads, stream = True, proxies=utils.global_proxies)
                     tempStorage = io.BytesIO()
                     for block in r.iter_content(1024):
                         tempStorage.write(block)
@@ -459,7 +459,7 @@ class client(object):
                             'fromuser': self.loginInfo['wxuin'],
                             'pass_ticket': 'undefined',
                             'webwx_data_ticket': cookiesList['webwx_data_ticket'],}
-                        r = self.s.get(url, params = payloads, stream = True)
+                        r = self.s.get(url, params = payloads, stream = True, proxies=utils.global_proxies)
                         tempStorage = io.BytesIO()
                         for block in r.iter_content(1024):
                             tempStorage.write(block)
@@ -497,7 +497,7 @@ class client(object):
                         'msgid': m['MsgId'],
                         'skey': self.loginInfo['skey'],}
                     headers = {'Range': 'bytes=0-'}
-                    r = self.s.get(url, params = payloads, headers = headers, stream = True)
+                    r = self.s.get(url, params = payloads, headers = headers, stream = True, proxies=utils.global_proxies)
                     tempStorage = io.BytesIO()
                     for block in r.iter_content(1024):
                         tempStorage.write(block)
@@ -718,7 +718,7 @@ class client(object):
                 if chatroom['EncryChatRoomId'] == '':
                     chatroom = self.update_chatroom(chatroomUserName)
                 params['chatroomid'] = chatroom['EncryChatRoomId']
-        r = self.s.get(url, params=params, stream=True)
+        r = self.s.get(url, params=params, stream=True, proxies=utils.global_proxies)
         tempStorage = io.BytesIO()
         for block in r.iter_content(1024):
             tempStorage.write(block)

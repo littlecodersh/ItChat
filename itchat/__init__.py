@@ -14,6 +14,18 @@ def new_instance():
 
 originInstance = new_instance()
 
+# set_proxy
+def set_proxy(proxies):
+    # set proxy for core http/https connection supporting both http/https and socks5.
+    # If need socks5, have to install socks
+    #     pip install requests[socks] 
+    # for usage
+    #     itChat.set_proxy({"http": "http://user:pass@host:port", "https": "https://user:pass@host:port"})
+    #     itChat.set_proxy({"http": "socks5://user:pass@host:port", "https": "socks5://user:pass@host:port"})
+
+    global global_proxies
+    global_proxies = proxies
+
 # I really want to use sys.modules[__name__] = originInstance
 # but it makes auto-fill a real mess, so forgive me for my following **
 # actually it toke me less than 30 seconds, god bless Uganda

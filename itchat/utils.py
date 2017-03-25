@@ -9,6 +9,8 @@ import requests
 
 from . import config
 
+global_proxies=None
+
 logger = logging.getLogger('itchat')
 
 emojiRegex = re.compile(r'<span class="emoji emoji(.{1,10})"></span>')
@@ -122,7 +124,7 @@ def print_line(msg, oneLine = False):
 def test_connect(retryTime=5):
     for i in range(retryTime):
         try:
-            r = requests.get(config.BASE_URL)
+            r = requests.get(config.BASE_URL, proxies=global_proxies)
             return True
         except:
             if i == retryTime - 1:
