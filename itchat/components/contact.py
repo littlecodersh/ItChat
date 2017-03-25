@@ -118,8 +118,12 @@ def update_local_chatrooms(core, l):
         # format new chatrooms
         utils.emoji_formatter(chatroom, 'NickName')
         for member in chatroom['MemberList']:
-            utils.emoji_formatter(member, 'NickName')
-            utils.emoji_formatter(member, 'DisplayName')
+            if 'NickName' in member:
+                utils.emoji_formatter(member, 'NickName')
+            if 'DisplayName' in member:
+                utils.emoji_formatter(member, 'DisplayName')
+            if 'RemarkName' in member:
+                utils.emoji_formatter(member, 'RemarkName')
         # update it to old chatrooms
         oldChatroom = utils.search_dict_list(
             core.chatroomList, 'UserName', chatroom['UserName'])
@@ -180,6 +184,8 @@ def update_local_friends(core, l):
             utils.emoji_formatter(friend, 'NickName')
         if 'DisplayName' in friend:
             utils.emoji_formatter(friend, 'DisplayName')
+        if 'RemarkName' in member:
+            utils.emoji_formatter(member, 'RemarkName')
         oldInfoDict = utils.search_dict_list(
             fullList, 'UserName', friend['UserName'])
         if oldInfoDict is None:
