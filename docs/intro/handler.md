@@ -45,7 +45,7 @@ RECORDING  |语音       |下载方法
 ATTACHMENT |附件       |下载方法        
 VIDEO      |小视频     |下载方法        
 FRIENDS    |好友邀请   |添加好友所需参数
-Useless    |无用信息   |'UselessMsg'    
+SYSTEM     |系统消息   |更新内容的用户或群聊的UserName组成的列表
 
 比如你需要存储发送给你的附件：
 
@@ -56,6 +56,7 @@ def download_files(msg):
 ```
 
 值得注意的是，群消息增加了三个键值：
+
 * isAt: 判断是否@本号
 * ActualNickName: 实际NickName
 * Content: 实际Content

@@ -9,6 +9,8 @@ Accessing your personal wechat account through itchat in python has never been e
 
 A wechat robot can handle all the basic messages with only less than 30 lines of codes.
 
+And it's similiar to itchatmp (api for wechat massive platform), learn once and get two tools.
+
 Now Wechat is an important part of personal life, hopefully this repo can help you extend your personal wechat account's functionality and enbetter user's experience with wechat.
 
 **Installation**
@@ -19,7 +21,17 @@ Now Wechat is an important part of personal life, hopefully this repo can help y
 
 **Simple uses**
 
-With itchat, you only need to write this to reply personal text messages.
+With itchat, if you want to send a message to filehelper, this is how:
+
+.. code:: python
+
+    import itchat
+
+    itchat.auto_login()
+
+    itchat.send('Hello, filehelper', toUserName='filehelper')
+
+And you only need to write this to reply personal text messages.
 
 .. code:: python
     
@@ -156,15 +168,51 @@ If you don't want a local copy of the picture, you may pass nothing to the funct
         with open(msg['FileName'], 'wb') as f:
             f.write(msg['Text']())
 
+*Multi instance*
+
+You may use the following commands to open multi instance.
+
+.. code:: python
+
+    import itchat
+
+    newInstance = itchat.new_instance()
+    newInstance.auto_login(hotReload=True, statusStorageDir='newInstance.pkl')
+
+    @newInstance.msg_register(TEXT)
+    def reply(msg):
+        return msg['Text']
+
+    newInstance.run()
+
+*Set callback after login and logout*
+
+Callback of login and logout are set through `loginCallback` and `exitCallback`.
+
+.. code:: python
+
+    import time
+
+    import itchat
+
+    def lc():
+        print('finish login')
+    def ec():
+        print('exit')
+
+    itchat.auto_login(loginCallback=lc, exitCallback=ec)
+    time.sleep(3)
+    itchat.logout()
+
+If loginCallback is not set, qr picture will be deleted and cmd will be cleared.
+
+If you exit through phone, exitCallback will also be called.
+
 **FAQ**
 
 Q: Why I can't send files whose name is encoded in utf8?
 
 A: That's because of the upload setting of requests, you can put `this file <https://gist.github.com/littlecodersh/9a0c5466f442d67d910f877744011705>`__ (for py3 you need `this <https://gist.github.com/littlecodersh/e93532d5e7ddf0ec56c336499165c4dc>`__) into packages/urllib3 of requests package.
-
-Q: Why I still can't show QRCode with command line after I set enableCmdQr key to True in itchat.auto_login()?
-
-A: That's because you need to install optional site-package pillow, try this script: pip install pillow
 
 Q: How to use this package to use my wechat as an monitor?
 
@@ -172,7 +220,7 @@ A: There are two ways: communicate with your own account or with filehelper.
 
 Q: Why sometimes I can't send messages?
 
-A: Some account simply can't send messages to yourself, so use `filehelper` instead. Besides, there's limitation in calling api, so set some gap between them.
+A: Some account simply can't send messages to yourself, so use `filehelper` instead.
 
 **Comments**
 

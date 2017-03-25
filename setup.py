@@ -1,7 +1,6 @@
 """ A wechat personal account api project
 See:
 https://github.com/littlecodersh/ItChat
-https://github.com/littlecodersh/ItChat/tree/robot
 """
 
 from setuptools import setup, find_packages
@@ -46,9 +45,9 @@ setup(
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
-    packages=['itchat',],
+    packages=find_packages(),
 
-    install_requires=['requests'],
+    install_requires=['requests', 'pyqrcode', 'pypng'],
 
     # List additional groups of dependencies here
     extras_require={},

@@ -1,125 +1,66 @@
-import time
+from . import content
+from .core import Core
+from .config import VERSION
+from .log import set_logging
 
-from .client import client
-from . import content # this is for creating pyc
+__version__ = VERSION
 
-__version__ = '1.1.18'
+instanceList = []
 
-__client = client()
-HOT_RELOAD = False
-HOT_RELOAD_DIR = 'itchat.pkl'
+def new_instance():
+    newInstance = Core()
+    instanceList.append(newInstance)
+    return newInstance
 
-def auto_login(hotReload=False, statusStorageDir='itchat.pkl', enableCmdQR=False):
-    global HOT_RELOAD, HOT_RELOAD_DIR
-    if hotReload:
-        if __client.load_login_status(statusStorageDir): return
-        __client.auto_login(enableCmdQR=enableCmdQR)
-        __client.dump_login_status(statusStorageDir)
-        HOT_RELOAD, HOT_RELOAD_DIR = True, statusStorageDir
-    else:
-        __client.auto_login(enableCmdQR=enableCmdQR)
-        HOT_RELOAD = False
+originInstance = new_instance()
 
-# The following method are all included in __client.auto_login >>>
-def get_QRuuid(): return __client.get_QRuuid()
-def get_QR(uuid=None, enableCmdQR=False): return __client.get_QR(uuid, enableCmdQR)
-def check_login(uuid=None): return __client.check_login(uuid)
-def web_init(): return __client.web_init()
-def show_mobile_login(): return __client.show_mobile_login()
-def start_receiving(): return __client.start_receiving()
-# <<<
+# I really want to use sys.modules[__name__] = originInstance
+# but it makes auto-fill a real mess, so forgive me for my following **
+# actually it toke me less than 30 seconds, god bless Uganda
 
-# The following methods are for reload without re-scan the QRCode >>>
-def dump_login_status(fileDir='itchat.pkl'): return __client.dump_login_status(fileDir)
-def load_login_status(fileDir='itchat.pkl'): return __client.load_login_status(fileDir)
-# <<<
-
-# The following methods are for contract dealing >>>
-def get_friends(update=False): return __client.get_friends(update)
-def search_friends(name=None, userName=None, remarkName=None, nickName=None, wechatAccount=None):
-    return __client.storageClass.search_friends(name, userName, remarkName, nickName, wechatAccount)
-def set_alias(userName, alias): return __client.set_alias(userName, alias)
-def add_friend(userName, status=2, ticket='', verifyContent='', userInfo={}): return __client.add_friend(userName, status, ticket, verifyContent, userInfo)
-def get_head_img(userName=None, chatroomUserName=None, picDir=None): return __client.get_head_img(userName, chatroomUserName, picDir)
-def get_mps(update=False): return __client.get_mps(update)
-def search_mps(name=None, userName=None): return __client.storageClass.search_mps(name, userName)
-def get_chatrooms(update=False): return __client.get_chatrooms(update)
-def search_chatrooms(name=None, userName=None): return __client.storageClass.search_chatrooms(name, userName)
-def update_chatroom(groupUserName, detailedMember=False): return __client.update_chatroom(groupUserName, detailedMember)
-def create_chatroom(memberList, topic = ''): return __client.create_chatroom(memberList, topic)
-def set_chatroom_name(chatroomUserName, name): return __client.set_chatroom_name(chatroomUserName, name)
-def delete_member_from_chatroom(chatroomUserName, memberList): return __client.delete_member_from_chatroom(chatroomUserName, memberList)
-def add_member_into_chatroom(chatroomUserName, memberList, useInvitation=False): return __client.add_member_into_chatroom(chatroomUserName, memberList, useInvitation)
-# <<<
-
-# The following is the tear of age, will be deleted soon
-def get_contract(update=False): return __client.get_friends(update)
-def get_batch_contract(groupUserName): return __client.update_chatroom(groupUserName)
-# <<<
-
-# if toUserName is set to None, msg will be sent to yourself
-def send_raw_msg(msgType, content, toUserName): return __client.send_raw_msg(msgType, content, toUserName)
-def send_msg(msg = 'Test Message', toUserName = None): return __client.send_msg(msg, toUserName)
-def send_file(fileDir, toUserName): return __client.send_file(fileDir, toUserName)
-def send_video(fileDir, toUserName): return __client.send_video(fileDir, toUserName)
-def send_image(fileDir, toUserName): return __client.send_image(fileDir, toUserName)
-def send(msg, toUserName = None):
-    if msg is None: return False
-    if msg[:5] == '@fil@':
-        return __client.send_file(msg[5:], toUserName)
-    elif msg[:5] == '@img@':
-        return __client.send_image(msg[5:], toUserName)
-    elif msg[:5] == '@msg@':
-        return __client.send_msg(msg[5:], toUserName)
-    elif msg[:5] == '@vid@':
-        return __client.send_video(msg[5:], toUserName)
-    else:
-        return __client.send_msg(msg, toUserName)
-
-# decorations
-__functionDict = {'FriendChat': {}, 'GroupChat': {}, 'MpChat': {}}
-def configured_reply():
-    ''' determine the type of message and reply if its method is defined
-        however, I use a strange way to determine whether a msg is from massive platform
-        I haven't found a better solution here
-        The main problem I'm worrying about is the mismatching of new friends added on phone
-        If you have any good idea, pleeeease report an issue. I will be more than grateful. '''
-    if not __client.storageClass.msgList: return
-    msg = __client.storageClass.msgList.pop()
-    if '@@' in msg['FromUserName']:
-        replyFn = __functionDict['GroupChat'].get(msg['Type'])
-        if replyFn: send(replyFn(msg), msg.get('FromUserName'))
-    elif search_mps(userName=msg['FromUserName']):
-        replyFn = __functionDict['MpChat'].get(msg['Type'])
-        if replyFn: send(replyFn(msg), msg.get('FromUserName'))
-    else:
-        replyFn = __functionDict['FriendChat'].get(msg['Type'])
-        if replyFn: send(replyFn(msg), msg.get('FromUserName'))
-
-def msg_register(msgType, isFriendChat=False, isGroupChat=False, isMpChat=False):
-    ''' a decorator constructor
-        return a specific decorator based on information given '''
-    if not isinstance(msgType, list): msgType = [msgType]
-    def _msg_register(fn):
-        for _msgType in msgType:
-            if isFriendChat:
-                __functionDict['FriendChat'][_msgType] = fn
-            if isGroupChat:
-                __functionDict['GroupChat'][_msgType] = fn
-            if isMpChat:
-                __functionDict['MpChat'][_msgType] = fn
-            if not any((isFriendChat, isGroupChat, isMpChat)):
-                __functionDict['FriendChat'][_msgType] = fn
-    return _msg_register
-
-# in-build run
-def run(debug=True):
-    print('Start auto replying')
-    __client.debug = debug
-    try:
-        while 1:
-            configured_reply()
-            time.sleep(.3)
-    except KeyboardInterrupt:
-        if HOT_RELOAD: __client.dump_login_status(HOT_RELOAD_DIR)
-        print('Bye~')
+# components.login
+login                       = originInstance.login
+get_QRuuid                  = originInstance.get_QRuuid
+get_QR                      = originInstance.get_QR
+check_login                 = originInstance.check_login
+web_init                    = originInstance.web_init
+show_mobile_login           = originInstance.show_mobile_login
+start_receiving             = originInstance.start_receiving
+get_msg                     = originInstance.get_msg
+logout                      = originInstance.logout
+# components.contact
+update_chatroom             = originInstance.update_chatroom
+update_friend               = originInstance.update_friend
+get_contact                 = originInstance.get_contact
+get_friends                 = originInstance.get_friends
+get_chatrooms               = originInstance.get_chatrooms
+get_mps                     = originInstance.get_mps
+set_alias                   = originInstance.set_alias
+set_pinned                  = originInstance.set_pinned
+add_friend                  = originInstance.add_friend
+get_head_img                = originInstance.get_head_img
+create_chatroom             = originInstance.create_chatroom
+set_chatroom_name           = originInstance.set_chatroom_name
+delete_member_from_chatroom = originInstance.delete_member_from_chatroom
+add_member_into_chatroom    = originInstance.add_member_into_chatroom
+# components.messages
+send_raw_msg                = originInstance.send_raw_msg
+send_msg                    = originInstance.send_msg
+upload_file                 = originInstance.upload_file
+send_file                   = originInstance.send_file
+send_image                  = originInstance.send_image
+send_video                  = originInstance.send_video
+send                        = originInstance.send
+# components.hotreload
+dump_login_status           = originInstance.dump_login_status
+load_login_status           = originInstance.load_login_status
+# components.register
+auto_login                  = originInstance.auto_login
+configured_reply            = originInstance.configured_reply
+msg_register                = originInstance.msg_register
+run                         = originInstance.run
+# other functions
+search_friends              = originInstance.search_friends
+search_chatrooms            = originInstance.search_chatrooms
+search_mps                  = originInstance.search_mps
+set_logging                 = set_logging

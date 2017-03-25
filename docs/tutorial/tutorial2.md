@@ -23,6 +23,7 @@ Python基础并不困难，所以即使没有这方面基础辅助搜索引擎�
 ## 简单成果展示
 
 完成了本文的学习，你将会完成三个小项目：（出于方便二次阅读，括号中都放上了源码链接）
+
 * 通过微信操作的音乐播放器（[源码][demo-pcmusicviawechat]）
 * 消息内容与对象可自定义的消息群发助手（[源码][demo-wechatsmartwish]）
 * 特定好友删除检测（[源码][demo-wechatcheckfriend]）
@@ -36,6 +37,7 @@ Python基础并不困难，所以即使没有这方面基础辅助搜索引擎�
 本文是这一教程的第二部分，需要基本的pip可用的Python环境。
 
 本教程使用的环境如下：
+
 * Windows 8.1 （其他平台也可用）
 * Python 2 or 3
 * 微信版本6.3.25
@@ -80,6 +82,7 @@ def close_music():
 ```
 
 而微信的调用可以通过itchat包简单的完成，这里要注意的是：
+
 * 有些账号无法与自己通信，所以我们选择与文件传输助手（filehelper）通信
 * 为了防止对于其他消息的响应，我们在第一行过滤了无关信息
 * itchat.run的选项分别为允许热拔插，方便调试
@@ -124,6 +127,7 @@ itchat对常用功能都做好了封装，调用还是非常容易的。
 当然，稍加操作，一切皆有可能。
 
 例如在消息中加入昵称：
+
 * 通过`get_friends`方法可以轻松获取所有的好友（好友首位是自己）
 * 基于不同的好友可以发送不同的消息
 * 这条程序运行后是真的会发消息出去，如果只是演示目的，把`itchat.send`改为`print`即可
@@ -147,6 +151,7 @@ for friend in friendList:
 又例如给特定的人发送特定的消息。
 
 我们这里通过群聊实现，划定一个群聊，在群聊内则私信发送祝福。
+
 * 如果仅是创建群聊不说话，对方是不会有提示的
 * 群聊如果不**保存到通讯录**，是无法在各设备之间同步的（所以itchat也无法读取到）
 * 群聊在被获取的时候不会自带用户列表，所以需要使用`update_chatroom`更新用户列表
@@ -189,7 +194,7 @@ itchat获取微信可以获取到的各种内容也都非常方便。
 
 ## 好友删除检测
 
-![pic][demo-wechatcheckfriend]
+![pic][demo-wechatcheckfriend-0]
 
 有时候我们会想知道某个好友有没有删除自己或者把自己拉入黑名单。
 
@@ -283,4 +288,4 @@ EOF
 [demo-wechatcheckfriend]: https://gist.github.com/littlecodersh/3fef7d2afb2d502e4735be083c9f79e1
 [demo-pcmusicviawechat-0]: http://7xrip4.com1.z0.glb.clouddn.com/ItChat/Tutorial/2/demo-pcmusicviawechat-0.png?imageView/2/w/200/
 [demo-pcmusicviawechat-1]: http://7xrip4.com1.z0.glb.clouddn.com/ItChat/Tutorial/2/demo-pcmusicviawechat-1.png?imageView/2/w/200/
-[demo-wechatcheckfriend]: http://7xrip4.com1.z0.glb.clouddn.com/ItChat/Tutorial/2/demo-wechatcheckfriend.png?imageView/2/w/200/
+[demo-wechatcheckfriend-0]: http://7xrip4.com1.z0.glb.clouddn.com/ItChat/Tutorial/2/demo-wechatcheckfriend.png?imageView/2/w/200/

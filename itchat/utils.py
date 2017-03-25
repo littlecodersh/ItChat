@@ -1,11 +1,15 @@
-import re, os, sys, subprocess, copy
+import re, os, sys, subprocess, copy, traceback, logging
 
 try:
     from HTMLParser import HTMLParser
 except ImportError:
     from html.parser import HTMLParser
 
+import requests
+
 from . import config
+
+logger = logging.getLogger('itchat')
 
 emojiRegex = re.compile(r'<span class="emoji emoji(.{1,10})"></span>')
 htmlParser = HTMLParser()
@@ -19,18 +23,22 @@ else:
     BLOCK = b
 friendInfoTemplate = {}
 for k in ('UserName', 'City', 'DisplayName', 'PYQuanPin', 'RemarkPYInitial', 'Province',
-    'KeyWord', 'RemarkName', 'PYInitial', 'EncryChatRoomId', 'Alias', 'Signature', 
-    'NickName', 'RemarkPYQuanPin', 'HeadImgUrl'): friendInfoTemplate[k] = ''
+        'KeyWord', 'RemarkName', 'PYInitial', 'EncryChatRoomId', 'Alias', 'Signature', 
+        'NickName', 'RemarkPYQuanPin', 'HeadImgUrl'):
+    friendInfoTemplate[k] = ''
 for k in ('UniFriend', 'Sex', 'AppAccountFlag', 'VerifyFlag', 'ChatRoomId', 'HideInputBarFlag',
-    'AttrStatus', 'SnsFlag', 'MemberCount', 'OwnerUin', 'ContactFlag', 'Uin',
-    'StarFriend', 'Statues'): friendInfoTemplate[k] = 0
+        'AttrStatus', 'SnsFlag', 'MemberCount', 'OwnerUin', 'ContactFlag', 'Uin',
+        'StarFriend', 'Statues'):
+    friendInfoTemplate[k] = 0
 friendInfoTemplate['MemberList'] = []
 
 def clear_screen():
     os.system('cls' if config.OS == 'Windows' else 'clear')
+
 def emoji_formatter(d, k):
-    # _emoji_deebugger is for bugs about emoji match caused by wechat backstage
-    # like :face with tears of joy: will be replaced with :cat face with tears of joy:
+    ''' _emoji_deebugger is for bugs about emoji match caused by wechat backstage
+    like :face with tears of joy: will be replaced with :cat face with tears of joy:
+    '''
     def _emoji_debugger(d, k):
         s = d[k].replace('<span class="emoji emoji1f450"></span',
             '<span class="emoji emoji1f450"></span>') # fix missing bug
@@ -54,16 +62,20 @@ def emoji_formatter(d, k):
                 ).encode('utf8').decode('unicode-escape', 'replace')
     d[k] = _emoji_debugger(d, k)
     d[k] = emojiRegex.sub(_emoji_formatter, d[k])
+
 def msg_formatter(d, k):
     emoji_formatter(d, k)
     d[k] = d[k].replace('<br/>', '\n')
     d[k]  = htmlParser.unescape(d[k])
+
 def check_file(fileDir):
     try:
-        with open(fileDir): pass
+        with open(fileDir):
+            pass
         return True
     except:
         return False
+
 def print_qr(fileDir):
     if config.OS == 'Darwin':
         subprocess.call(['open', fileDir])
@@ -71,38 +83,20 @@ def print_qr(fileDir):
         subprocess.call(['xdg-open', fileDir])
     else:
         os.startfile(fileDir)
-try:
-    from PIL import Image
-    def print_cmd_qr(fileDir, size = 37, padding = 3,
-            white = BLOCK, black = '  ', enableCmdQR = True):
-        img     = Image.open(fileDir)
-        times   = img.size[0] / (size + padding * 2)
-        rgb     = img.convert('RGB')
-        try:
-            blockCount = int(enableCmdQR)
-            assert(0 < abs(blockCount))
-        except:
-            blockCount = 1
-        finally:
-            white *= abs(blockCount)
-            if blockCount < 0: white, black = black, white
-        sys.stdout.write(' '*50 + '\r')
-        sys.stdout.flush()
-        qr = white * (size + 2) + '\n'
-        startPoint = padding + 0.5
-        for y in range(size):
-            qr += white
-            for x in range(size):
-                r,g,b = rgb.getpixel(((x + startPoint) * times, (y + startPoint) * times))
-                qr += white if r > 127 else black
-            qr += white + '\n'
-        qr += white * (size + 2) + '\n'
-        sys.stdout.write(qr)
-except ImportError:
-    def print_cmd_qr(fileDir, size = 37, padding = 3,
-            white = BLOCK, black = '  ', enableCmdQR = True):
-        print('pillow should be installed to use command line QRCode: pip install pillow')
-        print_qr(fileDir)
+
+def print_cmd_qr(qrText, white=BLOCK, black='  ', enableCmdQR=True):
+    blockCount = int(enableCmdQR)
+    if abs(blockCount) == 0:
+        blockCount = 1
+    white *= abs(blockCount)
+    if blockCount < 0:
+        white, black = black, white
+    sys.stdout.write(' '*50 + '\r')
+    sys.stdout.flush()
+    qr = qrText.replace('0', white).replace('1', black)
+    sys.stdout.write(qr)
+    sys.stdout.flush()
+
 def struct_friend_info(knownInfo):
     member = copy.deepcopy(friendInfoTemplate)
     for k, v in copy.deepcopy(knownInfo).items(): member[k] = v
@@ -112,4 +106,39 @@ def search_dict_list(l, key, value):
     ''' Search a list of dict
         * return dict with specific value & key '''
     for i in l:
-        if i.get(key) == value: return i
+        if i.get(key) == value:
+            return i
+
+def print_line(msg, oneLine = False):
+    if oneLine:
+        sys.stdout.write(' '*40 + '\r')
+        sys.stdout.flush()
+    else:
+        sys.stdout.write('\n')
+    sys.stdout.write(msg.encode(sys.stdin.encoding or 'utf8', 'replace'
+        ).decode(sys.stdin.encoding or 'utf8', 'replace'))
+    sys.stdout.flush()
+
+def test_connect(retryTime=5):
+    for i in range(retryTime):
+        try:
+            r = requests.get(config.BASE_URL)
+            return True
+        except:
+            if i == retryTime - 1:
+                logger.error(traceback.format_exc())
+                return False
+
+def contact_deep_copy(core, contact):
+    with core.storageClass.updateLock:
+        return copy.deepcopy(contact)
+
+def get_image_postfix(data):
+    data = data[:20]
+    if b'GIF' in data:
+        return 'gif'
+    elif b'PNG' in data:
+        return 'png'
+    elif b'JFIF' in data:
+        return 'jpg'
+    return ''
