@@ -256,18 +256,20 @@ def produce_group_chat(core, msg):
     msg['Content']        = content
     utils.msg_formatter(msg, 'Content')
 
-def send_raw_msg(self, msgType, content, toUserName):
-    url = '%s/webwxsendmsg' % self.loginInfo['url']
+def send_raw_msg(self, msgType, content, toUserName, uri=None, msgExt=None):
+    url = self.loginInfo['url'] + (uri or '/webwxsendmsg')
+    msg = {
+        'Type': msgType,
+        'Content': content,
+        'FromUserName': self.storageClass.userName,
+        'ToUserName': (toUserName if toUserName else self.storageClass.userName),
+        'LocalID': int(time.time() * 1e4),
+        'ClientMsgId': int(time.time() * 1e4), }
+    if msgExt:
+        msg.update(msgExt)
     data = {
         'BaseRequest': self.loginInfo['BaseRequest'],
-        'Msg': {
-            'Type': msgType,
-            'Content': content,
-            'FromUserName': self.storageClass.userName,
-            'ToUserName': (toUserName if toUserName else self.storageClass.userName),
-            'LocalID': int(time.time() * 1e4),
-            'ClientMsgId': int(time.time() * 1e4),
-            }, 
+        'Msg': msg,
         'Scene': 0, }
     headers = { 'ContentType': 'application/json; charset=UTF-8', 'User-Agent' : config.USER_AGENT }
     r = self.s.post(url, headers=headers,
