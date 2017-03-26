@@ -244,11 +244,10 @@ def produce_group_chat(core, msg):
     if member is None:
         logger.debug('chatroom member fetch failed with %s' % actualUserName)
         msg['ActualNickName'] = ''
-        msg['isAt'] = False
+        msg['IsAt'] = False
     else:
         msg['ActualNickName'] = member['DisplayName'] or member['NickName']
-        atFlag = '@' + (chatroom['self']['DisplayName']
-            or core.storageClass.nickName)
+        atFlag = '@' + chatroom['Self'].get('DisplayName', core.storageClass.nickName)
         msg['IsAt'] = (
             (atFlag + (u'\u2005' if u'\u2005' in msg['Content'] else ' '))
             in msg['Content'] or msg['Content'].endswith(atFlag))

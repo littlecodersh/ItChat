@@ -85,7 +85,7 @@ class AbstractUserDict(dict):
     def send_raw_msg(self, msgType, content):
         return self.core.send_raw_msg(msgType, content, self.userName)
     def send_msg(self, msg='Test Message'):
-        return self.core.send_msg(msgType, content, self.userName)
+        return self.core.send_msg(msg, self.userName)
     def send_file(self, fileDir, mediaId=None):
         return self.core.send_file(fileDir, self.userName, mediaId)
     def send_image(self, fileDir, mediaId=None):

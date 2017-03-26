@@ -158,16 +158,16 @@ def update_local_chatrooms(core, l):
         if oldChatroom.get('ChatRoomOwner') and oldChatroom.get('MemberList'):
             oldChatroom['OwnerUin'] = utils.search_dict_list(oldChatroom['MemberList'],
                 'UserName', oldChatroom['ChatRoomOwner']).get('Uin', 0)
-        #  - update isAdmin
+        #  - update IsAdmin
         if 'OwnerUin' in oldChatroom and oldChatroom['OwnerUin'] != 0:
-            oldChatroom['isAdmin'] = \
+            oldChatroom['IsAdmin'] = \
                 oldChatroom['OwnerUin'] == int(core.loginInfo['wxuin'])
         else:
-            oldChatroom['isAdmin'] = None
-        #  - update self
+            oldChatroom['IsAdmin'] = None
+        #  - update Self
         newSelf = utils.search_dict_list(oldChatroom['MemberList'],
             'UserName', core.storageClass.userName)
-        oldChatroom['self'] = newSelf or copy.deepcopy(core.loginInfo['User'])
+        oldChatroom['Self'] = newSelf or copy.deepcopy(core.loginInfo['User'])
     return {
         'Type'         : 'System',
         'Text'         : [chatroom['UserName'] for chatroom in l],
@@ -242,7 +242,8 @@ def update_local_uin(core, msg):
                         if newChatroomDict is None:
                             newChatroomDict = utils.struct_friend_info({
                                 'UserName': username,
-                                'Uin': uin, })
+                                'Uin': uin, 
+                                'Self': copy.deepcopy(core.loginInfo['User'])})
                             core.chatroomList.append(newChatroomDict)
                         else:
                             newChatroomDict['Uin'] = uin
