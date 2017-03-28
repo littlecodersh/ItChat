@@ -1,5 +1,6 @@
-import pickle, os
-import logging, traceback
+import pickle
+import os
+import logging
 
 import requests
 

@@ -1,8 +1,9 @@
-import os, time, re, io
-import json, copy
-import traceback, logging
-
-import requests
+import time
+import re
+import io
+import json
+import copy
+import logging
 
 from .. import config, utils
 from ..returnvalues import ReturnValue

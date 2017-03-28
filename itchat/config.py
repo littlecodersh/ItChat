@@ -1,4 +1,5 @@
-import os, platform
+import os
+import platform
 
 VERSION = '1.3.2'
 BASE_URL = 'https://login.weixin.qq.com'

@@ -1,10 +1,14 @@
-import os, sys, time, re, io
+import os
+import time
+import re
+import io
 import threading
-import json, xml.dom.minidom
-import copy, pickle, random
-import traceback, logging
+import json
+import xml.dom.minidom
+import random
+import traceback
+import logging
 
-import requests
 from pyqrcode import QRCode
 
 from .. import config, utils
