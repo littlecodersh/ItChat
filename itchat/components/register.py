@@ -43,12 +43,12 @@ def auto_login(self, hotReload=False, statusStorageDir='itchat.pkl',
 
 
 def configured_reply(self):
-    ''' determine the type of message and reply if its method is defined
+    """ determine the type of message and reply if its method is defined
         however, I use a strange way to determine whether a msg is from massive platform
         I haven't found a better solution here
         The main problem I'm worrying about is the mismatching of new friends added on phone
         If you have any good idea, pleeeease report an issue. I will be more than grateful.
-    '''
+    """
     try:
         msg = self.msgList.get(timeout=1)
     except Queue.Empty:
@@ -72,8 +72,8 @@ def configured_reply(self):
 
 
 def msg_register(self, msgType, isFriendChat=False, isGroupChat=False, isMpChat=False):
-    ''' a decorator constructor
-        return a specific decorator based on information given '''
+    """ a decorator constructor
+        return a specific decorator based on information given """
     if not (isinstance(msgType, list) or isinstance(msgType, tuple)):
         msgType = [msgType]
 

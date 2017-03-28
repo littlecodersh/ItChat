@@ -148,11 +148,11 @@ def check_login(self, uuid=None):
 
 
 def process_login_info(core, loginContent):
-    ''' when finish login (scanning qrcode)
+    """ when finish login (scanning qrcode)
      * syncUrl and fileUploadingUrl will be fetched
      * deviceid and msgid will be generated
      * skey, wxsid, wxuin, pass_ticket will be fetched
-    '''
+    """
     regx = r'window.redirect_uri="(\S+)";'
     core.loginInfo['url'] = re.search(regx, loginContent).group(1)
     headers = {'User-Agent': config.USER_AGENT}

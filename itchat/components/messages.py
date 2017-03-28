@@ -52,10 +52,10 @@ def get_download_fn(core, url, msgId):
 
 
 def produce_msg(core, msgList):
-    ''' for messages types
+    """ for messages types
      * 40 msg, 43 videochat, 50 VOIPMSG, 52 voipnotifymsg
      * 53 webwxvoipnotifymsg, 9999 sysnotice 
-    '''
+    """
     rl = []
     srl = [40, 43, 50, 52, 53, 9999]
     for m in msgList:

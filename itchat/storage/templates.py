@@ -19,8 +19,8 @@ fakeItchat = UnInitializedItchat()
 
 
 class ContactList(list):
-    ''' when a dict is append, init function will be called to format that dict
-    '''
+    """ when a dict is append, init function will be called to format that dict
+    """
 
     def __init__(self, *args, **kwargs):
         super(ContactList, self).__init__(*args, **kwargs)

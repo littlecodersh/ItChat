@@ -105,9 +105,9 @@ def update_friend(self, userName):
 
 
 def update_info_dict(oldInfoDict, newInfoDict):
-    ''' only normal values will be updated here
+    """ only normal values will be updated here
         because newInfoDict is normal dict, so it's not necessary to consider templates
-    '''
+    """
     for k, v in newInfoDict.items():
         if any((isinstance(v, t) for t in (tuple, list, dict))):
             pass  # these values will be updated somewhere else
@@ -117,10 +117,10 @@ def update_info_dict(oldInfoDict, newInfoDict):
 
 @contact_change
 def update_local_chatrooms(core, l):
-    '''
+    """
         get a list of chatrooms for updating local chatrooms
         return a list of given chatrooms with updated info
-    '''
+    """
     for chatroom in l:
         # format new chatrooms
         utils.emoji_formatter(chatroom, 'NickName')
@@ -185,9 +185,9 @@ def update_local_chatrooms(core, l):
 
 @contact_change
 def update_local_friends(core, l):
-    '''
+    """
         get a list of friends or mps for updating local contact
-    '''
+    """
     fullList = core.memberList + core.mpList
     for friend in l:
         if 'NickName' in friend:
@@ -210,13 +210,13 @@ def update_local_friends(core, l):
 
 @contact_change
 def update_local_uin(core, msg):
-    '''
+    """
         content contains uins and StatusNotifyUserName contains username
         they are in same order, so what I do is to pair them together
 
         I caught an exception in this method while not knowing why
         but don't worry, it won't cause any problem
-    '''
+    """
     uins = re.search('<username>([^<]*?)<', msg['Content'])
     usernameChangedList = []
     r = {
@@ -378,10 +378,10 @@ def set_pinned(self, userName, isPinned=True):
 
 
 def add_friend(self, userName, status=2, verifyContent='', autoUpdate=True):
-    ''' Add a friend or accept a friend
+    """ Add a friend or accept a friend
         * for adding status should be 2
         * for accepting status should be 3
-    '''
+    """
     url = '%s/webwxverifyuser?r=%s&pass_ticket=%s' % (
         self.loginInfo['url'], int(time.time()), self.loginInfo['pass_ticket'])
     data = {
@@ -406,11 +406,11 @@ def add_friend(self, userName, status=2, verifyContent='', autoUpdate=True):
 
 
 def get_head_img(self, userName=None, chatroomUserName=None, picDir=None):
-    ''' get head image
+    """ get head image
      * if you want to get chatroom header: only set chatroomUserName
      * if you want to get friend header: only set userName
      * if you want to get chatroom member header: set both
-    '''
+    """
     params = {
         'userName': userName or chatroomUserName or self.storageClass.userName,
         'skey': self.loginInfo['skey'],
@@ -497,11 +497,11 @@ def delete_member_from_chatroom(self, chatroomUserName, memberList):
 
 def add_member_into_chatroom(self, chatroomUserName, memberList,
                              useInvitation=False):
-    ''' add or invite member into chatroom
+    """ add or invite member into chatroom
      * there are two ways to get members into chatroom: invite or directly add
      * but for chatrooms with more than 40 users, you can only use invite
      * but don't worry we will auto-force userInvitation for you when necessary
-    '''
+    """
     if not useInvitation:
         chatroom = self.storageClass.search_chatrooms(userName=chatroomUserName)
         if not chatroom: chatroom = self.update_chatroom(chatroomUserName)

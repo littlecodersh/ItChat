@@ -44,9 +44,9 @@ def clear_screen():
 
 
 def emoji_formatter(d, k):
-    ''' _emoji_deebugger is for bugs about emoji match caused by wechat backstage
+    """ _emoji_deebugger is for bugs about emoji match caused by wechat backstage
     like :face with tears of joy: will be replaced with :cat face with tears of joy:
-    '''
+    """
 
     def _emoji_debugger(d, k):
         s = d[k].replace('<span class="emoji emoji1f450"></span',
@@ -122,8 +122,8 @@ def struct_friend_info(knownInfo):
 
 
 def search_dict_list(l, key, value):
-    ''' Search a list of dict
-        * return dict with specific value & key '''
+    """ Search a list of dict
+        * return dict with specific value & key """
     for i in l:
         if i.get(key) == value:
             return i

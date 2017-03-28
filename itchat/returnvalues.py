@@ -3,7 +3,7 @@ TRANSLATE = 'Chinese'
 
 
 class ReturnValue(dict):
-    ''' turn return value of itchat into a boolean value
+    """ turn return value of itchat into a boolean value
     for requests:
         ..code::python
 
@@ -19,7 +19,7 @@ class ReturnValue(dict):
                     'Ret': 0,
                     'ErrMsg': 'My error msg', }, }
             print(ReturnValue(returnDict))
-    '''
+    """
 
     def __init__(self, returnValueDict={}, rawResponse=None):
         if rawResponse:
