@@ -15,19 +15,21 @@ from .messages import produce_msg
 
 logger = logging.getLogger('itchat')
 
+
 def load_login(core):
-    core.login             = login
-    core.get_QRuuid        = get_QRuuid
-    core.get_QR            = get_QR
-    core.check_login       = check_login
-    core.web_init          = web_init
+    core.login = login
+    core.get_QRuuid = get_QRuuid
+    core.get_QR = get_QR
+    core.check_login = check_login
+    core.web_init = web_init
     core.show_mobile_login = show_mobile_login
-    core.start_receiving   = start_receiving
-    core.get_msg           = get_msg
-    core.logout            = logout
+    core.start_receiving = start_receiving
+    core.get_msg = get_msg
+    core.logout = logout
+
 
 def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
-        loginCallback=None, exitCallback=None):
+          loginCallback=None, exitCallback=None):
     if self.alive or self.isLogging:
         logger.warning('itchat has already logged in.')
         return
@@ -42,7 +44,7 @@ def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
                 time.sleep(1)
             logger.info('Downloading QR code.')
             qrStorage = self.get_QR(enableCmdQR=enableCmdQR,
-                picDir=picDir, qrCallback=qrCallback)
+                                    picDir=picDir, qrCallback=qrCallback)
             logger.info('Please scan the QR code to log in.')
         isLoggedIn = False
         while not isLoggedIn:
@@ -61,7 +63,7 @@ def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
             break
         logger.info('Log in time out, reloading QR code.')
     else:
-        return # log in process is stopped by user
+        return  # log in process is stopped by user
     logger.info('Loading the contact, this may take a little while.')
     self.web_init()
     self.show_mobile_login()
@@ -76,30 +78,33 @@ def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
     self.start_receiving(exitCallback)
     self.isLogging = False
 
+
 def push_login(core):
     cookiesDict = core.s.cookies.get_dict()
     if 'wxuin' in cookiesDict:
         url = '%s/cgi-bin/mmwebwx-bin/webwxpushloginurl?uin=%s' % (
             config.BASE_URL, cookiesDict['wxuin'])
-        headers = { 'User-Agent' : config.USER_AGENT }
+        headers = {'User-Agent': config.USER_AGENT}
         r = core.s.get(url, headers=headers).json()
         if 'uuid' in r and r.get('ret') in (0, '0'):
             core.uuid = r['uuid']
             return r['uuid']
     return False
 
+
 def get_QRuuid(self):
     url = '%s/jslogin' % config.BASE_URL
     params = {
-        'appid' : 'wx782c26e4c19acffb',
-        'fun'   : 'new', }
-    headers = { 'User-Agent' : config.USER_AGENT }
+        'appid': 'wx782c26e4c19acffb',
+        'fun': 'new', }
+    headers = {'User-Agent': config.USER_AGENT}
     r = self.s.get(url, params=params, headers=headers)
     regx = r'window.QRLogin.code = (\d+); window.QRLogin.uuid = "(\S+?)";'
     data = re.search(regx, r.text)
     if data and data.group(1) == '200':
         self.uuid = data.group(2)
         return self.uuid
+
 
 def get_QR(self, uuid=None, enableCmdQR=False, picDir=None, qrCallback=None):
     uuid = uuid or self.uuid
@@ -118,13 +123,14 @@ def get_QR(self, uuid=None, enableCmdQR=False, picDir=None, qrCallback=None):
             utils.print_qr(picDir)
     return qrStorage
 
+
 def check_login(self, uuid=None):
     uuid = uuid or self.uuid
     url = '%s/cgi-bin/mmwebwx-bin/login' % config.BASE_URL
     localTime = int(time.time())
     params = 'loginicon=true&uuid=%s&tip=0&r=%s&_=%s' % (
         uuid, localTime / 1579, localTime)
-    headers = { 'User-Agent' : config.USER_AGENT }
+    headers = {'User-Agent': config.USER_AGENT}
     r = self.s.get(url, params=params, headers=headers)
     regx = r'window.code=(\d+)'
     data = re.search(regx, r.text)
@@ -136,6 +142,7 @@ def check_login(self, uuid=None):
     else:
         return '400'
 
+
 def process_login_info(core, loginContent):
     ''' when finish login (scanning qrcode)
      * syncUrl and fileUploadingUrl will be fetched
@@ -144,15 +151,15 @@ def process_login_info(core, loginContent):
     '''
     regx = r'window.redirect_uri="(\S+)";'
     core.loginInfo['url'] = re.search(regx, loginContent).group(1)
-    headers = { 'User-Agent' : config.USER_AGENT }
+    headers = {'User-Agent': config.USER_AGENT}
     r = core.s.get(core.loginInfo['url'], headers=headers, allow_redirects=False)
     core.loginInfo['url'] = core.loginInfo['url'][:core.loginInfo['url'].rfind('/')]
     for indexUrl, detailedUrl in (
-            ("wx2.qq.com"      , ("file.wx2.qq.com", "webpush.wx2.qq.com")),
-            ("wx8.qq.com"      , ("file.wx8.qq.com", "webpush.wx8.qq.com")),
-            ("qq.com"          , ("file.wx.qq.com", "webpush.wx.qq.com")),
-            ("web2.wechat.com" , ("file.web2.wechat.com", "webpush.web2.wechat.com")),
-            ("wechat.com"      , ("file.web.wechat.com", "webpush.web.wechat.com"))):
+            ("wx2.qq.com", ("file.wx2.qq.com", "webpush.wx2.qq.com")),
+            ("wx8.qq.com", ("file.wx8.qq.com", "webpush.wx8.qq.com")),
+            ("qq.com", ("file.wx.qq.com", "webpush.wx.qq.com")),
+            ("web2.wechat.com", ("file.web2.wechat.com", "webpush.web2.wechat.com")),
+            ("wechat.com", ("file.web.wechat.com", "webpush.web.wechat.com"))):
         fileUrl, syncUrl = ['https://%s/cgi-bin/mmwebwx-bin' % url for url in detailedUrl]
         if indexUrl in core.loginInfo['url']:
             core.loginInfo['fileUrl'], core.loginInfo['syncUrl'] = \
@@ -172,12 +179,13 @@ def process_login_info(core, loginContent):
         elif node.nodeName == 'pass_ticket':
             core.loginInfo['pass_ticket'] = core.loginInfo['BaseRequest']['DeviceID'] = node.childNodes[0].data
 
+
 def web_init(self):
     url = '%s/webwxinit?r=%s' % (self.loginInfo['url'], int(time.time()))
-    data = { 'BaseRequest': self.loginInfo['BaseRequest'], }
+    data = {'BaseRequest': self.loginInfo['BaseRequest'], }
     headers = {
         'ContentType': 'application/json; charset=UTF-8',
-        'User-Agent' : config.USER_AGENT, }
+        'User-Agent': config.USER_AGENT, }
     r = self.s.post(url, data=json.dumps(data), headers=headers)
     dic = json.loads(r.content.decode('utf-8', 'replace'))
     # deal with login info
@@ -187,44 +195,47 @@ def web_init(self):
     self.memberList.append(self.loginInfo['User'])
     self.loginInfo['SyncKey'] = dic['SyncKey']
     self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val'])
-        for item in dic['SyncKey']['List']])
+                                          for item in dic['SyncKey']['List']])
     self.storageClass.userName = dic['User']['UserName']
     self.storageClass.nickName = dic['User']['NickName']
     # deal with contact list returned when init
-    contactList = dic.get('ContactList', [])		
-    chatroomList, otherList = [], []		
-    for m in contactList:		
-        if m['Sex'] != 0:		
-            otherList.append(m)		
-        elif '@@' in m['UserName']:		
-            m['MemberList'] = [] # don't let dirty info pollute the list
-            chatroomList.append(m)		
-        elif '@' in m['UserName']:		
+    contactList = dic.get('ContactList', [])
+    chatroomList, otherList = [], []
+    for m in contactList:
+        if m['Sex'] != 0:
+            otherList.append(m)
+        elif '@@' in m['UserName']:
+            m['MemberList'] = []  # don't let dirty info pollute the list
+            chatroomList.append(m)
+        elif '@' in m['UserName']:
             # mp will be dealt in update_local_friends as well		
-            otherList.append(m)		
+            otherList.append(m)
     if chatroomList:
-        update_local_chatrooms(self, chatroomList)		
+        update_local_chatrooms(self, chatroomList)
     if otherList:
         update_local_friends(self, otherList)
     return dic
+
 
 def show_mobile_login(self):
     url = '%s/webwxstatusnotify?lang=zh_CN&pass_ticket=%s' % (
         self.loginInfo['url'], self.loginInfo['pass_ticket'])
     data = {
-        'BaseRequest'  : self.loginInfo['BaseRequest'],
-        'Code'         : 3,
-        'FromUserName' : self.storageClass.userName,
-        'ToUserName'   : self.storageClass.userName,
-        'ClientMsgId'  : int(time.time()), }
+        'BaseRequest': self.loginInfo['BaseRequest'],
+        'Code': 3,
+        'FromUserName': self.storageClass.userName,
+        'ToUserName': self.storageClass.userName,
+        'ClientMsgId': int(time.time()), }
     headers = {
         'ContentType': 'application/json; charset=UTF-8',
-        'User-Agent' : config.USER_AGENT, }
+        'User-Agent': config.USER_AGENT, }
     r = self.s.post(url, data=json.dumps(data), headers=headers)
     return ReturnValue(rawResponse=r)
 
+
 def start_receiving(self, exitCallback=None, getReceivingFnOnly=False):
     self.alive = True
+
     def maintain_loop():
         retryCount = 0
         while self.alive:
@@ -264,6 +275,7 @@ def start_receiving(self, exitCallback=None, getReceivingFnOnly=False):
             exitCallback()
         else:
             logger.info('LOG OUT!')
+
     if getReceivingFnOnly:
         return maintain_loop
     else:
@@ -271,17 +283,18 @@ def start_receiving(self, exitCallback=None, getReceivingFnOnly=False):
         maintainThread.setDaemon(True)
         maintainThread.start()
 
+
 def sync_check(self):
     url = '%s/synccheck' % self.loginInfo.get('syncUrl', self.loginInfo['url'])
     params = {
-        'r'        : int(time.time() * 1000),
-        'skey'     : self.loginInfo['skey'],
-        'sid'      : self.loginInfo['wxsid'],
-        'uin'      : self.loginInfo['wxuin'],
-        'deviceid' : self.loginInfo['deviceid'],
-        'synckey'  : self.loginInfo['synckey'],
-        '_'        : int(time.time() * 1000),}
-    headers = { 'User-Agent' : config.USER_AGENT }
+        'r': int(time.time() * 1000),
+        'skey': self.loginInfo['skey'],
+        'sid': self.loginInfo['wxsid'],
+        'uin': self.loginInfo['wxuin'],
+        'deviceid': self.loginInfo['deviceid'],
+        'synckey': self.loginInfo['synckey'],
+        '_': int(time.time() * 1000), }
+    headers = {'User-Agent': config.USER_AGENT}
     r = self.s.get(url, params=params, headers=headers)
     regx = r'window.synccheck={retcode:"(\d+)",selector:"(\d+)"}'
     pm = re.search(regx, r.text)
@@ -290,33 +303,35 @@ def sync_check(self):
         return None
     return pm.group(2)
 
+
 def get_msg(self):
     url = '%s/webwxsync?sid=%s&skey=%s&pass_ticket=%s' % (
         self.loginInfo['url'], self.loginInfo['wxsid'],
-        self.loginInfo['skey'],self.loginInfo['pass_ticket'])
+        self.loginInfo['skey'], self.loginInfo['pass_ticket'])
     data = {
-        'BaseRequest' : self.loginInfo['BaseRequest'],
-        'SyncKey'     : self.loginInfo['SyncKey'],
-        'rr'          : ~int(time.time()), }
+        'BaseRequest': self.loginInfo['BaseRequest'],
+        'SyncKey': self.loginInfo['SyncKey'],
+        'rr': ~int(time.time()), }
     headers = {
         'ContentType': 'application/json; charset=UTF-8',
-        'User-Agent' : config.USER_AGENT }
+        'User-Agent': config.USER_AGENT}
     r = self.s.post(url, data=json.dumps(data), headers=headers)
     dic = json.loads(r.content.decode('utf-8', 'replace'))
     if dic['BaseResponse']['Ret'] != 0: return None, None
     self.loginInfo['SyncKey'] = dic['SyncCheckKey']
     self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val'])
-        for item in dic['SyncCheckKey']['List']])
+                                          for item in dic['SyncCheckKey']['List']])
     return dic['AddMsgList'], dic['ModContactList']
+
 
 def logout(self):
     if self.alive:
         url = '%s/webwxlogout' % self.loginInfo['url']
         params = {
-            'redirect' : 1,
-            'type'     : 1,
-            'skey'     : self.loginInfo['skey'], }
-        headers = { 'User-Agent' : config.USER_AGENT }
+            'redirect': 1,
+            'type': 1,
+            'skey': self.loginInfo['skey'], }
+        headers = {'User-Agent': config.USER_AGENT}
         self.s.get(url, params=params, headers=headers)
         self.alive = False
     self.isLogging = False

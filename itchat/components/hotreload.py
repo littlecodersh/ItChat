@@ -11,9 +11,11 @@ from .messages import produce_msg
 
 logger = logging.getLogger('itchat')
 
+
 def load_hotreload(core):
     core.dump_login_status = dump_login_status
     core.load_login_status = load_login_status
+
 
 def dump_login_status(self, fileDir=None):
     fileDir = fileDir or self.hotReloadDir
@@ -24,16 +26,17 @@ def dump_login_status(self, fileDir=None):
     except:
         raise Exception('Incorrect fileDir')
     status = {
-        'version'   : VERSION,
-        'loginInfo' : self.loginInfo,
-        'cookies'   : self.s.cookies.get_dict(),
-        'storage'   : self.storageClass.dumps()}
+        'version': VERSION,
+        'loginInfo': self.loginInfo,
+        'cookies': self.s.cookies.get_dict(),
+        'storage': self.storageClass.dumps()}
     with open(fileDir, 'wb') as f:
         pickle.dump(status, f)
     logger.debug('Dump login status for hot reload successfully.')
 
+
 def load_login_status(self, fileDir,
-        loginCallback=None, exitCallback=None):
+                      loginCallback=None, exitCallback=None):
     try:
         with open(fileDir, 'rb') as f:
             j = pickle.load(f)
@@ -44,9 +47,9 @@ def load_login_status(self, fileDir,
             'Ret': -1002, }})
 
     if j.get('version', '') != VERSION:
-        logger.debug(('you have updated itchat from %s to %s, ' + 
-            'so cached status is ignored') % (
-            j.get('version', 'old version'), VERSION))
+        logger.debug(('you have updated itchat from %s to %s, ' +
+                      'so cached status is ignored') % (
+                         j.get('version', 'old version'), VERSION))
         return ReturnValue({'BaseResponse': {
             'ErrMsg': 'cached status ignored because of version',
             'Ret': -1005, }})
@@ -80,6 +83,7 @@ def load_login_status(self, fileDir,
         return ReturnValue({'BaseResponse': {
             'ErrMsg': 'loading login status succeeded.',
             'Ret': 0, }})
+
 
 def load_last_login_status(session, cookiesDict):
     try:

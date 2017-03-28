@@ -2,7 +2,7 @@ import os, platform
 
 VERSION = '1.3.2'
 BASE_URL = 'https://login.weixin.qq.com'
-OS = platform.system() #Windows, Linux, Darwin
+OS = platform.system()  # Windows, Linux, Darwin
 DIR = os.getcwd()
 DEFAULT_QR = 'QR.png'
 
