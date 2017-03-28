@@ -237,7 +237,7 @@ def produce_group_chat(core, msg):
     chatroom = core.storageClass.search_chatrooms(userName=chatroomUserName)
     member = utils.search_dict_list((chatroom or {}).get(
         'MemberList') or [], 'UserName', actualUserName)
-    if member is None:
+    if (not chatroom.has_key('Self')) or (member is None):
         chatroom = core.update_chatroom(msg['FromUserName'])
         member = utils.search_dict_list((chatroom or {}).get(
             'MemberList') or [], 'UserName', actualUserName)
@@ -246,11 +246,14 @@ def produce_group_chat(core, msg):
         msg['ActualNickName'] = ''
         msg['IsAt'] = False
     else:
-        msg['ActualNickName'] = member['DisplayName'] or member['NickName']
-        atFlag = '@' + chatroom['Self'].get('DisplayName', core.storageClass.nickName)
+        msg['ActualNickName'] = member.get('DisplayName', member['NickName']) or member['NickName']
+        selfActualNickName = chatroom['Self'].get('DisplayName', core.storageClass.nickName) or core.storageClass.nickName
+        atFlag = '@' + selfActualNickName
         msg['IsAt'] = (
             (atFlag + (u'\u2005' if u'\u2005' in msg['Content'] else ' '))
             in msg['Content'] or msg['Content'].endswith(atFlag))
+    #make "msg['IsAt']" more compatible
+    msg['isAt'] = msg['IsAt']
     msg['ActualUserName'] = actualUserName
     msg['Content']        = content
     utils.msg_formatter(msg, 'Content')
