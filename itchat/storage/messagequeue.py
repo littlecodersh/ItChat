@@ -23,9 +23,7 @@ class Message(dict):
         return self.get(value, '')
 
     def __str__(self):
-        return '{%s}' % ', '.join(
-            ['%s: %s' % (repr(k), repr(v)) for k, v in self.items()])
+        return '{%s}' % ', '.join(['%s: %s' % (repr(k), repr(v)) for k, v in self.items()])
 
     def __repr__(self):
-        return '<%s: %s>' % (self.__class__.__name__.split('.')[-1],
-                             self.__str__())
+        return '<%s: %s>' % (self.__class__.__name__.split('.')[-1], self.__str__())

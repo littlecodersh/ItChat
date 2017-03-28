@@ -15,8 +15,7 @@ class LogSystem(object):
         self.fileHandler = None
         self.logger.addHandler(self.cmdHandler)
 
-    def set_logging(self, showOnCmd=True, loggingFile=None,
-                    loggingLevel=logging.INFO):
+    def set_logging(self, showOnCmd=True, loggingFile=None, loggingLevel=logging.INFO):
         if showOnCmd != self.showOnCmd:
             if showOnCmd:
                 self.logger.addHandler(self.cmdHandler)

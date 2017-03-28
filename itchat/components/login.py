@@ -32,8 +32,7 @@ def load_login(core):
     core.logout = logout
 
 
-def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
-          loginCallback=None, exitCallback=None):
+def login(self, enableCmdQR=False, picDir=None, qrCallback=None, loginCallback=None, exitCallback=None):
     if self.alive or self.isLogging:
         logger.warning('itchat has already logged in.')
         return
@@ -47,8 +46,7 @@ def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
             while not self.get_QRuuid():
                 time.sleep(1)
             logger.info('Downloading QR code.')
-            qrStorage = self.get_QR(enableCmdQR=enableCmdQR,
-                                    picDir=picDir, qrCallback=qrCallback)
+            qrStorage = self.get_QR(enableCmdQR=enableCmdQR, picDir=picDir, qrCallback=qrCallback)
             logger.info('Please scan the QR code to log in.')
         isLoggedIn = False
         while not isLoggedIn:
@@ -86,8 +84,7 @@ def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
 def push_login(core):
     cookiesDict = core.s.cookies.get_dict()
     if 'wxuin' in cookiesDict:
-        url = '%s/cgi-bin/mmwebwx-bin/webwxpushloginurl?uin=%s' % (
-            config.BASE_URL, cookiesDict['wxuin'])
+        url = '%s/cgi-bin/mmwebwx-bin/webwxpushloginurl?uin=%s' % (config.BASE_URL, cookiesDict['wxuin'])
         headers = {'User-Agent': config.USER_AGENT}
         r = core.s.get(url, headers=headers).json()
         if 'uuid' in r and r.get('ret') in (0, '0'):
@@ -132,8 +129,7 @@ def check_login(self, uuid=None):
     uuid = uuid or self.uuid
     url = '%s/cgi-bin/mmwebwx-bin/login' % config.BASE_URL
     localTime = int(time.time())
-    params = 'loginicon=true&uuid=%s&tip=0&r=%s&_=%s' % (
-        uuid, localTime / 1579, localTime)
+    params = 'loginicon=true&uuid=%s&tip=0&r=%s&_=%s' % (uuid, localTime / 1579, localTime)
     headers = {'User-Agent': config.USER_AGENT}
     r = self.s.get(url, params=params, headers=headers)
     regx = r'window.code=(\d+)'
@@ -166,8 +162,7 @@ def process_login_info(core, loginContent):
             ("wechat.com", ("file.web.wechat.com", "webpush.web.wechat.com"))):
         fileUrl, syncUrl = ['https://%s/cgi-bin/mmwebwx-bin' % url for url in detailedUrl]
         if indexUrl in core.loginInfo['url']:
-            core.loginInfo['fileUrl'], core.loginInfo['syncUrl'] = \
-                fileUrl, syncUrl
+            core.loginInfo['fileUrl'], core.loginInfo['syncUrl'] = fileUrl, syncUrl
             break
     else:
         core.loginInfo['fileUrl'] = core.loginInfo['syncUrl'] = core.loginInfo['url']
@@ -212,7 +207,7 @@ def web_init(self):
             m['MemberList'] = []  # don't let dirty info pollute the list
             chatroomList.append(m)
         elif '@' in m['UserName']:
-            # mp will be dealt in update_local_friends as well		
+            # mp will be dealt in update_local_friends as well
             otherList.append(m)
     if chatroomList:
         update_local_chatrooms(self, chatroomList)
@@ -222,8 +217,7 @@ def web_init(self):
 
 
 def show_mobile_login(self):
-    url = '%s/webwxstatusnotify?lang=zh_CN&pass_ticket=%s' % (
-        self.loginInfo['url'], self.loginInfo['pass_ticket'])
+    url = '%s/webwxstatusnotify?lang=zh_CN&pass_ticket=%s' % (self.loginInfo['url'], self.loginInfo['pass_ticket'])
     data = {
         'BaseRequest': self.loginInfo['BaseRequest'],
         'Code': 3,
@@ -267,7 +261,7 @@ def start_receiving(self, exitCallback=None, getReceivingFnOnly=False):
                         self.msgList.put(chatroomMsg)
                         update_local_friends(self, otherList)
                 retryCount = 0
-            except:
+            except Exception:
                 retryCount += 1
                 logger.error(traceback.format_exc())
                 if self.receivingRetryCount < retryCount:
@@ -309,9 +303,8 @@ def sync_check(self):
 
 
 def get_msg(self):
-    url = '%s/webwxsync?sid=%s&skey=%s&pass_ticket=%s' % (
-        self.loginInfo['url'], self.loginInfo['wxsid'],
-        self.loginInfo['skey'], self.loginInfo['pass_ticket'])
+    url = '%s/webwxsync?sid=%s&skey=%s&pass_ticket=%s' % (self.loginInfo['url'], self.loginInfo['wxsid'],
+                                                          self.loginInfo['skey'], self.loginInfo['pass_ticket'])
     data = {
         'BaseRequest': self.loginInfo['BaseRequest'],
         'SyncKey': self.loginInfo['SyncKey'],
@@ -321,7 +314,8 @@ def get_msg(self):
         'User-Agent': config.USER_AGENT}
     r = self.s.post(url, data=json.dumps(data), headers=headers)
     dic = json.loads(r.content.decode('utf-8', 'replace'))
-    if dic['BaseResponse']['Ret'] != 0: return None, None
+    if dic['BaseResponse']['Ret'] != 0:
+        return None, None
     self.loginInfo['SyncKey'] = dic['SyncCheckKey']
     self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val'])
                                           for item in dic['SyncCheckKey']['List']])

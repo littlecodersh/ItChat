@@ -70,26 +70,22 @@ class AbstractUserDict(dict):
     def update(self):
         return ReturnValue({'BaseResponse': {
             'Ret': -1006,
-            'ErrMsg': '%s can not be updated' % \
-                      self.__class__.__name__, }, })
+            'ErrMsg': '%s can not be updated' % self.__class__.__name__, }, })
 
     def set_alias(self, alias):
         return ReturnValue({'BaseResponse': {
             'Ret': -1006,
-            'ErrMsg': '%s can not set alias' % \
-                      self.__class__.__name__, }, })
+            'ErrMsg': '%s can not set alias' % self.__class__.__name__, }, })
 
     def set_pinned(self, isPinned=True):
         return ReturnValue({'BaseResponse': {
             'Ret': -1006,
-            'ErrMsg': '%s can not be pinned' % \
-                      self.__class__.__name__, }, })
+            'ErrMsg': '%s can not be pinned' % self.__class__.__name__, }, })
 
     def verify(self):
         return ReturnValue({'BaseResponse': {
             'Ret': -1006,
-            'ErrMsg': '%s do not need verify' % \
-                      self.__class__.__name__, }, })
+            'ErrMsg': '%s do not need verify' % self.__class__.__name__, }, })
 
     def get_head_image(self, imageDir=None):
         return self.core.get_head_img(self.userName, picDir=imageDir)
@@ -97,14 +93,12 @@ class AbstractUserDict(dict):
     def delete_member(self, userName):
         return ReturnValue({'BaseResponse': {
             'Ret': -1006,
-            'ErrMsg': '%s can not delete member' % \
-                      self.__class__.__name__, }, })
+            'ErrMsg': '%s can not delete member' % self.__class__.__name__, }, })
 
     def add_member(self, userName):
         return ReturnValue({'BaseResponse': {
             'Ret': -1006,
-            'ErrMsg': '%s can not add member' % \
-                      self.__class__.__name__, }, })
+            'ErrMsg': '%s can not add member' % self.__class__.__name__, }, })
 
     def send_raw_msg(self, msgType, content):
         return self.core.send_raw_msg(msgType, content, self.userName)
@@ -128,8 +122,7 @@ class AbstractUserDict(dict):
                       wechatAccount=None):
         return ReturnValue({'BaseResponse': {
             'Ret': -1006,
-            'ErrMsg': '%s do not have members' % \
-                      self.__class__.__name__, }, })
+            'ErrMsg': '%s do not have members' % self.__class__.__name__, }, })
 
     def __getattr__(self, value):
         value = value[0].upper() + value[1:]
@@ -265,38 +258,32 @@ class ChatroomMember(AbstractUserDict):
     def send_raw_msg(self, msgType, content):
         return ReturnValue({'BaseResponse': {
             'Ret': -1006,
-            'ErrMsg': '%s can not send message directly' % \
-                      self.__class__.__name__, }, })
+            'ErrMsg': '%s can not send message directly' % self.__class__.__name__, }, })
 
     def send_msg(self, msg='Test Message'):
         return ReturnValue({'BaseResponse': {
             'Ret': -1006,
-            'ErrMsg': '%s can not send message directly' % \
-                      self.__class__.__name__, }, })
+            'ErrMsg': '%s can not send message directly' % self.__class__.__name__, }, })
 
     def send_file(self, fileDir, mediaId=None):
         return ReturnValue({'BaseResponse': {
             'Ret': -1006,
-            'ErrMsg': '%s can not send message directly' % \
-                      self.__class__.__name__, }, })
+            'ErrMsg': '%s can not send message directly' % self.__class__.__name__, }, })
 
     def send_image(self, fileDir, mediaId=None):
         return ReturnValue({'BaseResponse': {
             'Ret': -1006,
-            'ErrMsg': '%s can not send message directly' % \
-                      self.__class__.__name__, }, })
+            'ErrMsg': '%s can not send message directly' % self.__class__.__name__, }, })
 
     def send_video(self, fileDir=None, mediaId=None):
         return ReturnValue({'BaseResponse': {
             'Ret': -1006,
-            'ErrMsg': '%s can not send message directly' % \
-                      self.__class__.__name__, }, })
+            'ErrMsg': '%s can not send message directly' % self.__class__.__name__, }, })
 
     def send(self, msg, mediaId=None):
         return ReturnValue({'BaseResponse': {
             'Ret': -1006,
-            'ErrMsg': '%s can not send message directly' % \
-                      self.__class__.__name__, }, })
+            'ErrMsg': '%s can not send message directly' % self.__class__.__name__, }, })
 
     def __deepcopy__(self, memo):
         r = super(ChatroomMember, self).__deepcopy__(memo)

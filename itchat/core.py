@@ -29,8 +29,7 @@ class Core(object):
         self.useHotReload, self.hotReloadDir = False, 'itchat.pkl'
         self.receivingRetryCount = 5
 
-    def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
-              loginCallback=None, exitCallback=None):
+    def login(self, enableCmdQR=False, picDir=None, qrCallback=None, loginCallback=None, exitCallback=None):
         """ log in like web wechat does
             for log in
                 - a QR code will be downloaded and opened
@@ -123,7 +122,8 @@ class Core(object):
             for options:
                 - exitCallback: callback after logged out
                     - it contains calling of logout
-                - getReceivingFnOnly: if True thread will not be created and started. Instead, receive fn will be returned.
+                - getReceivingFnOnly: if True thread will not be created and started.
+                    Instead, receive fn will be returned.
             for processing:
                 - messages: msgs are formatted and passed on to registered fns
                 - contact : chatrooms are updated when related info is received
@@ -355,7 +355,7 @@ class Core(object):
         """ send attachment
             for options
                 - fileDir: dir for file ready for upload
-                - mediaId: mediaId for file. 
+                - mediaId: mediaId for file.
                     - if set, file will not be uploaded twice
                 - toUserName: 'UserName' key of friend dict
             it is defined in components/messages.py
@@ -367,7 +367,7 @@ class Core(object):
             for options
                 - fileDir: dir for file ready for upload
                     - if it's a gif, name it like 'xx.gif'
-                - mediaId: mediaId for file. 
+                - mediaId: mediaId for file.
                     - if set, file will not be uploaded twice
                 - toUserName: 'UserName' key of friend dict
             it is defined in components/messages.py
@@ -379,7 +379,7 @@ class Core(object):
             for options
                 - fileDir: dir for file ready for upload
                     - if mediaId is set, it's unnecessary to set fileDir
-                - mediaId: mediaId for file. 
+                - mediaId: mediaId for file.
                     - if set, file will not be uploaded twice
                 - toUserName: 'UserName' key of friend dict
             it is defined in components/messages.py
@@ -461,8 +461,7 @@ class Core(object):
         """
         raise NotImplementedError()
 
-    def msg_register(self, msgType,
-                     isFriendChat=False, isGroupChat=False, isMpChat=False):
+    def msg_register(self, msgType, isFriendChat=False, isGroupChat=False, isMpChat=False):
         """ a decorator constructor
             return a specific decorator based on information given
         """
@@ -476,8 +475,7 @@ class Core(object):
         """
         raise NotImplementedError()
 
-    def search_friends(self, name=None, userName=None, remarkName=None, nickName=None,
-                       wechatAccount=None):
+    def search_friends(self, name=None, userName=None, remarkName=None, nickName=None, wechatAccount=None):
         return self.storageClass.search_friends(name, userName, remarkName,
                                                 nickName, wechatAccount)
 

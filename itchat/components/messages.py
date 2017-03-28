@@ -54,7 +54,7 @@ def get_download_fn(core, url, msgId):
 def produce_msg(core, msgList):
     """ for messages types
      * 40 msg, 43 videochat, 50 VOIPMSG, 52 voipnotifymsg
-     * 53 webwxvoipnotifymsg, 9999 sysnotice 
+     * 53 webwxvoipnotifymsg, 9999 sysnotice
     """
     rl = []
     srl = [40, 43, 50, 52, 53, 9999]
@@ -96,16 +96,14 @@ def produce_msg(core, msgList):
                     'Type': 'Text',
                     'Text': m['Content'], }
         elif m['MsgType'] == 3 or m['MsgType'] == 47:  # picture
-            download_fn = get_download_fn(core,
-                                          '%s/webwxgetmsgimg' % core.loginInfo['url'], m['NewMsgId'])
+            download_fn = get_download_fn(core, '%s/webwxgetmsgimg' % core.loginInfo['url'], m['NewMsgId'])
             msg = {
                 'Type': 'Picture',
                 'FileName': '%s.%s' % (time.strftime('%y%m%d-%H%M%S', time.localtime()),
                                        'png' if m['MsgType'] == 3 else 'gif'),
                 'Text': download_fn, }
         elif m['MsgType'] == 34:  # voice
-            download_fn = get_download_fn(core,
-                                          '%s/webwxgetvoice' % core.loginInfo['url'], m['NewMsgId'])
+            download_fn = get_download_fn(core, '%s/webwxgetvoice' % core.loginInfo['url'], m['NewMsgId'])
             msg = {
                 'Type': 'Recording',
                 'FileName': '%s.mp3' % time.strftime('%y%m%d-%H%M%S', time.localtime()),
@@ -180,8 +178,7 @@ def produce_msg(core, msgList):
                     'Type': 'Attachment',
                     'Text': download_atta, }
             elif m['AppMsgType'] == 8:
-                download_fn = get_download_fn(core,
-                                              '%s/webwxgetmsgimg' % core.loginInfo['url'], m['NewMsgId'])
+                download_fn = get_download_fn(core, '%s/webwxgetmsgimg' % core.loginInfo['url'], m['NewMsgId'])
                 msg = {
                     'Type': 'Picture',
                     'FileName': '%s.gif' % (
@@ -248,12 +245,10 @@ def produce_group_chat(core, msg):
         utils.msg_formatter(msg, 'Content')
         return
     chatroom = core.storageClass.search_chatrooms(userName=chatroomUserName)
-    member = utils.search_dict_list((chatroom or {}).get(
-        'MemberList') or [], 'UserName', actualUserName)
+    member = utils.search_dict_list((chatroom or {}).get('MemberList') or [], 'UserName', actualUserName)
     if member is None:
         chatroom = core.update_chatroom(msg['FromUserName'])
-        member = utils.search_dict_list((chatroom or {}).get(
-            'MemberList') or [], 'UserName', actualUserName)
+        member = utils.search_dict_list((chatroom or {}).get('MemberList') or [], 'UserName', actualUserName)
     if member is None:
         logger.debug('chatroom member fetch failed with %s' % actualUserName)
         msg['ActualNickName'] = ''
@@ -283,8 +278,7 @@ def send_raw_msg(self, msgType, content, toUserName):
         },
         'Scene': 0, }
     headers = {'ContentType': 'application/json; charset=UTF-8', 'User-Agent': config.USER_AGENT}
-    r = self.s.post(url, headers=headers,
-                    data=json.dumps(data, ensure_ascii=False).encode('utf8'))
+    r = self.s.post(url, headers=headers, data=json.dumps(data, ensure_ascii=False).encode('utf8'))
     return ReturnValue(rawResponse=r)
 
 
@@ -316,16 +310,14 @@ def _prepare_file(fileDir, file_=None):
     return fileDict
 
 
-def upload_file(self, fileDir, isPicture=False, isVideo=False,
-                toUserName='filehelper', file_=None, preparedFile=None):
+def upload_file(self, fileDir, isPicture=False, isVideo=False, toUserName='filehelper', file_=None, preparedFile=None):
     logger.debug('Request to upload a %s: %s' % (
         'picture' if isPicture else 'video' if isVideo else 'file', fileDir))
     if not preparedFile:
         preparedFile = _prepare_file(fileDir, file_)
         if not preparedFile:
             return preparedFile
-    fileSize, fileMd5, file_ = \
-        preparedFile['fileSize'], preparedFile['fileMd5'], preparedFile['file_']
+    fileSize, fileMd5, file_ = preparedFile['fileSize'], preparedFile['fileMd5'], preparedFile['file_']
     fileSymbol = 'pic' if isPicture else 'video' if isVideo else'doc'
     chunks = int((fileSize - 1) / 524288) + 1
     clientMediaId = int(time.time() * 1e4)
@@ -351,10 +343,8 @@ def upload_file(self, fileDir, isPicture=False, isVideo=False,
     return ReturnValue(rawResponse=r)
 
 
-def upload_chunk_file(core, fileDir, fileSymbol, fileSize,
-                      file_, chunk, chunks, uploadMediaRequest):
-    url = core.loginInfo.get('fileUrl', core.loginInfo['url']) + \
-          '/webwxuploadmedia?f=json'
+def upload_chunk_file(core, fileDir, fileSymbol, fileSize, file_, chunk, chunks, uploadMediaRequest):
+    url = core.loginInfo.get('fileUrl', core.loginInfo['url']) + '/webwxuploadmedia?f=json'
     # save it on server
     cookiesList = {name: data for name, data in core.s.cookies.items()}
     fileType = mimetypes.guess_type(fileDir)[0] or 'application/octet-stream'
@@ -372,7 +362,7 @@ def upload_chunk_file(core, fileDir, fileSymbol, fileSize,
         ('pass_ticket', (None, core.loginInfo['pass_ticket'])),
         ('filename', (os.path.basename(fileDir), file_.read(524288), 'application/octet-stream'))])
     if chunks == 1:
-        del files['chunk'];
+        del files['chunk']
         del files['chunks']
     else:
         files['chunk'], files['chunks'] = (None, str(chunk)), (None, str(chunks))
@@ -381,8 +371,7 @@ def upload_chunk_file(core, fileDir, fileSymbol, fileSize,
 
 
 def send_file(self, fileDir, toUserName=None, mediaId=None, file_=None):
-    logger.debug('Request to send a file(mediaId: %s) to %s: %s' % (
-        mediaId, toUserName, fileDir))
+    logger.debug('Request to send a file(mediaId: %s) to %s: %s' % (mediaId, toUserName, fileDir))
     if hasattr(fileDir, 'read'):
         return ReturnValue({'BaseResponse': {
             'ErrMsg': 'fileDir param should not be an opened file in send_file',
@@ -466,8 +455,7 @@ def send_image(self, fileDir=None, toUserName=None, mediaId=None, file_=None):
 
 
 def send_video(self, fileDir=None, toUserName=None, mediaId=None, file_=None):
-    logger.debug('Request to send a video(mediaId: %s) to %s: %s' % (
-        mediaId, toUserName, fileDir))
+    logger.debug('Request to send a video(mediaId: %s) to %s: %s' % (mediaId, toUserName, fileDir))
     if fileDir or file_:
         if hasattr(fileDir, 'read'):
             file_, fileDir = fileDir, None

@@ -24,7 +24,7 @@ def dump_login_status(self, fileDir=None):
         with open(fileDir, 'w') as f:
             f.write('itchat - DELETE THIS')
         os.remove(fileDir)
-    except:
+    except Exception:
         raise Exception('Incorrect fileDir')
     status = {
         'version': VERSION,
@@ -36,12 +36,11 @@ def dump_login_status(self, fileDir=None):
     logger.debug('Dump login status for hot reload successfully.')
 
 
-def load_login_status(self, fileDir,
-                      loginCallback=None, exitCallback=None):
+def load_login_status(self, fileDir, loginCallback=None, exitCallback=None):
     try:
         with open(fileDir, 'rb') as f:
             j = pickle.load(f)
-    except Exception as e:
+    except Exception:
         logger.debug('No such file, loading login status failed.')
         return ReturnValue({'BaseResponse': {
             'ErrMsg': 'No such file, loading login status failed.',
@@ -76,7 +75,8 @@ def load_login_status(self, fileDir,
                     update_local_friends(self, [contact])
         if msgList:
             msgList = produce_msg(self, msgList)
-            for msg in msgList: self.msgList.put(msg)
+            for msg in msgList:
+                self.msgList.put(msg)
         self.start_receiving(exitCallback)
         logger.debug('loading login status succeeded.')
         if hasattr(loginCallback, '__call__'):
@@ -99,6 +99,6 @@ def load_last_login_status(session, cookiesDict):
             'mm_lang': 'zh_CN',
             'MM_WX_NOTIFY_STATE': '1',
             'MM_WX_SOUND_STATE': '1', })
-    except:
+    except Exception:
         logger.info('Load status for push login failed, we may have experienced a cookies change.')
         logger.info('If you are using the newest version of itchat, you may report a bug.')

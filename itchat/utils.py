@@ -88,7 +88,7 @@ def check_file(fileDir):
         with open(fileDir):
             pass
         return True
-    except:
+    except Exception:
         return False
 
 
@@ -117,7 +117,8 @@ def print_cmd_qr(qrText, white=BLOCK, black='  ', enableCmdQR=True):
 
 def struct_friend_info(knownInfo):
     member = copy.deepcopy(friendInfoTemplate)
-    for k, v in copy.deepcopy(knownInfo).items(): member[k] = v
+    for k, v in copy.deepcopy(knownInfo).items():
+        member[k] = v
     return member
 
 
@@ -135,8 +136,8 @@ def print_line(msg, oneLine=False):
         sys.stdout.flush()
     else:
         sys.stdout.write('\n')
-    sys.stdout.write(msg.encode(sys.stdin.encoding or 'utf8', 'replace'
-                                ).decode(sys.stdin.encoding or 'utf8', 'replace'))
+    sys.stdout.write(
+        msg.encode(sys.stdin.encoding or 'utf8', 'replace').decode(sys.stdin.encoding or 'utf8', 'replace'))
     sys.stdout.flush()
 
 
@@ -145,7 +146,7 @@ def test_connect(retryTime=5):
         try:
             r = requests.get(config.BASE_URL)
             return True
-        except:
+        except Exception:
             if i == retryTime - 1:
                 logger.error(traceback.format_exc())
                 return False

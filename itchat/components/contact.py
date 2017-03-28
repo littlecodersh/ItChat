@@ -32,8 +32,7 @@ def load_contact(core):
 def update_chatroom(self, userName, detailedMember=False):
     if not isinstance(userName, list):
         userName = [userName]
-    url = '%s/webwxbatchgetcontact?type=ex&r=%s' % (
-        self.loginInfo['url'], int(time.time()))
+    url = '%s/webwxbatchgetcontact?type=ex&r=%s' % (self.loginInfo['url'], int(time.time()))
     headers = {
         'ContentType': 'application/json; charset=UTF-8',
         'User-Agent': config.USER_AGENT}
@@ -43,8 +42,8 @@ def update_chatroom(self, userName, detailedMember=False):
         'List': [{
                      'UserName': u,
                      'ChatRoomId': '', } for u in userName], }
-    chatroomList = json.loads(self.s.post(url, data=json.dumps(data), headers=headers
-                                          ).content.decode('utf8', 'replace')).get('ContactList')
+    r = self.s.post(url, data=json.dumps(data), headers=headers)
+    chatroomList = json.loads(r.content.decode('utf8', 'replace')).get('ContactList')
     if not chatroomList:
         return ReturnValue({'BaseResponse': {
             'ErrMsg': 'No chatroom found',
@@ -52,8 +51,7 @@ def update_chatroom(self, userName, detailedMember=False):
 
     if detailedMember:
         def get_detailed_member_info(encryChatroomId, memberList):
-            url = '%s/webwxbatchgetcontact?type=ex&r=%s' % (
-                self.loginInfo['url'], int(time.time()))
+            url = '%s/webwxbatchgetcontact?type=ex&r=%s' % (self.loginInfo['url'], int(time.time()))
             headers = {
                 'ContentType': 'application/json; charset=UTF-8',
                 'User-Agent': config.USER_AGENT, }
@@ -62,10 +60,9 @@ def update_chatroom(self, userName, detailedMember=False):
                 'Count': len(memberList),
                 'List': [{
                              'UserName': member['UserName'],
-                             'EncryChatRoomId': encryChatroomId} \
-                         for member in memberList], }
-            return json.loads(self.s.post(url, data=json.dumps(data), headers=headers
-                                          ).content.decode('utf8', 'replace'))['ContactList']
+                             'EncryChatRoomId': encryChatroomId} for member in memberList], }
+            r = self.s.post(url, data=json.dumps(data), headers=headers)
+            return json.loads(r.content.decode('utf8', 'replace'))['ContactList']
 
         MAX_GET_NUMBER = 50
         for chatroom in chatroomList:
@@ -76,16 +73,14 @@ def update_chatroom(self, userName, detailedMember=False):
             chatroom['MemberList'] = totalMemberList
 
     update_local_chatrooms(self, chatroomList)
-    r = [self.storageClass.search_chatrooms(userName=c['UserName'])
-         for c in chatroomList]
+    r = [self.storageClass.search_chatrooms(userName=c['UserName']) for c in chatroomList]
     return r if 1 < len(r) else r[0]
 
 
 def update_friend(self, userName):
     if not isinstance(userName, list):
         userName = [userName]
-    url = '%s/webwxbatchgetcontact?type=ex&r=%s' % (
-        self.loginInfo['url'], int(time.time()))
+    url = '%s/webwxbatchgetcontact?type=ex&r=%s' % (self.loginInfo['url'], int(time.time()))
     headers = {
         'ContentType': 'application/json; charset=UTF-8',
         'User-Agent': config.USER_AGENT}
@@ -95,12 +90,11 @@ def update_friend(self, userName):
         'List': [{
                      'UserName': u,
                      'EncryChatRoomId': '', } for u in userName], }
-    friendList = json.loads(self.s.post(url, data=json.dumps(data), headers=headers
-                                        ).content.decode('utf8', 'replace')).get('ContactList')
+    r = self.s.post(url, data=json.dumps(data), headers=headers)
+    friendList = json.loads(r.content.decode('utf8', 'replace')).get('ContactList')
 
     update_local_friends(self, friendList)
-    r = [self.storageClass.search_friends(userName=f['UserName'])
-         for f in friendList]
+    r = [self.storageClass.search_friends(userName=f['UserName']) for f in friendList]
     return r if len(r) != 1 else r[0]
 
 
@@ -141,8 +135,7 @@ def update_local_chatrooms(core, l):
             oldMemberList = oldChatroom.memberList
             if memberList:
                 for member in memberList:
-                    oldMember = utils.search_dict_list(
-                        oldMemberList, 'UserName', member['UserName'])
+                    oldMember = utils.search_dict_list(oldMemberList, 'UserName', member['UserName'])
                     if oldMember:
                         update_info_dict(oldMember, member)
                     else:
@@ -151,8 +144,7 @@ def update_local_chatrooms(core, l):
             oldChatroom = templates.wrap_user_dict(chatroom)
             core.chatroomList.append(oldChatroom)
         # delete useless members
-        if len(chatroom['MemberList']) != len(oldChatroom['MemberList']) and \
-                chatroom['MemberList']:
+        if len(chatroom['MemberList']) != len(oldChatroom['MemberList']) and chatroom['MemberList']:
             existsUserNames = [member['UserName'] for member in chatroom['MemberList']]
             delList = []
             for i, member in enumerate(oldChatroom['MemberList']):
@@ -167,13 +159,11 @@ def update_local_chatrooms(core, l):
                                                              'UserName', oldChatroom['ChatRoomOwner']).get('Uin', 0)
         # - update IsAdmin
         if 'OwnerUin' in oldChatroom and oldChatroom['OwnerUin'] != 0:
-            oldChatroom['IsAdmin'] = \
-                oldChatroom['OwnerUin'] == int(core.loginInfo['wxuin'])
+            oldChatroom['IsAdmin'] = oldChatroom['OwnerUin'] == int(core.loginInfo['wxuin'])
         else:
             oldChatroom['IsAdmin'] = None
         # - update Self
-        newSelf = utils.search_dict_list(oldChatroom['MemberList'],
-                                         'UserName', core.storageClass.userName)
+        newSelf = utils.search_dict_list(oldChatroom['MemberList'], 'UserName', core.storageClass.userName)
         oldChatroom['Self'] = newSelf or copy.deepcopy(core.loginInfo['User'])
     return {
         'Type': 'System',
@@ -196,8 +186,7 @@ def update_local_friends(core, l):
             utils.emoji_formatter(friend, 'DisplayName')
         if 'RemarkName' in friend:
             utils.emoji_formatter(friend, 'RemarkName')
-        oldInfoDict = utils.search_dict_list(
-            fullList, 'UserName', friend['UserName'])
+        oldInfoDict = utils.search_dict_list(fullList, 'UserName', friend['UserName'])
         if oldInfoDict is None:
             oldInfoDict = copy.deepcopy(friend)
             if oldInfoDict['VerifyFlag'] & 8 == 0:
@@ -228,7 +217,8 @@ def update_local_uin(core, msg):
         usernames = msg['StatusNotifyUserName'].split(',')
         if 0 < len(uins) == len(usernames):
             for uin, username in zip(uins, usernames):
-                if not '@' in username: continue
+                if '@' not in username:
+                    continue
                 fullContact = core.memberList + core.chatroomList + core.mpList
                 userDicts = utils.search_dict_list(fullContact,
                                                    'UserName', username)
@@ -239,15 +229,13 @@ def update_local_uin(core, msg):
                         logger.debug('Uin fetched: %s, %s' % (username, uin))
                     else:
                         if userDicts['Uin'] != uin:
-                            logger.debug('Uin changed: %s, %s' % (
-                                userDicts['Uin'], uin))
+                            logger.debug('Uin changed: %s, %s' % (userDicts['Uin'], uin))
                 else:
                     if '@@' in username:
                         core.storageClass.updateLock.release()
                         update_chatroom(core, username)
                         core.storageClass.updateLock.acquire()
-                        newChatroomDict = utils.search_dict_list(
-                            core.chatroomList, 'UserName', username)
+                        newChatroomDict = utils.search_dict_list(core.chatroomList, 'UserName', username)
                         if newChatroomDict is None:
                             newChatroomDict = utils.struct_friend_info({
                                 'UserName': username,
@@ -260,8 +248,7 @@ def update_local_uin(core, msg):
                         core.storageClass.updateLock.release()
                         update_friend(core, username)
                         core.storageClass.updateLock.acquire()
-                        newFriendDict = utils.search_dict_list(
-                            core.memberList, 'UserName', username)
+                        newFriendDict = utils.search_dict_list(core.memberList, 'UserName', username)
                         if newFriendDict is None:
                             newFriendDict = utils.struct_friend_info({
                                 'UserName': username,
@@ -272,8 +259,7 @@ def update_local_uin(core, msg):
                     usernameChangedList.append(username)
                     logger.debug('Uin fetched: %s, %s' % (username, uin))
         else:
-            logger.debug('Wrong length of uins & usernames: %s, %s' % (
-                len(uins), len(usernames)))
+            logger.debug('Wrong length of uins & usernames: %s, %s' % (len(uins), len(usernames)))
     else:
         logger.debug('No uins in 51 message')
         logger.debug(msg['Content'])
@@ -292,7 +278,7 @@ def get_contact(self, update=False):
             'User-Agent': config.USER_AGENT, }
         try:
             r = self.s.get(url, headers=headers)
-        except:
+        except Exception:
             logger.info('Failed to fetch contact, that may because of the amount of your chatrooms')
             for chatroom in self.get_chatrooms():
                 self.update_chatroom(chatroom['UserName'], detailedMember=True)
@@ -338,26 +324,23 @@ def get_chatrooms(self, update=False, contactOnly=False):
 
 
 def get_mps(self, update=False):
-    if update: self.get_contact(update=True)
+    if update:
+        self.get_contact(update=True)
     return utils.contact_deep_copy(self, self.mpList)
 
 
 def set_alias(self, userName, alias):
-    oldFriendInfo = utils.search_dict_list(
-        self.memberList, 'UserName', userName)
+    oldFriendInfo = utils.search_dict_list(self.memberList, 'UserName', userName)
     if oldFriendInfo is None:
-        return ReturnValue({'BaseResponse': {
-            'Ret': -1001, }})
-    url = '%s/webwxoplog?lang=%s&pass_ticket=%s' % (
-        self.loginInfo['url'], 'zh_CN', self.loginInfo['pass_ticket'])
+        return ReturnValue({'BaseResponse': {'Ret': -1001, }})
+    url = '%s/webwxoplog?lang=%s&pass_ticket=%s' % (self.loginInfo['url'], 'zh_CN', self.loginInfo['pass_ticket'])
     data = {
         'UserName': userName,
         'CmdId': 2,
         'RemarkName': alias,
         'BaseRequest': self.loginInfo['BaseRequest'], }
     headers = {'User-Agent': config.USER_AGENT}
-    r = self.s.post(url, json.dumps(data, ensure_ascii=False).encode('utf8'),
-                    headers=headers)
+    r = self.s.post(url, json.dumps(data, ensure_ascii=False).encode('utf8'), headers=headers)
     r = ReturnValue(rawResponse=r)
     if r:
         oldFriendInfo['RemarkName'] = alias
@@ -365,8 +348,7 @@ def set_alias(self, userName, alias):
 
 
 def set_pinned(self, userName, isPinned=True):
-    url = '%s/webwxoplog?pass_ticket=%s' % (
-        self.loginInfo['url'], self.loginInfo['pass_ticket'])
+    url = '%s/webwxoplog?pass_ticket=%s' % (self.loginInfo['url'], self.loginInfo['pass_ticket'])
     data = {
         'UserName': userName,
         'CmdId': 3,
@@ -398,8 +380,7 @@ def add_friend(self, userName, status=2, verifyContent='', autoUpdate=True):
     headers = {
         'ContentType': 'application/json; charset=UTF-8',
         'User-Agent': config.USER_AGENT}
-    r = self.s.post(url, headers=headers,
-                    data=json.dumps(data, ensure_ascii=False).encode('utf8', 'replace'))
+    r = self.s.post(url, headers=headers, data=json.dumps(data, ensure_ascii=False).encode('utf8', 'replace'))
     if autoUpdate:
         self.update_friend(userName)
     return ReturnValue(rawResponse=r)
@@ -461,14 +442,12 @@ def create_chatroom(self, memberList, topic=''):
     headers = {
         'content-type': 'application/json; charset=UTF-8',
         'User-Agent': config.USER_AGENT}
-    r = self.s.post(url, headers=headers,
-                    data=json.dumps(data, ensure_ascii=False).encode('utf8', 'ignore'))
+    r = self.s.post(url, headers=headers, data=json.dumps(data, ensure_ascii=False).encode('utf8', 'ignore'))
     return ReturnValue(rawResponse=r)
 
 
 def set_chatroom_name(self, chatroomUserName, name):
-    url = '%s/webwxupdatechatroom?fun=modtopic&pass_ticket=%s' % (
-        self.loginInfo['url'], self.loginInfo['pass_ticket'])
+    url = '%s/webwxupdatechatroom?fun=modtopic&pass_ticket=%s' % (self.loginInfo['url'], self.loginInfo['pass_ticket'])
     data = {
         'BaseRequest': self.loginInfo['BaseRequest'],
         'ChatRoomName': chatroomUserName,
@@ -476,14 +455,12 @@ def set_chatroom_name(self, chatroomUserName, name):
     headers = {
         'content-type': 'application/json; charset=UTF-8',
         'User-Agent': config.USER_AGENT}
-    r = self.s.post(url, headers=headers,
-                    data=json.dumps(data, ensure_ascii=False).encode('utf8', 'ignore'))
+    r = self.s.post(url, headers=headers, data=json.dumps(data, ensure_ascii=False).encode('utf8', 'ignore'))
     return ReturnValue(rawResponse=r)
 
 
 def delete_member_from_chatroom(self, chatroomUserName, memberList):
-    url = '%s/webwxupdatechatroom?fun=delmember&pass_ticket=%s' % (
-        self.loginInfo['url'], self.loginInfo['pass_ticket'])
+    url = '%s/webwxupdatechatroom?fun=delmember&pass_ticket=%s' % (self.loginInfo['url'], self.loginInfo['pass_ticket'])
     data = {
         'BaseRequest': self.loginInfo['BaseRequest'],
         'ChatRoomName': chatroomUserName,
@@ -495,8 +472,7 @@ def delete_member_from_chatroom(self, chatroomUserName, memberList):
     return ReturnValue(rawResponse=r)
 
 
-def add_member_into_chatroom(self, chatroomUserName, memberList,
-                             useInvitation=False):
+def add_member_into_chatroom(self, chatroomUserName, memberList, useInvitation=False):
     """ add or invite member into chatroom
      * there are two ways to get members into chatroom: invite or directly add
      * but for chatrooms with more than 40 users, you can only use invite
@@ -504,7 +480,8 @@ def add_member_into_chatroom(self, chatroomUserName, memberList,
     """
     if not useInvitation:
         chatroom = self.storageClass.search_chatrooms(userName=chatroomUserName)
-        if not chatroom: chatroom = self.update_chatroom(chatroomUserName)
+        if not chatroom:
+            chatroom = self.update_chatroom(chatroomUserName)
         if len(chatroom['MemberList']) > self.loginInfo['InviteStartCount']:
             useInvitation = True
     if useInvitation:
