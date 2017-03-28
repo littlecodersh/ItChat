@@ -1,5 +1,6 @@
-import pickle, os
-import logging, traceback
+import os
+import pickle
+import logging
 
 import requests
 
@@ -11,9 +12,11 @@ from .messages import produce_msg
 
 logger = logging.getLogger('itchat')
 
+
 def load_hotreload(core):
     core.dump_login_status = dump_login_status
     core.load_login_status = load_login_status
+
 
 def dump_login_status(self, fileDir=None):
     fileDir = fileDir or self.hotReloadDir
@@ -21,32 +24,32 @@ def dump_login_status(self, fileDir=None):
         with open(fileDir, 'w') as f:
             f.write('itchat - DELETE THIS')
         os.remove(fileDir)
-    except:
+    except Exception:
         raise Exception('Incorrect fileDir')
     status = {
-        'version'   : VERSION,
-        'loginInfo' : self.loginInfo,
-        'cookies'   : self.s.cookies.get_dict(),
-        'storage'   : self.storageClass.dumps()}
+        'version': VERSION,
+        'loginInfo': self.loginInfo,
+        'cookies': self.s.cookies.get_dict(),
+        'storage': self.storageClass.dumps()}
     with open(fileDir, 'wb') as f:
         pickle.dump(status, f)
     logger.debug('Dump login status for hot reload successfully.')
 
-def load_login_status(self, fileDir,
-        loginCallback=None, exitCallback=None):
+
+def load_login_status(self, fileDir, loginCallback=None, exitCallback=None):
     try:
         with open(fileDir, 'rb') as f:
             j = pickle.load(f)
-    except Exception as e:
+    except Exception:
         logger.debug('No such file, loading login status failed.')
         return ReturnValue({'BaseResponse': {
             'ErrMsg': 'No such file, loading login status failed.',
             'Ret': -1002, }})
 
     if j.get('version', '') != VERSION:
-        logger.debug(('you have updated itchat from %s to %s, ' + 
-            'so cached status is ignored') % (
-            j.get('version', 'old version'), VERSION))
+        logger.debug(('you have updated itchat from %s to %s, ' +
+                      'so cached status is ignored') % (
+                         j.get('version', 'old version'), VERSION))
         return ReturnValue({'BaseResponse': {
             'ErrMsg': 'cached status ignored because of version',
             'Ret': -1005, }})
@@ -72,7 +75,8 @@ def load_login_status(self, fileDir,
                     update_local_friends(self, [contact])
         if msgList:
             msgList = produce_msg(self, msgList)
-            for msg in msgList: self.msgList.put(msg)
+            for msg in msgList:
+                self.msgList.put(msg)
         self.start_receiving(exitCallback)
         logger.debug('loading login status succeeded.')
         if hasattr(loginCallback, '__call__'):
@@ -80,6 +84,7 @@ def load_login_status(self, fileDir,
         return ReturnValue({'BaseResponse': {
             'ErrMsg': 'loading login status succeeded.',
             'Ret': 0, }})
+
 
 def load_last_login_status(session, cookiesDict):
     try:
@@ -94,6 +99,6 @@ def load_last_login_status(session, cookiesDict):
             'mm_lang': 'zh_CN',
             'MM_WX_NOTIFY_STATE': '1',
             'MM_WX_SOUND_STATE': '1', })
-    except:
+    except Exception:
         logger.info('Load status for push login failed, we may have experienced a cookies change.')
         logger.info('If you are using the newest version of itchat, you may report a bug.')

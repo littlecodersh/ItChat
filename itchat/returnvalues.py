@@ -1,17 +1,16 @@
-#coding=utf8
-import sys
-
+# coding=utf8
 TRANSLATE = 'Chinese'
 
+
 class ReturnValue(dict):
-    ''' turn return value of itchat into a boolean value
+    """ turn return value of itchat into a boolean value
     for requests:
         ..code::python
 
             import requests
             r = requests.get('http://httpbin.org/get')
             print(ReturnValue(rawResponse=r)
-    
+
     for normal dict:
         ..code::python
 
@@ -20,7 +19,8 @@ class ReturnValue(dict):
                     'Ret': 0,
                     'ErrMsg': 'My error msg', }, }
             print(ReturnValue(returnDict))
-    '''
+    """
+
     def __init__(self, returnValueDict={}, rawResponse=None):
         if rawResponse:
             try:
@@ -33,27 +33,29 @@ class ReturnValue(dict):
                     'Data': rawResponse.content, }
         for k, v in returnValueDict.items():
             self[k] = v
-        if not 'BaseResponse' in self:
+        if 'BaseResponse' not in self:
             self['BaseResponse'] = {
                 'ErrMsg': 'no BaseResponse in raw response',
                 'Ret': -1000, }
         if TRANSLATE:
             self['BaseResponse']['RawMsg'] = self['BaseResponse'].get('ErrMsg', '')
-            self['BaseResponse']['ErrMsg'] = \
-                TRANSLATION[TRANSLATE].get(
-                self['BaseResponse'].get('Ret', '')) \
-                or self['BaseResponse'].get('ErrMsg', u'No ErrMsg')
-            self['BaseResponse']['RawMsg'] = \
-                self['BaseResponse']['RawMsg'] or self['BaseResponse']['ErrMsg']
+            self['BaseResponse']['ErrMsg'] = TRANSLATION[TRANSLATE].get(
+                self['BaseResponse'].get('Ret', '')) or self['BaseResponse'].get('ErrMsg', u'No ErrMsg')
+            self['BaseResponse']['RawMsg'] = self['BaseResponse']['RawMsg'] or self['BaseResponse']['ErrMsg']
+
     def __nonzero__(self):
         return self['BaseResponse'].get('Ret') == 0
+
     def __bool__(self):
         return self.__nonzero__()
+
     def __str__(self):
         return '{%s}' % ', '.join(
-            ['%s: %s' % (repr(k),repr(v)) for k,v in self.items()])
+            ['%s: %s' % (repr(k), repr(v)) for k, v in self.items()])
+
     def __repr__(self):
         return '<ItchatReturnValue: %s>' % self.__str__()
+
 
 TRANSLATION = {
     'Chinese': {
