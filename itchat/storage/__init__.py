@@ -3,8 +3,13 @@ from threading import Lock
 
 from .messagequeue import Queue
 from .templates import (
-    ContactList, AbstractUserDict, User,
-    MassivePlatform, Chatroom, ChatroomMember)
+    ContactList,
+    AbstractUserDict,
+    User,
+    MassivePlatform,
+    Chatroom,
+    ChatroomMember
+)
 
 
 def contact_change(fn):

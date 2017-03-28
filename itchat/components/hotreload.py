@@ -1,5 +1,5 @@
-import pickle
 import os
+import pickle
 import logging
 
 import requests

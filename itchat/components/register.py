@@ -1,6 +1,6 @@
+import sys
 import logging
 import traceback
-import sys
 import threading
 
 try:
