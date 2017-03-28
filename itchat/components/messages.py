@@ -369,11 +369,11 @@ def send_file(self, fileDir, toUserName=None, mediaId=None, file_=None):
             'Ret': -1005, }})
     if toUserName is None:
         toUserName = self.storageClass.userName
+    preparedFile = _prepare_file(fileDir, file_)
+    if not preparedFile:
+        return preparedFile
+    fileSize = preparedFile['fileSize']
     if mediaId is None:
-        preparedFile = _prepare_file(fileDir, file_)
-        if not preparedFile:
-            return preparedFile
-        fileSize = preparedFile['fileSize']
         r = self.upload_file(fileDir, preparedFile=preparedFile)
         if r:
             mediaId = r['MediaId']

@@ -7,6 +7,7 @@ import requests
 from .. import config, utils
 from ..returnvalues import ReturnValue
 from ..storage import contact_change, templates
+from ..utils import update_info_dict
 
 logger = logging.getLogger('itchat')
 
@@ -98,16 +99,6 @@ def update_friend(self, userName):
         for f in friendList]
     return r if len(r) != 1 else r[0]
 
-def update_info_dict(oldInfoDict, newInfoDict):
-    ''' only normal values will be updated here
-        because newInfoDict is normal dict, so it's not necessary to consider templates
-    '''
-    for k, v in newInfoDict.items():
-        if any((isinstance(v, t) for t in (tuple, list, dict))):
-            pass # these values will be updated somewhere else
-        elif oldInfoDict.get(k) is None or v not in (None, '', '0', 0):
-            oldInfoDict[k] = v
-
 @contact_change
 def update_local_chatrooms(core, l):
     '''
@@ -131,7 +122,7 @@ def update_local_chatrooms(core, l):
             update_info_dict(oldChatroom, chatroom)
             #  - update other values
             memberList = chatroom.get('MemberList', [])
-            oldMemberList = oldChatroom.memberList
+            oldMemberList = oldChatroom['MemberList']
             if memberList:
                 for member in memberList:
                     oldMember = utils.search_dict_list(

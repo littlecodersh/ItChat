@@ -32,9 +32,9 @@ class Storage(object):
         return {
             'userName'          : self.userName,
             'nickName'          : self.nickName,
-            'memberList'        : [dict(member) for member in self.memberList],
-            'mpList'            : [dict(mp) for mp in self.mpList],
-            'chatroomList'      : [dict(chatroom) for chatroom in self.chatroomList],
+            'memberList'        : self.memberList,
+            'mpList'            : self.mpList,
+            'chatroomList'      : self.chatroomList,
             'lastInputUserName' : self.lastInputUserName, }
     def loads(self, j):
         self.userName = j.get('userName', None)
@@ -48,6 +48,16 @@ class Storage(object):
         del self.chatroomList[:]
         for i in j.get('chatroomList', []):
             self.chatroomList.append(i)
+        # I tried to solve everything in pickle
+        # but this way is easier and more storage-saving
+        for chatroom in self.chatroomList:
+            if 'MemberList' in chatroom:
+                for member in chatroom['MemberList']:
+                    member.core = chatroom.core
+                    member.chatroom = chatroom
+            if 'Self' in chatroom:
+                chatroom['Self'].core = chatroom.core
+                chatroom['Self'].chatroom = chatroom
         self.lastInputUserName = j.get('lastInputUserName', None)
     def search_friends(self, name=None, userName=None, remarkName=None, nickName=None,
             wechatAccount=None):

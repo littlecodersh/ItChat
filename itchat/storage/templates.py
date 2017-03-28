@@ -1,6 +1,7 @@
 import logging, copy, pickle
 
 from ..returnvalues import ReturnValue
+from ..utils import update_info_dict
 
 logger = logging.getLogger('itchat')
 
@@ -17,9 +18,7 @@ class ContactList(list):
     '''
     def __init__(self, *args, **kwargs):
         super(ContactList, self).__init__(*args, **kwargs)
-        self.contactInitFn = None
-        self.contactClass = User
-        self.core = fakeItchat
+        self.__setstate__(None)
     def set_default_value(self, initFunction=None, contactClass=None):
         if hasattr(initFunction, '__call__'):
             self.contactInitFn = initFunction
@@ -32,12 +31,17 @@ class ContactList(list):
             contact = self.contactInitFn(contact) or contact
         super(ContactList, self).append(contact)
     def __deepcopy__(self, memo):
-        return self.__class__([copy.deepcopy(v) for v in self])
+        r = self.__class__([copy.deepcopy(v) for v in self])
+        r.contactInitFn = self.contactInitFn
+        r.contactClass = self.contactClass
+        r.core = self.core
+        return r
     def __getstate__(self):
-        return [pickle.dumps(v) for v in self]
+        return 1
     def __setstate__(self, state):
-        for v in state:
-            super(ContactList, self).append(pickle.loads(v))
+        self.contactInitFn = None
+        self.contactClass = User
+        self.core = fakeItchat
     def __str__(self):
         return '[%s]' % ', '.join([repr(v) for v in self])
     def __repr__(self):
@@ -49,7 +53,7 @@ fakeContactList = ContactList
 class AbstractUserDict(dict):
     def __init__(self, *args, **kwargs):
         super(AbstractUserDict, self).__init__(*args, **kwargs)
-        self.core = fakeItchat
+        self.__setstate__(None)
     def update(self):
         return ReturnValue({'BaseResponse': {
             'Ret': -1006,
@@ -104,30 +108,31 @@ class AbstractUserDict(dict):
         value = value[0].upper() + value[1:]
         return self.get(value, '')
     def __deepcopy__(self, memo):
-        r = self.__class__({
-            copy.deepcopy(k, memo): copy.deepcopy(v, memo)
-            for k, v in self.items()})
+        r = self.__class__()
+        for k, v in self.items():
+            r[copy.deepcopy(k)] = copy.deepcopy(v)
         r.core = self.core
         return r
-    def __getstate__(self):
-        return dict(self)
-    def __setstate__(self, state):
-        for k, v in state.items():
-            self[k] = v
     def __str__(self):
         return '{%s}' % ', '.join(
             ['%s: %s' % (repr(k),repr(v)) for k,v in self.items()])
     def __repr__(self):
         return '<%s: %s>' % (self.__class__.__name__.split('.')[-1],
             self.__str__())
+    def __getstate__(self):
+        return 1
+    def __setstate__(self, state):
+        self.core = fakeItchat
         
 class User(AbstractUserDict):
     def __init__(self, *args, **kwargs):
         super(User, self).__init__(*args, **kwargs)
-        self.verifyDict = {}
-        self.memberList = fakeContactList
+        self.__setstate__(None)
     def update(self):
-        return self.core.update_friend(self.userName)
+        r = self.core.update_friend(self.userName)
+        if r:
+            update_info_dict(self, r)
+        return r
     def set_alias(self, alias):
         return self.core.set_alias(self.userName, alias)
     def set_pinned(self, isPinned=True):
@@ -138,10 +143,17 @@ class User(AbstractUserDict):
         r = super(User, self).__deepcopy__(memo)
         r.verifyDict = copy.deepcopy(self.verifyDict)
         return r
+    def __setstate__(self, state):
+        super(User, self).__setstate__(state)
+        self.verifyDict = {}
+        self.memberList = fakeContactList
 
 class MassivePlatform(AbstractUserDict):
     def __init__(self, *args, **kwargs):
         super(MassivePlatform, self).__init__(*args, **kwargs)
+        self.__setstate__(None)
+    def __setstate__(self, state):
+        super(MassivePlatform, self).__setstate__(state)
         self.memberList = fakeContactList
 
 class Chatroom(AbstractUserDict):
@@ -151,11 +163,21 @@ class Chatroom(AbstractUserDict):
         def init_fn(d):
             d.chatroom = self
         memberList.set_default_value(init_fn, ChatroomMember)
-        for rawMember in self.memberList:
-            memberList.append(rawMember)
-        self['MemberList'] = memberList
+        if 'MemberList' in self:
+            if not isinstance(self.memberList, ContactList):
+                for member in self.memberList:
+                    memberList.append(member)
+                self['MemberList'] = memberList
+        else:
+            for member in self.memberList:
+                memberList.append(member)
+            self['MemberList'] = memberList
     def update(self, detailedMember=False):
-        return self.core.update_chatroom(self.userName, detailedMember)
+        r = self.core.update_chatroom(self.userName, detailedMember)
+        if r:
+            update_info_dict(self, r)
+            self['MemberList'] = r['MemberList']
+        return r
     def set_alias(self, alias):
         return self.core.set_chatroom_name(self.userName, alias)
     def set_pinned(self, isPinned=True):
@@ -200,8 +222,7 @@ class Chatroom(AbstractUserDict):
 class ChatroomMember(AbstractUserDict):
     def __init__(self, *args, **kwargs):
         super(AbstractUserDict, self).__init__(*args, **kwargs)
-        self.core = fakeItchat
-        self.chatroom = self.fakeChatroom
+        self.__setstate__(None)
     def get_head_image(self, imageDir=None):
         return self.core.get_head_img(self.userName, self.chatroom.userName, picDir=imageDir)
     def delete_member(self, userName):
@@ -240,6 +261,9 @@ class ChatroomMember(AbstractUserDict):
         r = super(ChatroomMember, self).__deepcopy__(memo)
         r.core = self.core
         return r
+    def __setstate__(self, state):
+        super(ChatroomMember, self).__setstate__(state)
+        self.chatroom = self.fakeChatroom
 
 ChatroomMember.fakeChatroom = Chatroom()
 
