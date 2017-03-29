@@ -1,12 +1,14 @@
+import logging
+
 try:
     import Queue as queue
 except ImportError:
     import queue
 
+logger = logging.getLogger('itchat')
+
 class Queue(queue.Queue):
     def put(self, message):
-        if 'IsAt' in message:
-            message['isAt'] = message['IsAt']
         queue.Queue.put(self, Message(message))
 
 class Message(dict):
@@ -17,7 +19,18 @@ class Message(dict):
             return b''
     def __getattr__(self, value):
         value = value[0].upper() + value[1:]
-        return self.get(value, '')
+        return self[value]
+    def __getitem__(self, value):
+        if value in ('isAdmin', 'isAt'):
+            v = value[0].upper() + value[1:] # ''[1:] == ''
+            logger.debug('%s is expired in 1.3.0, use %s instead.' % (value, v))
+            value = v
+        return super(Message, self).__getitem__(value)
+    def get(self, v, d=None):
+        try:
+            return self[v]
+        except KeyError:
+            return d
     def __str__(self):
         return '{%s}' % ', '.join(
             ['%s: %s' % (repr(k),repr(v)) for k,v in self.items()])

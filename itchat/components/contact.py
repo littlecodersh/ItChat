@@ -132,8 +132,9 @@ def update_local_chatrooms(core, l):
                     else:
                         oldMemberList.append(member)
         else:
-            oldChatroom = templates.wrap_user_dict(chatroom)
-            core.chatroomList.append(oldChatroom)
+            core.chatroomList.append(chatroom)
+            oldChatroom = utils.search_dict_list(
+                core.chatroomList, 'UserName', chatroom['UserName'])
         # delete useless members
         if len(chatroom['MemberList']) != len(oldChatroom['MemberList']) and \
                 chatroom['MemberList']:
