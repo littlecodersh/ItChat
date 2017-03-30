@@ -39,7 +39,7 @@ And you only need to write this to reply personal text messages.
 
     @itchat.msg_register(itchat.content.TEXT)
     def text_reply(msg):
-        itchat.send(msg['Text'], msg['FromUserName'])
+        return msg.text
 
     itchat.auto_login()
     itchat.run()
@@ -56,37 +56,62 @@ Here is the `code <https://gist.github.com/littlecodersh/ec8ddab12364323c97d4e36
 
 **Advanced uses**
 
+*Special usage of message dictionary*
+
+You may find out that all the users and messages of itchat are dictionaries by printing them out onto the screen.
+
+But actually they are useful classes itchat created.
+
+They have useful keys and useful interfaces, like:
+
+.. code:: python
+    
+    @itchat.msg_register(TEXT)
+    def _(msg):
+        # equals to print(msg['FromUserName'])
+        print(msg.fromUserName)
+
+And like:
+
+.. code:: python
+
+    author = itchat.search_friends(nickName='LittleCoder')[0]
+    author.send('greeting, littlecoder!')
+
 *Message register of various types*
 
 The following is a demo of how itchat is configured to fetch and reply daily information.
 
 .. code:: python
 
-    #coding=utf8
     import itchat, time
     from itchat.content import *
 
     @itchat.msg_register([TEXT, MAP, CARD, NOTE, SHARING])
     def text_reply(msg):
-        itchat.send('%s: %s' % (msg['Type'], msg['Text']), msg['FromUserName'])
+        msg.user.send('%s: %s' % (msg.type, msg.text))
 
     @itchat.msg_register([PICTURE, RECORDING, ATTACHMENT, VIDEO])
     def download_files(msg):
-        msg['Text'](msg['FileName'])
-        return '@%s@%s' % ({'Picture': 'img', 'Video': 'vid'}.get(msg['Type'], 'fil'), msg['FileName'])
+        msg.download(msg.fileName)
+        typeSymbol = {
+            PICTURE: 'img',
+            VIDEO: 'vid', }.get(msg.type, 'fil')
+        return '@%s@%s' % (typeSymbol, msg.fileName)
 
     @itchat.msg_register(FRIENDS)
     def add_friend(msg):
-        itchat.add_friend(**msg['Text']) # 该操作会自动将新好友的消息录入，不需要重载通讯录
-        itchat.send_msg('Nice to meet you!', msg['RecommendInfo']['UserName'])
+        msg.user.verify()
+        msg.user.send('Nice to meet you!')
 
     @itchat.msg_register(TEXT, isGroupChat=True)
     def text_reply(msg):
-        if msg['isAt']:
-            itchat.send(u'@%s\u2005I received: %s' % (msg['ActualNickName'], msg['Content']), msg['FromUserName'])
+        if msg.isAt:
+            msg.user.send(u'@%s\u2005I received: %s' % (
+                msg.actualNickName, msg.text))
 
     itchat.auto_login(True)
-    itchat.run()
+    itchat.run(True)
 
 *Command line QR Code*
 
@@ -153,20 +178,22 @@ Download function accept one location value (include the file name) and store at
 
 .. code:: python
 
-    @itchat.msg_register(['Picture', 'Recording', 'Attachment', 'Video'])
+    @itchat.msg_register([PICTURE, RECORDING, ATTACHMENT, VIDEO])
     def download_files(msg):
-        msg['Text'](msg['FileName'])
-        itchat.send('@%s@%s'%('img' if msg['Type'] == 'Picture' else 'fil', msg['FileName']), msg['FromUserName'])
-        return '%s received'%msg['Type']
+        msg.download(msg.fileName)
+        itchat.send('@%s@%s' % (
+            'img' if msg['Type'] == 'Picture' else 'fil', msg['FileName']),
+            msg['FromUserName'])
+        return '%s received' % msg['Type']
 
 If you don't want a local copy of the picture, you may pass nothing to the function to get a binary string.
 
 .. code:: python
 
-    @itchat.msg_register(['Picture', 'Recording', 'Attachment', 'Video'])
+    @itchat.msg_register([PICTURE, RECORDING, ATTACHMENT, VIDEO])
     def download_files(msg):
-        with open(msg['FileName'], 'wb') as f:
-            f.write(msg['Text']())
+        with open(msg.fileName, 'wb') as f:
+            f.write(msg.download())
 
 *Multi instance*
 

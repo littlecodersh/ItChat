@@ -39,7 +39,7 @@ import itchat
 
 @itchat.msg_register(itchat.content.TEXT)
 def text_reply(msg):
-    return msg['Text']
+    return msg.text
 
 itchat.auto_login()
 itchat.run()
@@ -179,20 +179,22 @@ itchat的附件下载方法存储在msg的Text键中。
 下载方法接受一个可用的位置参数（包括文件名），并将文件相应的存储。
 
 ```python
-@itchat.msg_register(['Picture', 'Recording', 'Attachment', 'Video'])
+@itchat.msg_register([PICTURE, RECORDING, ATTACHMENT, VIDEO])
 def download_files(msg):
-    msg['Text'](msg['FileName'])
-    itchat.send('@%s@%s'%('img' if msg['Type'] == 'Picture' else 'fil', msg['FileName']), msg['FromUserName'])
-    return '%s received'%msg['Type']
+    msg.download(msg.fileName)
+    itchat.send('@%s@%s' % (
+        'img' if msg['Type'] == 'Picture' else 'fil', msg['FileName']),
+        msg['FromUserName'])
+    return '%s received' % msg['Type']
 ```
 
 如果你不需要下载到本地，仅想要读取二进制串进行进一步处理可以不传入参数，方法将会返回图片的二进制串。
 
 ```python
-@itchat.msg_register(['Picture', 'Recording', 'Attachment', 'Video'])
+@itchat.msg_register([PICTURE, RECORDING, ATTACHMENT, VIDEO])
 def download_files(msg):
-    with open(msg['FileName'], 'wb') as f:
-        f.write(msg['Text']())
+    with open(msg.fileName, 'wb') as f:
+        f.write(msg.download())
 ```
 
 ### 用户多开
@@ -207,7 +209,7 @@ newInstance.auto_login(hotReload=True, statusStorageDir='newInstance.pkl')
 
 @newInstance.msg_register(TEXT)
 def reply(msg):
-    return msg['Text']
+    return msg.text
 
 newInstance.run()
 ```

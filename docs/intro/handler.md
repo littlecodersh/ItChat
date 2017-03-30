@@ -22,7 +22,7 @@ def simple_reply(msg):
 # 带对象参数注册，对应消息对象将调用该方法
 @itchat.msg_register(TEXT, isFriendChat=True, isGroupChat=True, isMpChat=True)
 def text_reply(msg):
-    itchat.send('%s: %s' % (msg['Type'], msg['Text']), msg['FromUserName'])
+    msg.user.send('%s: %s' % (msg.type, msg.text))
 ```
 
 ## 消息类型
@@ -67,11 +67,11 @@ def download_files(msg):
 import itchat
 from itchat.content import TEXT
 
-@itchat.msg_register(TEXT, isGroupChat = True)
+@itchat.msg_register(TEXT, isGroupChat=True)
 def text_reply(msg):
-    print(msg['isAt'])
-    print(msg['ActualNickName'])
-    print(msg['Content'])
+    print(msg.isAt)
+    print(msg.actualNickName)
+    print(msg.text)
 
 itchat.auto_login()
 itchat.run()
@@ -109,11 +109,11 @@ itchat.auto_login()
 
 @itchat.msg_register
 def general_reply(msg):
-    return 'I received a %s' % msg['Type']
+    return 'I received a %s' % msg.type
     
 @itchat.msg_register(TEXT)
 def text_reply(msg):
-    return 'You said to me one to one: %s' % msg['Text']
+    return 'You said to me one to one: %s' % msg.text
 
 itchat.run()
 ```
@@ -154,7 +154,7 @@ functionStatus = False
 def change_function():
     if replyToGroupChat != functionStatus:
         if replyToGroupChat:
-            @itchat.msg_register(TEXT, isGroupChat = True)
+            @itchat.msg_register(TEXT, isGroupChat=True)
             def group_text_reply(msg):
                 if u'关闭' in msg['Text']:
                     replyToGroupChat = False
@@ -163,7 +163,7 @@ def change_function():
                     return u'已经在运行'
                 return u'输入"关闭"或者"开启"测试功能'
         else:
-            @itchat.msg_register(TEXT, isGroupChat = True)
+            @itchat.msg_register(TEXT, isGroupChat=True)
             def group_text_reply(msg):
                 if u'开启' in msg['Text']:
                     replyToGroupChat = True

@@ -7,6 +7,7 @@
 当然这里需要特别强调的是三点，分别是短时间关闭重连、命令行二维码与自定义登陆内容。
 
 * itchat提供了登陆状态暂存，关闭程序后一定时间内不需要扫码即可登录。
+* 由于目前微信网页版提供上一次登录的微信号不扫码直接手机确认登陆，所以如果开启登陆状态暂存将会自动使用这一功能。
 * 为了方便在无图形界面使用itchat，程序内置了命令行二维码的显示。
 * 如果你需要就登录状态就一些修改（例如更改提示语、二维码出现后邮件发送等）。
 
@@ -24,11 +25,10 @@ from itchat.content import TEXT
 
 @itchat.msg_register(TEXT)
 def simple_reply(msg):
-    print(msg['Text'])
+    print(msg.text)
 
 itchat.auto_login(hotReload=True)
 itchat.run()
-itchat.dump_login_status()
 ```
 
 通过设置statusStorageDir可以将静态文件指定为其他的值。

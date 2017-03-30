@@ -10,9 +10,9 @@ from itchat.content import TEXT
 
 @itchat.msg_register(TEXT, isFriendChat=True, isGroupChat=True, isMpChat=True)
 def simple_reply(msg):
-    return 'I received: %s' % msg['Content']
+    return 'I received: %s' % msg.text
 
-itchat.auto_login()
+itchat.auto_login(True)
 itchat.run()
 ```
 
@@ -21,34 +21,34 @@ itchat.run()
 itchat支持所有的消息类型与群聊，下面的示例中演示了对于这些消息类型简单的配置。
 
 ```python
-#coding=utf8
-import itchat
+import itchat, time
 from itchat.content import *
 
 @itchat.msg_register([TEXT, MAP, CARD, NOTE, SHARING])
 def text_reply(msg):
-    itchat.send('%s: %s' % (msg['Type'], msg['Text']), msg['FromUserName'])
+    msg.user.send('%s: %s' % (msg.type, msg.text))
 
-# 以下四类的消息的Text键下存放了用于下载消息内容的方法，传入文件地址即可
 @itchat.msg_register([PICTURE, RECORDING, ATTACHMENT, VIDEO])
 def download_files(msg):
-    msg['Text'](msg['FileName'])
-    return '@%s@%s' % ({'Picture': 'img', 'Video': 'vid'}.get(msg['Type'], 'fil'), msg['FileName'])
+    msg.download(msg.fileName)
+    typeSymbol = {
+        PICTURE: 'img',
+        VIDEO: 'vid', }.get(msg.type, 'fil')
+    return '@%s@%s' % (typeSymbol, msg.fileName)
 
-# 收到好友邀请自动添加好友
 @itchat.msg_register(FRIENDS)
 def add_friend(msg):
-    itchat.add_friend(**msg['Text']) # 该操作会自动将新好友的消息录入，不需要重载通讯录
-    itchat.send_msg('Nice to meet you!', msg['RecommendInfo']['UserName'])
+    msg.user.verify()
+    msg.user.send('Nice to meet you!')
 
-# 在注册时增加isGroupChat=True将判定为群聊回复
-@itchat.msg_register(TEXT, isGroupChat = True)
-def groupchat_reply(msg):
-    if msg['isAt']:
-        itchat.send(u'@%s\u2005I received: %s' % (msg['ActualNickName'], msg['Content']), msg['FromUserName'])
+@itchat.msg_register(TEXT, isGroupChat=True)
+def text_reply(msg):
+    if msg.isAt:
+        msg.user.send(u'@%s\u2005I received: %s' % (
+            msg.actualNickName, msg.text))
 
 itchat.auto_login(True)
-itchat.run()
+itchat.run(True)
 ```
 
 当然这里不需要深究为什么这些东西可以这么写，我在这里放出了示例程序只是为了给你一个该sdk相关代码大概样子的概念。
