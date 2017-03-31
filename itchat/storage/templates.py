@@ -1,9 +1,24 @@
 import logging, copy, pickle
+from weakref import ref
 
 from ..returnvalues import ReturnValue
 from ..utils import update_info_dict
 
 logger = logging.getLogger('itchat')
+
+class AttributeDict(dict):
+    def __getattr__(self, value):
+        keyName = value[0].upper() + value[1:]
+        try:
+            return self[keyName]
+        except KeyError:
+            raise AttributeError("'%s' object has no attribute '%s'" % (
+                self.__class__.__name__.split('.')[-1], value))
+    def get(self, v, d=None):
+        try:
+            return self[v]
+        except KeyError:
+            return d
 
 class UnInitializedItchat(object):
     def _raise_error(self, *args, **kwargs):
@@ -11,14 +26,17 @@ class UnInitializedItchat(object):
     def __getattr__(self, value):
         return self._raise_error
 
-fakeItchat = UnInitializedItchat()
-
 class ContactList(list):
-    ''' when a dict is append, init function will be called to format that dict
-    '''
+    ''' when a dict is append, init function will be called to format that dict '''
     def __init__(self, *args, **kwargs):
         super(ContactList, self).__init__(*args, **kwargs)
         self.__setstate__(None)
+    @property
+    def core(self):
+        return getattr(self, '_core', lambda: fakeItchat)() or fakeItchat
+    @core.setter
+    def core(self, value):
+        self._core = ref(value)
     def set_default_value(self, initFunction=None, contactClass=None):
         if hasattr(initFunction, '__call__'):
             self.contactInitFn = initFunction
@@ -28,7 +46,7 @@ class ContactList(list):
         contact = self.contactClass(value)
         contact.core = self.core
         if self.contactInitFn is not None:
-            contact = self.contactInitFn(contact) or contact
+            contact = self.contactInitFn(self, contact) or contact
         super(ContactList, self).append(contact)
     def __deepcopy__(self, memo):
         r = self.__class__([copy.deepcopy(v) for v in self])
@@ -41,19 +59,21 @@ class ContactList(list):
     def __setstate__(self, state):
         self.contactInitFn = None
         self.contactClass = User
-        self.core = fakeItchat
     def __str__(self):
         return '[%s]' % ', '.join([repr(v) for v in self])
     def __repr__(self):
         return '<%s: %s>' % (self.__class__.__name__.split('.')[-1],
             self.__str__())
 
-fakeContactList = ContactList
-
-class AbstractUserDict(dict):
+class AbstractUserDict(AttributeDict):
     def __init__(self, *args, **kwargs):
         super(AbstractUserDict, self).__init__(*args, **kwargs)
-        self.__setstate__(None)
+    @property
+    def core(self):
+        return getattr(self, '_core', lambda: fakeItchat)() or fakeItchat
+    @core.setter
+    def core(self, value):
+        self._core = ref(value)
     def update(self):
         return ReturnValue({'BaseResponse': {
             'Ret': -1006,
@@ -104,9 +124,6 @@ class AbstractUserDict(dict):
             'Ret': -1006,
             'ErrMsg': '%s do not have members' % \
                 self.__class__.__name__, }, })
-    def __getattr__(self, value):
-        value = value[0].upper() + value[1:]
-        return self.get(value, '')
     def __deepcopy__(self, memo):
         r = self.__class__()
         for k, v in self.items():
@@ -122,7 +139,7 @@ class AbstractUserDict(dict):
     def __getstate__(self):
         return 1
     def __setstate__(self, state):
-        self.core = fakeItchat
+        pass
         
 class User(AbstractUserDict):
     def __init__(self, *args, **kwargs):
@@ -146,7 +163,7 @@ class User(AbstractUserDict):
     def __setstate__(self, state):
         super(User, self).__setstate__(state)
         self.verifyDict = {}
-        self.memberList = fakeContactList
+        self['MemberList'] = fakeContactList
 
 class MassivePlatform(AbstractUserDict):
     def __init__(self, *args, **kwargs):
@@ -154,24 +171,31 @@ class MassivePlatform(AbstractUserDict):
         self.__setstate__(None)
     def __setstate__(self, state):
         super(MassivePlatform, self).__setstate__(state)
-        self.memberList = fakeContactList
+        self['MemberList'] = fakeContactList
 
 class Chatroom(AbstractUserDict):
     def __init__(self, *args, **kwargs):
         super(Chatroom, self).__init__(*args, **kwargs)
         memberList = ContactList()
-        def init_fn(d):
-            d.chatroom = self
+        userName = self.get('UserName', '')
+        refSelf = ref(self)
+        def init_fn(parentList, d):
+            d.chatroom = refSelf() or \
+                parentList.core.search_chatrooms(userName=userName)
         memberList.set_default_value(init_fn, ChatroomMember)
         if 'MemberList' in self:
-            if not isinstance(self.memberList, ContactList):
-                for member in self.memberList:
-                    memberList.append(member)
-                self['MemberList'] = memberList
-        else:
             for member in self.memberList:
                 memberList.append(member)
-            self['MemberList'] = memberList
+        self['MemberList'] = memberList
+    @property
+    def core(self):
+        return getattr(self, '_core', lambda: fakeItchat)() or fakeItchat
+    @core.setter
+    def core(self, value):
+        self._core = ref(value)
+        self.memberList.core = value
+        for member in self.memberList:
+            member.core = value
     def update(self, detailedMember=False):
         r = self.core.update_chatroom(self.userName, detailedMember)
         if r:
@@ -218,11 +242,29 @@ class Chatroom(AbstractUserDict):
                     return copy.deepcopy(friendList)
                 else:
                     return copy.deepcopy(contact)
+    def __setstate__(self, state):
+        super(Chatroom, self).__setstate__(state)
+        if not 'MemberList' in self:
+            self['MemberList'] = fakeContactList
 
 class ChatroomMember(AbstractUserDict):
     def __init__(self, *args, **kwargs):
         super(AbstractUserDict, self).__init__(*args, **kwargs)
         self.__setstate__(None)
+    @property
+    def chatroom(self):
+        r = getattr(self, '_chatroom', lambda: fakeChatroom)()
+        if r is None:
+            userName = getattr(self, '_chatroomUserName', '')
+            r = self.core.search_chatrooms(userName=userName)
+            if isinstance(r, dict):
+                self.chatroom = r
+        return r or fakeChatroom
+    @chatroom.setter
+    def chatroom(self, value):
+        if isinstance(value, dict) and 'UserName' in value:
+            self._chatroom = ref(value)
+            self._chatroomUserName = value['UserName']
     def get_head_image(self, imageDir=None):
         return self.core.get_head_img(self.userName, self.chatroom.userName, picDir=imageDir)
     def delete_member(self, userName):
@@ -263,9 +305,7 @@ class ChatroomMember(AbstractUserDict):
         return r
     def __setstate__(self, state):
         super(ChatroomMember, self).__setstate__(state)
-        self.chatroom = self.fakeChatroom
-
-ChatroomMember.fakeChatroom = Chatroom()
+        self['MemberList'] = fakeContactList
 
 def wrap_user_dict(d):
     userName = d.get('UserName')
@@ -276,3 +316,7 @@ def wrap_user_dict(d):
     else:
         r = MassivePlatform(d)
     return r
+
+fakeItchat = UnInitializedItchat()
+fakeContactList = ContactList()
+fakeChatroom = Chatroom()
