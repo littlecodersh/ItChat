@@ -299,10 +299,6 @@ class ChatroomMember(AbstractUserDict):
             'Ret': -1006,
             'ErrMsg': '%s can not send message directly' % \
                 self.__class__.__name__, }, })
-    def __deepcopy__(self, memo):
-        r = super(ChatroomMember, self).__deepcopy__(memo)
-        r.core = self.core
-        return r
     def __setstate__(self, state):
         super(ChatroomMember, self).__setstate__(state)
         self['MemberList'] = fakeContactList

@@ -271,6 +271,8 @@ A: 有些账号是天生无法给自己的账号发送信息的，建议使用`f
 
 [HanSon/vbot][HanSon-vbot]: 基于PHP7的微信个人号机器人，通过实现匿名函数可以方便地实现各种自定义的功能
 
+[yaphone/itchat4j][yaphone-itchat4j]: 用Java扩展个人微信号的能力
+
 ## 问题和建议
 
 如果有什么问题或者建议都可以在这个[Issue][issue#1]和我讨论
@@ -301,4 +303,5 @@ A: 有些账号是天生无法给自己的账号发送信息的，建议使用`f
 [zixia-wechaty]: https://github.com/zixia/wechaty
 [Mojo-Weixin]: https://github.com/sjdy521/Mojo-Weixin
 [HanSon-vbot]: https://github.com/hanson/vbot
+[yaphone-itchat4j]: https://github.com/yaphone/itchat4j
 [issue#1]: https://github.com/littlecodersh/ItChat/issues/1
