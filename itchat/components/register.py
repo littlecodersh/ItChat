@@ -6,6 +6,7 @@ except ImportError:
 
 from ..log import set_logging
 from ..utils import test_connect
+from ..storage import templates
 
 logger = logging.getLogger('itchat')
 
@@ -46,19 +47,12 @@ def configured_reply(self):
     except Queue.Empty:
         pass
     else:
-        if msg['FromUserName'] == self.storageClass.userName:
-            actualOpposite = msg['ToUserName']
-        else:
-            actualOpposite = msg['FromUserName']
-        if '@@' in actualOpposite:
-            replyFn = self.functionDict['GroupChat'].get(msg['Type'])
-        elif self.search_mps(userName=msg['FromUserName']):
-            replyFn = self.functionDict['MpChat'].get(msg['Type'])
-        elif '@' in actualOpposite or \
-                actualOpposite in ('filehelper', 'fmessage'):
+        if isinstance(msg['User'], templates.User):
             replyFn = self.functionDict['FriendChat'].get(msg['Type'])
-        else:
+        elif isinstance(msg['User'], templates.MassivePlatform):
             replyFn = self.functionDict['MpChat'].get(msg['Type'])
+        elif isinstance(msg['User'], templates.Chatroom):
+            replyFn = self.functionDict['GroupChat'].get(msg['Type'])
         if replyFn is None:
             r = None
         else:
@@ -72,7 +66,7 @@ def configured_reply(self):
 def msg_register(self, msgType, isFriendChat=False, isGroupChat=False, isMpChat=False):
     ''' a decorator constructor
         return a specific decorator based on information given '''
-    if not isinstance(msgType, list):
+    if not (isinstance(msgType, list) or isinstance(msgType, tuple)):
         msgType = [msgType]
     def _msg_register(fn):
         for _msgType in msgType:
@@ -84,6 +78,7 @@ def msg_register(self, msgType, isFriendChat=False, isGroupChat=False, isMpChat=
                 self.functionDict['MpChat'][_msgType] = fn
             if not any((isFriendChat, isGroupChat, isMpChat)):
                 self.functionDict['FriendChat'][_msgType] = fn
+        return fn
     return _msg_register
 
 def run(self, debug=False, blockThread=True):

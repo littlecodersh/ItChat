@@ -9,6 +9,7 @@ from pyqrcode import QRCode
 
 from .. import config, utils
 from ..returnvalues import ReturnValue
+from ..storage.templates import wrap_user_dict
 from .contact import update_local_chatrooms, update_local_friends
 from .messages import produce_msg
 
@@ -27,17 +28,22 @@ def load_login(core):
 
 def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
         loginCallback=None, exitCallback=None):
-    if self.alive:
+    if self.alive or self.isLogging:
         logger.warning('itchat has already logged in.')
         return
-    while 1:
-        logger.info('Getting uuid of QR code.')
-        while not self.get_QRuuid():
-            time.sleep(1)
-        logger.info('Downloading QR code.')
-        qrStorage = self.get_QR(enableCmdQR=enableCmdQR,
-            picDir=picDir, qrCallback=qrCallback)
-        logger.info('Please scan the QR code to log in.')
+    self.isLogging = True
+    while self.isLogging:
+        uuid = push_login(self)
+        if uuid:
+            qrStorage = io.BytesIO()
+        else:
+            logger.info('Getting uuid of QR code.')
+            while not self.get_QRuuid():
+                time.sleep(1)
+            logger.info('Downloading QR code.')
+            qrStorage = self.get_QR(enableCmdQR=enableCmdQR,
+                picDir=picDir, qrCallback=qrCallback)
+            logger.info('Please scan the QR code to log in.')
         isLoggedIn = False
         while not isLoggedIn:
             status = self.check_login()
@@ -53,7 +59,10 @@ def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
                 break
         if isLoggedIn:
             break
-        logger.info('Log in time out, reloading QR code')
+        logger.info('Log in time out, reloading QR code.')
+    else:
+        return # log in process is stopped by user
+    logger.info('Loading the contact, this may take a little while.')
     self.web_init()
     self.show_mobile_login()
     self.get_contact(True)
@@ -65,6 +74,19 @@ def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
             os.remove(picDir or config.DEFAULT_QR)
         logger.info('Login successfully as %s' % self.storageClass.nickName)
     self.start_receiving(exitCallback)
+    self.isLogging = False
+
+def push_login(core):
+    cookiesDict = core.s.cookies.get_dict()
+    if 'wxuin' in cookiesDict:
+        url = '%s/cgi-bin/mmwebwx-bin/webwxpushloginurl?uin=%s' % (
+            config.BASE_URL, cookiesDict['wxuin'])
+        headers = { 'User-Agent' : config.USER_AGENT }
+        r = core.s.get(url, headers=headers).json()
+        if 'uuid' in r and r.get('ret') in (0, '0'):
+            core.uuid = r['uuid']
+            return r['uuid']
+    return False
 
 def get_QRuuid(self):
     url = '%s/jslogin' % config.BASE_URL
@@ -161,13 +183,29 @@ def web_init(self):
     # deal with login info
     utils.emoji_formatter(dic['User'], 'NickName')
     self.loginInfo['InviteStartCount'] = int(dic['InviteStartCount'])
-    self.loginInfo['User'] = utils.struct_friend_info(dic['User'])
+    self.loginInfo['User'] = wrap_user_dict(utils.struct_friend_info(dic['User']))
     self.memberList.append(self.loginInfo['User'])
     self.loginInfo['SyncKey'] = dic['SyncKey']
     self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val'])
         for item in dic['SyncKey']['List']])
     self.storageClass.userName = dic['User']['UserName']
     self.storageClass.nickName = dic['User']['NickName']
+    # deal with contact list returned when init
+    contactList = dic.get('ContactList', [])		
+    chatroomList, otherList = [], []		
+    for m in contactList:		
+        if m['Sex'] != 0:		
+            otherList.append(m)		
+        elif '@@' in m['UserName']:		
+            m['MemberList'] = [] # don't let dirty info pollute the list
+            chatroomList.append(m)		
+        elif '@' in m['UserName']:		
+            # mp will be dealt in update_local_friends as well		
+            otherList.append(m)		
+    if chatroomList:
+        update_local_chatrooms(self, chatroomList)		
+    if otherList:
+        update_local_friends(self, otherList)
     return dic
 
 def show_mobile_login(self):
@@ -195,12 +233,13 @@ def start_receiving(self, exitCallback=None, getReceivingFnOnly=False):
                 if i is None:
                     self.alive = False
                 elif i == '0':
-                    continue
+                    pass
                 else:
                     msgList, contactList = self.get_msg()
                     if msgList:
                         msgList = produce_msg(self, msgList)
-                        for msg in msgList: self.msgList.put(msg)
+                        for msg in msgList:
+                            self.msgList.put(msg)
                     if contactList:
                         chatroomList, otherList = [], []
                         for contact in contactList:
@@ -209,6 +248,7 @@ def start_receiving(self, exitCallback=None, getReceivingFnOnly=False):
                             else:
                                 otherList.append(contact)
                         chatroomMsg = update_local_chatrooms(self, chatroomList)
+                        chatroomMsg['User'] = self.loginInfo['User']
                         self.msgList.put(chatroomMsg)
                         update_local_friends(self, otherList)
                 retryCount = 0
@@ -279,6 +319,7 @@ def logout(self):
         headers = { 'User-Agent' : config.USER_AGENT }
         self.s.get(url, params=params, headers=headers)
         self.alive = False
+    self.isLogging = False
     self.s.cookies.clear()
     del self.chatroomList[:]
     del self.memberList[:]

@@ -2,7 +2,7 @@
 
 Q: itchat稳定性如何？
 
-A: 测试用机器人能稳定在线多个月。如果你在测试过程中发现无法稳定登陆，请检查**登陆手机**及主机是否稳定连接网络。
+A: 测试用机器人能稳定在线多个月。如果你在测试过程中发现无法稳定登陆，请检查**登陆手机**及主机是否稳定连接网络。如果你需要最稳定的消息环境，建议使用[itchatmp][itchatmp]项目，两者使用方法类似。
 
 ## 中文文件名文件上传
 
@@ -30,3 +30,4 @@ A: 有些账号是天生无法给自己的账号发送信息的，建议使用`f
 
 [fields.py-2]: https://gist.github.com/littlecodersh/9a0c5466f442d67d910f877744011705
 [fields.py-3]: https://gist.github.com/littlecodersh/e93532d5e7ddf0ec56c336499165c4dc
+[itchatmp]: https://github.com/littlecodersh/itchatmp

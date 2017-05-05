@@ -17,8 +17,8 @@ class Core(object):
                 - it's 5 now, but actually even 1 is enough
                 - failing is failing
         '''
-        self.alive = False
-        self.storageClass = storage.Storage()
+        self.alive, self.isLogging = False, False
+        self.storageClass = storage.Storage(self)
         self.memberList = self.storageClass.memberList
         self.mpList = self.storageClass.mpList
         self.chatroomList = self.storageClass.chatroomList
@@ -54,7 +54,7 @@ class Core(object):
             it is defined in components/login.py
             and of course every single move in login can be called outside
                 - you may scan source code to see how
-                - and modified according to your own demond
+                - and modified according to your own demand
         '''
         raise NotImplementedError()
     def get_QRuuid(self):
@@ -313,7 +313,7 @@ class Core(object):
         '''
         raise NotImplementedError()
     def upload_file(self, fileDir, isPicture=False, isVideo=False,
-            toUserName='filehelper'):
+            toUserName='filehelper', file_=None, preparedFile=None):
         ''' upload file to server and get mediaId
             for options
                 - fileDir: dir for file ready for upload
@@ -325,7 +325,7 @@ class Core(object):
             it is defined in components/messages.py
         '''
         raise NotImplementedError()
-    def send_file(self, fileDir, toUserName=None, mediaId=None):
+    def send_file(self, fileDir, toUserName=None, mediaId=None, file_=None):
         ''' send attachment
             for options
                 - fileDir: dir for file ready for upload
@@ -335,7 +335,7 @@ class Core(object):
             it is defined in components/messages.py
         '''
         raise NotImplementedError()
-    def send_image(self, fileDir, toUserName=None, mediaId=None):
+    def send_image(self, fileDir=None, toUserName=None, mediaId=None, file_=None):
         ''' send image
             for options
                 - fileDir: dir for file ready for upload
@@ -346,7 +346,7 @@ class Core(object):
             it is defined in components/messages.py
         '''
         raise NotImplementedError()
-    def send_video(self, fileDir=None, toUserName=None, mediaId=None):
+    def send_video(self, fileDir=None, toUserName=None, mediaId=None, file_=None):
         ''' send video
             for options
                 - fileDir: dir for file ready for upload
