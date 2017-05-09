@@ -55,7 +55,10 @@ def load_login_status(self, fileDir,
     self.loginInfo['User'].core = self
     self.s.cookies = requests.utils.cookiejar_from_dict(j['cookies'])
     self.storageClass.loads(j['storage'])
-    msgList, contactList = self.get_msg()
+    try:
+        msgList, contactList = self.get_msg()
+    except:
+        msgList = contactList = None
     if (msgList or contactList) is None:
         self.logout()
         load_last_login_status(self.s, j['cookies'])
