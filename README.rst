@@ -202,6 +202,7 @@ You may use the following commands to open multi instance.
 .. code:: python
 
     import itchat
+    from itchat.content import TEXT
 
     newInstance = itchat.new_instance()
     newInstance.auto_login(hotReload=True, statusStorageDir='newInstance.pkl')
