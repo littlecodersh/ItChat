@@ -23,6 +23,7 @@ def auto_login(self, hotReload=False, statusStorageDir='itchat.pkl',
         logger.info("You can't get access to internet or wechat domain, so exit.")
         sys.exit()
     self.useHotReload = hotReload
+    self.hotReloadDir = statusStorageDir
     if hotReload:
         if self.load_login_status(statusStorageDir,
                 loginCallback=loginCallback, exitCallback=exitCallback):
@@ -30,7 +31,6 @@ def auto_login(self, hotReload=False, statusStorageDir='itchat.pkl',
         self.login(enableCmdQR=enableCmdQR, picDir=picDir, qrCallback=qrCallback,
             loginCallback=loginCallback, exitCallback=exitCallback)
         self.dump_login_status(statusStorageDir)
-        self.hotReloadDir = statusStorageDir
     else:
         self.login(enableCmdQR=enableCmdQR, picDir=picDir, qrCallback=qrCallback,
             loginCallback=loginCallback, exitCallback=exitCallback)
