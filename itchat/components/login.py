@@ -82,7 +82,7 @@ def push_login(core):
         url = '%s/cgi-bin/mmwebwx-bin/webwxpushloginurl?uin=%s' % (
             config.BASE_URL, cookiesDict['wxuin'])
         headers = { 'User-Agent' : config.USER_AGENT }
-        r = core.s.get(url, headers=headers).json()
+        r = core.s.get(url, headers=headers, proxies=utils.global_proxies).json()
         if 'uuid' in r and r.get('ret') in (0, '0'):
             core.uuid = r['uuid']
             return r['uuid']
@@ -94,7 +94,7 @@ def get_QRuuid(self):
         'appid' : 'wx782c26e4c19acffb',
         'fun'   : 'new', }
     headers = { 'User-Agent' : config.USER_AGENT }
-    r = self.s.get(url, params=params, headers=headers)
+    r = self.s.get(url, params=params, headers=headers, proxies=utils.global_proxies)
     regx = r'window.QRLogin.code = (\d+); window.QRLogin.uuid = "(\S+?)";'
     data = re.search(regx, r.text)
     if data and data.group(1) == '200':
@@ -125,7 +125,7 @@ def check_login(self, uuid=None):
     params = 'loginicon=true&uuid=%s&tip=0&r=%s&_=%s' % (
         uuid, localTime / 1579, localTime)
     headers = { 'User-Agent' : config.USER_AGENT }
-    r = self.s.get(url, params=params, headers=headers)
+    r = self.s.get(url, params=params, headers=headers, proxies=utils.global_proxies)
     regx = r'window.code=(\d+)'
     data = re.search(regx, r.text)
     if data and data.group(1) == '200':
@@ -145,7 +145,7 @@ def process_login_info(core, loginContent):
     regx = r'window.redirect_uri="(\S+)";'
     core.loginInfo['url'] = re.search(regx, loginContent).group(1)
     headers = { 'User-Agent' : config.USER_AGENT }
-    r = core.s.get(core.loginInfo['url'], headers=headers, allow_redirects=False)
+    r = core.s.get(core.loginInfo['url'], headers=headers, allow_redirects=False, proxies=utils.global_proxies)
     core.loginInfo['url'] = core.loginInfo['url'][:core.loginInfo['url'].rfind('/')]
     for indexUrl, detailedUrl in (
             ("wx2.qq.com"      , ("file.wx2.qq.com", "webpush.wx2.qq.com")),
@@ -282,7 +282,7 @@ def sync_check(self):
         'synckey'  : self.loginInfo['synckey'],
         '_'        : int(time.time() * 1000),}
     headers = { 'User-Agent' : config.USER_AGENT }
-    r = self.s.get(url, params=params, headers=headers)
+    r = self.s.get(url, params=params, headers=headers, proxies=utils.global_proxies)
     regx = r'window.synccheck={retcode:"(\d+)",selector:"(\d+)"}'
     pm = re.search(regx, r.text)
     if pm is None or pm.group(1) != '0':
@@ -317,7 +317,7 @@ def logout(self):
             'type'     : 1,
             'skey'     : self.loginInfo['skey'], }
         headers = { 'User-Agent' : config.USER_AGENT }
-        self.s.get(url, params=params, headers=headers)
+        self.s.get(url, params=params, headers=headers, proxies=utils.global_proxies)
         self.alive = False
     self.isLogging = False
     self.s.cookies.clear()

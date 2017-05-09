@@ -272,7 +272,7 @@ def get_contact(self, update=False):
             'ContentType': 'application/json; charset=UTF-8',
             'User-Agent' : config.USER_AGENT, }
         try:
-            r = self.s.get(url, headers=headers)
+            r = self.s.get(url, headers=headers, proxies=utils.global_proxies)
         except:
             logger.info('Failed to fetch contact, that may because of the amount of your chatrooms')
             for chatroom in self.get_chatrooms():
@@ -408,7 +408,7 @@ def get_head_img(self, userName=None, chatroomUserName=None, picDir=None):
                 params['chatroomid'] = chatroom['EncryChatRoomId']
             params['chatroomid'] =  params['chatroomid'] or chatroom['UserName']
     headers = { 'User-Agent' : config.USER_AGENT }
-    r = self.s.get(url, params=params, stream=True, headers=headers)
+    r = self.s.get(url, params=params, stream=True, headers=headers, proxies=utils.global_proxies)
     tempStorage = io.BytesIO()
     for block in r.iter_content(1024):
         tempStorage.write(block)

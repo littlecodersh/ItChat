@@ -28,7 +28,7 @@ def get_download_fn(core, url, msgId):
             'msgid': msgId,
             'skey': core.loginInfo['skey'],}
         headers = { 'User-Agent' : config.USER_AGENT }
-        r = core.s.get(url, params=params, stream=True, headers = headers)
+        r = core.s.get(url, params=params, stream=True, headers = headers, proxies=utils.global_proxies)
         tempStorage = io.BytesIO()
         for block in r.iter_content(1024):
             tempStorage.write(block)
@@ -124,7 +124,7 @@ def produce_msg(core, msgList):
                     'msgid': msgId,
                     'skey': core.loginInfo['skey'],}
                 headers = {'Range': 'bytes=0-', 'User-Agent' : config.USER_AGENT }
-                r = core.s.get(url, params=params, headers=headers, stream=True)
+                r = core.s.get(url, params=params, headers=headers, stream=True, proxies=utils.global_proxies)
                 tempStorage = io.BytesIO()
                 for block in r.iter_content(1024):
                     tempStorage.write(block)
@@ -153,7 +153,7 @@ def produce_msg(core, msgList):
                         'pass_ticket': 'undefined',
                         'webwx_data_ticket': cookiesList['webwx_data_ticket'],}
                     headers = { 'User-Agent' : config.USER_AGENT }
-                    r = core.s.get(url, params=params, stream=True, headers=headers)
+                    r = core.s.get(url, params=params, stream=True, headers=headers, proxies=utils.global_proxies)
                     tempStorage = io.BytesIO()
                     for block in r.iter_content(1024):
                         tempStorage.write(block)
