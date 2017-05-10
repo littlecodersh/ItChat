@@ -369,6 +369,14 @@ class Core(object):
             it is defined in components/messages.py
         '''
         raise NotImplementedError()
+    def revoke(self, localID, msgID, toUserName=None):
+        ''' revoke message with its LocalID and MsgID
+            for options
+                - localID: message ID at local
+                - msgID: message ID on server
+                - toUserName: 'UserName' key of friend dict
+            it is defined in components/messages.py
+        '''
     def dump_login_status(self, fileDir=None):
         ''' dump login status to a specific file
             for option
