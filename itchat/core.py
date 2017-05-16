@@ -377,6 +377,7 @@ class Core(object):
                 - toUserName: 'UserName' key of friend dict
             it is defined in components/messages.py
         '''
+        raise NotImplementedError()
     def dump_login_status(self, fileDir=None):
         ''' dump login status to a specific file
             for option
