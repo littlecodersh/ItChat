@@ -36,8 +36,9 @@ itchat.send('Hello, filehelper', toUserName='filehelper')
 
 ```python
 import itchat
+from itchat.content import TEXT
 
-@itchat.msg_register(itchat.content.TEXT)
+@itchat.msg_register(TEXT)
 def text_reply(msg):
     return msg.text
 
