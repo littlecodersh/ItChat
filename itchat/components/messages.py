@@ -21,6 +21,7 @@ def load_messages(core):
     core.send_image   = send_image
     core.send_video   = send_video
     core.send         = send
+    core.revoke       = revoke
 
 def get_download_fn(core, url, msgId):
     def download_fn(downloadDir=None):
@@ -506,3 +507,17 @@ def send(self, msg, toUserName=None, mediaId=None):
     else:
         r = self.send_msg(msg, toUserName)
     return r
+
+def revoke(self, msgId, toUserName, localId=None):
+    url = '%s/webwxrevokemsg' % self.loginInfo['url']
+    data = {
+        'BaseRequest': self.loginInfo['BaseRequest'],
+        "ClientMsgId": localId or str(time.time() * 1e3),
+        "SvrMsgId": msgId,
+        "ToUserName": toUserName}
+    headers = { 
+        'ContentType': 'application/json; charset=UTF-8', 
+        'User-Agent' : config.USER_AGENT }
+    r = self.s.post(url, headers=headers,
+        data=json.dumps(data, ensure_ascii=False).encode('utf8'))
+    return ReturnValue(rawResponse=r)

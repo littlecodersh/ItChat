@@ -51,6 +51,7 @@ send_file                   = originInstance.send_file
 send_image                  = originInstance.send_image
 send_video                  = originInstance.send_video
 send                        = originInstance.send
+revoke                      = originInstance.revoke
 # components.hotreload
 dump_login_status           = originInstance.dump_login_status
 load_login_status           = originInstance.load_login_status
