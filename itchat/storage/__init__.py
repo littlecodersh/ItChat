@@ -72,14 +72,14 @@ class Storage(object):
                 matchDict = {
                     'RemarkName' : remarkName,
                     'NickName'   : nickName,
-                    'Alias'      : wechatAccount, }
-                for k in ('RemarkName', 'NickName', 'Alias'):
+                    'Uin'      : wechatAccount, }
+                for k in ('RemarkName', 'NickName', 'Uin'):
                     if matchDict[k] is None:
                         del matchDict[k]
                 if name: # select based on name
                     contact = []
                     for m in self.memberList:
-                        if any([m.get(k) == name for k in ('RemarkName', 'NickName', 'Alias')]):
+                        if any([m.get(k) == name for k in ('RemarkName', 'NickName', 'Uin')]):
                             contact.append(m)
                 else:
                     contact = self.memberList[:]
