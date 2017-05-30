@@ -290,8 +290,14 @@ class Core(object):
             it is defined in components/contact.py
         '''
         raise NotImplementedError()
-    def send_raw_msg(self, msgType, content, toUserName):
+    def send_raw_msg(self, msgType, content, toUserName, uri=None, msgExt=None):
         ''' many messages are sent in a common way
+            for options
+                    - msgType: the raw message type number (int)
+                    - content: the raw message content
+                    - toUserName: 'UserName' key of user dict
+                    - uri: the remaining path appended to the base url, '/webwxsendmsg' as default
+                    - msgExt: a dict to extend the 'Msg' key in the request payload by .update()
             for demo
                 .. code:: python
 
