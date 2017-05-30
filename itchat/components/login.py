@@ -10,6 +10,7 @@ from pyqrcode import QRCode
 from .. import config, utils
 from ..returnvalues import ReturnValue
 from ..storage.templates import wrap_user_dict
+from ..signals import scan_qr_code, confirm_login, logged_in
 from .contact import update_local_chatrooms, update_local_friends
 from .messages import produce_msg
 
@@ -44,6 +45,7 @@ def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
             qrStorage = self.get_QR(enableCmdQR=enableCmdQR,
                 picDir=picDir, qrCallback=qrCallback)
             logger.info('Please scan the QR code to log in.')
+            scan_qr_code.send(self.uuid, type='scan_qr_code')
         isLoggedIn = False
         while not isLoggedIn:
             status = self.check_login()
@@ -54,6 +56,7 @@ def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
             elif status == '201':
                 if isLoggedIn is not None:
                     logger.info('Please press confirm on your phone.')
+                    confirm_login.send(self.uuid, type='confirm_login')
                     isLoggedIn = None
             elif status != '408':
                 break
@@ -73,6 +76,7 @@ def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
         if os.path.exists(picDir or config.DEFAULT_QR):
             os.remove(picDir or config.DEFAULT_QR)
         logger.info('Login successfully as %s' % self.storageClass.nickName)
+        logged_in.send(self.uuid, type='logged_in')
     self.start_receiving(exitCallback)
     self.isLogging = False
 
