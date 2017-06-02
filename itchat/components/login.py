@@ -72,7 +72,7 @@ def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
         utils.clear_screen()
         if os.path.exists(picDir or config.DEFAULT_QR):
             os.remove(picDir or config.DEFAULT_QR)
-        logger.info('Login successfully as %s' % self.storageClass.nickName)
+        logger.info(u'Login successfully as %s' % self.storageClass.nickName)
     self.start_receiving(exitCallback)
     self.isLogging = False
 
