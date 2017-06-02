@@ -59,6 +59,7 @@ load_login_status           = originInstance.load_login_status
 auto_login                  = originInstance.auto_login
 configured_reply            = originInstance.configured_reply
 msg_register                = originInstance.msg_register
+msgList                     = originInstance.msgList
 run                         = originInstance.run
 # other functions
 search_friends              = originInstance.search_friends
