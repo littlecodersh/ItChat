@@ -283,6 +283,7 @@ def sync_check(self):
         '_'        : int(time.time() * 1000),}
     headers = { 'User-Agent' : config.USER_AGENT }
     r = self.s.get(url, params=params, headers=headers, timeout=config.TIMEOUT)
+    r.raise_for_status()
     regx = r'window.synccheck={retcode:"(\d+)",selector:"(\d+)"}'
     pm = re.search(regx, r.text)
     if pm is None or pm.group(1) != '0':
