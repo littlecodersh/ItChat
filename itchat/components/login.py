@@ -59,7 +59,8 @@ def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
                 break
         if isLoggedIn:
             break
-        logger.info('Log in time out, reloading QR code.')
+        elif self.isLogging:
+            logger.info('Log in time out, reloading QR code.')
     else:
         return # log in process is stopped by user
     logger.info('Loading the contact, this may take a little while.')
@@ -129,8 +130,10 @@ def check_login(self, uuid=None):
     regx = r'window.code=(\d+)'
     data = re.search(regx, r.text)
     if data and data.group(1) == '200':
-        process_login_info(self, r.text)
-        return '200'
+        if process_login_info(self, r.text):
+            return '200'
+        else:
+            return '400'
     elif data:
         return data.group(1)
     else:
@@ -171,6 +174,11 @@ def process_login_info(core, loginContent):
             core.loginInfo['wxuin'] = core.loginInfo['BaseRequest']['Uin'] = node.childNodes[0].data
         elif node.nodeName == 'pass_ticket':
             core.loginInfo['pass_ticket'] = core.loginInfo['BaseRequest']['DeviceID'] = node.childNodes[0].data
+    if not all([key in core.loginInfo for key in ('skey', 'wxsid', 'wxuin', 'pass_ticket')]):
+        logger.error('Your wechat account may be LIMITED to log in WEB wechat, error info:\n%s' % r.text)
+        core.isLogging = False
+        return False
+    return True
 
 def web_init(self):
     url = '%s/webwxinit?r=%s' % (self.loginInfo['url'], int(time.time()))
@@ -252,6 +260,8 @@ def start_receiving(self, exitCallback=None, getReceivingFnOnly=False):
                         self.msgList.put(chatroomMsg)
                         update_local_friends(self, otherList)
                 retryCount = 0
+            except requests.exceptions.ReadTimeout:
+                pass
             except:
                 retryCount += 1
                 logger.error(traceback.format_exc())
