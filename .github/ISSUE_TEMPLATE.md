@@ -18,6 +18,6 @@
 
 > [您的内容]
 
-[document]: https://github.com/soimort/you-get/wiki/FAQ
-[issues]: https://github.com/soimort/you-get/issues
+[document]: http://itchat.readthedocs.io/zh/latest/
+[issues]: https://github.com/littlecodersh/itchat/issues
 [itchatmp]: https://github.com/littlecodersh/itchatmp
