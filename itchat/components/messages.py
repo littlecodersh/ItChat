@@ -123,7 +123,9 @@ def produce_msg(core, msgList):
                 url = '%s/webwxgetvideo' % core.loginInfo['url']
                 params = {
                     'msgid': msgId,
-                    'skey': core.loginInfo['skey'],}
+                    'skey': core.loginInfo['skey'],
+                    'type': 'flv',
+                    }
                 headers = {'Range': 'bytes=0-', 'User-Agent' : config.USER_AGENT }
                 r = core.s.get(url, params=params, headers=headers, stream=True)
                 tempStorage = io.BytesIO()
