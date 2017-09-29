@@ -13,25 +13,23 @@ from .contact import update_local_uin
 
 logger = logging.getLogger('itchat')
 
-
 def load_messages(core):
     core.send_raw_msg = send_raw_msg
-    core.send_msg = send_msg
-    core.upload_file = upload_file
-    core.send_file = send_file
-    core.send_image = send_image
-    core.send_video = send_video
-    core.send = send
-    core.revoke = revoke
-
+    core.send_msg     = send_msg
+    core.upload_file  = upload_file
+    core.send_file    = send_file
+    core.send_image   = send_image
+    core.send_video   = send_video
+    core.send         = send
+    core.revoke       = revoke
 
 def get_download_fn(core, url, msgId):
     def download_fn(downloadDir=None):
         params = {
             'msgid': msgId,
-            'skey': core.loginInfo['skey'], }
-        headers = {'User-Agent': config.USER_AGENT}
-        r = core.s.get(url, params=params, stream=True, headers=headers)
+            'skey': core.loginInfo['skey'],}
+        headers = { 'User-Agent' : config.USER_AGENT }
+        r = core.s.get(url, params=params, stream=True, headers = headers)
         tempStorage = io.BytesIO()
         for block in r.iter_content(1024):
             tempStorage.write(block)
@@ -44,9 +42,7 @@ def get_download_fn(core, url, msgId):
             'ErrMsg': 'Successfully downloaded',
             'Ret': 0, },
             'PostFix': utils.get_image_postfix(tempStorage.read(20)), })
-
     return download_fn
-
 
 def produce_msg(core, msgList):
     ''' for messages types
@@ -69,67 +65,66 @@ def produce_msg(core, msgList):
         # set user of msg
         if '@@' in actualOpposite:
             m['User'] = core.search_chatrooms(userName=actualOpposite) or \
-                        templates.Chatroom({'UserName': actualOpposite})
+                templates.Chatroom({'UserName': actualOpposite})
             # we don't need to update chatroom here because we have
             # updated once when producing basic message
         elif actualOpposite in ('filehelper', 'fmessage'):
             m['User'] = templates.User({'UserName': actualOpposite})
         else:
             m['User'] = core.search_mps(userName=actualOpposite) or \
-                        core.search_friends(userName=actualOpposite) or \
-                        templates.User(userName=actualOpposite)
+                core.search_friends(userName=actualOpposite) or \
+                templates.User(userName=actualOpposite)
             # by default we think there may be a user missing not a mp
         m['User'].core = core
-        if m['MsgType'] == 1:  # words
+        if m['MsgType'] == 1: # words
             if m['Url']:
                 regx = r'(.+?\(.+?\))'
                 data = re.search(regx, m['Content'])
                 data = 'Map' if data is None else data.group(1)
                 msg = {
                     'Type': 'Map',
-                    'Text': data, }
+                    'Text': data,}
             else:
                 msg = {
                     'Type': 'Text',
-                    'Text': m['Content'], }
-        elif m['MsgType'] == 3 or m['MsgType'] == 47:  # picture
+                    'Text': m['Content'],}
+        elif m['MsgType'] == 3 or m['MsgType'] == 47: # picture
             download_fn = get_download_fn(core,
-                                          '%s/webwxgetmsgimg' % core.loginInfo['url'], m['NewMsgId'])
+                '%s/webwxgetmsgimg' % core.loginInfo['url'], m['NewMsgId'])
             msg = {
-                'Type': 'Picture',
-                'FileName': '%s.%s' % (time.strftime('%y%m%d-%H%M%S', time.localtime()),
-                                       'png' if m['MsgType'] == 3 else 'gif'),
-                'Text': download_fn, }
-        elif m['MsgType'] == 34:  # voice
+                'Type'     : 'Picture',
+                'FileName' : '%s.%s' % (time.strftime('%y%m%d-%H%M%S', time.localtime()),
+                    'png' if m['MsgType'] == 3 else 'gif'),
+                'Text'     : download_fn, }
+        elif m['MsgType'] == 34: # voice
             download_fn = get_download_fn(core,
-                                          '%s/webwxgetvoice' % core.loginInfo['url'], m['NewMsgId'])
+                '%s/webwxgetvoice' % core.loginInfo['url'], m['NewMsgId'])
             msg = {
                 'Type': 'Recording',
-                'FileName': '%s.mp3' % time.strftime('%y%m%d-%H%M%S', time.localtime()),
-                'Text': download_fn, }
-        elif m['MsgType'] == 37:  # friends
+                'FileName' : '%s.mp3' % time.strftime('%y%m%d-%H%M%S', time.localtime()),
+                'Text': download_fn,}
+        elif m['MsgType'] == 37: # friends
             m['User']['UserName'] = m['RecommendInfo']['UserName']
             msg = {
                 'Type': 'Friends',
                 'Text': {
-                    'status': m['Status'],
-                    'userName': m['RecommendInfo']['UserName'],
-                    'verifyContent': m['Ticket'],
-                    'autoUpdate': m['RecommendInfo'], }, }
+                    'status'        : m['Status'],
+                    'userName'      : m['RecommendInfo']['UserName'],
+                    'verifyContent' : m['Ticket'],
+                    'autoUpdate'    : m['RecommendInfo'], }, }
             m['User'].verifyDict = msg['Text']
-        elif m['MsgType'] == 42:  # name card
+        elif m['MsgType'] == 42: # name card
             msg = {
                 'Type': 'Card',
                 'Text': m['RecommendInfo'], }
-        elif m['MsgType'] in (43, 62):  # tiny video
+        elif m['MsgType'] in (43, 62): # tiny video
             msgId = m['MsgId']
-
             def download_video(videoDir=None):
                 url = '%s/webwxgetvideo' % core.loginInfo['url']
                 params = {
                     'msgid': msgId,
-                    'skey': core.loginInfo['skey'], }
-                headers = {'Range': 'bytes=0-', 'User-Agent': config.USER_AGENT}
+                    'skey': core.loginInfo['skey'],}
+                headers = {'Range': 'bytes=0-', 'User-Agent' : config.USER_AGENT }
                 r = core.s.get(url, params=params, headers=headers, stream=True)
                 tempStorage = io.BytesIO()
                 for block in r.iter_content(1024):
@@ -141,16 +136,14 @@ def produce_msg(core, msgList):
                 return ReturnValue({'BaseResponse': {
                     'ErrMsg': 'Successfully downloaded',
                     'Ret': 0, }})
-
             msg = {
                 'Type': 'Video',
-                'FileName': '%s.mp4' % time.strftime('%y%m%d-%H%M%S', time.localtime()),
+                'FileName' : '%s.mp4' % time.strftime('%y%m%d-%H%M%S', time.localtime()),
                 'Text': download_video, }
-        elif m['MsgType'] == 49:  # sharing
+        elif m['MsgType'] == 49: # sharing
             if m['AppMsgType'] == 6:
                 rawMsg = m
-                cookiesList = {name: data for name, data in core.s.cookies.items()}
-
+                cookiesList = {name:data for name,data in core.s.cookies.items()}
                 def download_atta(attaDir=None):
                     url = core.loginInfo['fileUrl'] + '/webwxgetmedia'
                     params = {
@@ -159,8 +152,8 @@ def produce_msg(core, msgList):
                         'filename': rawMsg['FileName'],
                         'fromuser': core.loginInfo['wxuin'],
                         'pass_ticket': 'undefined',
-                        'webwx_data_ticket': cookiesList['webwx_data_ticket'], }
-                    headers = {'User-Agent': config.USER_AGENT}
+                        'webwx_data_ticket': cookiesList['webwx_data_ticket'],}
+                    headers = { 'User-Agent' : config.USER_AGENT }
                     r = core.s.get(url, params=params, stream=True, headers=headers)
                     tempStorage = io.BytesIO()
                     for block in r.iter_content(1024):
@@ -172,18 +165,17 @@ def produce_msg(core, msgList):
                     return ReturnValue({'BaseResponse': {
                         'ErrMsg': 'Successfully downloaded',
                         'Ret': 0, }})
-
                 msg = {
                     'Type': 'Attachment',
                     'Text': download_atta, }
             elif m['AppMsgType'] == 8:
                 download_fn = get_download_fn(core,
-                                              '%s/webwxgetmsgimg' % core.loginInfo['url'], m['NewMsgId'])
+                    '%s/webwxgetmsgimg' % core.loginInfo['url'], m['NewMsgId'])
                 msg = {
-                    'Type': 'Picture',
-                    'FileName': '%s.gif' % (
+                    'Type'     : 'Picture',
+                    'FileName' : '%s.gif' % (
                         time.strftime('%y%m%d-%H%M%S', time.localtime())),
-                    'Text': download_fn, }
+                    'Text'     : download_fn, }
             elif m['AppMsgType'] == 17:
                 msg = {
                     'Type': 'Note',
@@ -202,12 +194,12 @@ def produce_msg(core, msgList):
                 msg = {
                     'Type': 'Sharing',
                     'Text': m['FileName'], }
-        elif m['MsgType'] == 51:  # phone init
+        elif m['MsgType'] == 51: # phone init
             msg = update_local_uin(core, m)
         elif m['MsgType'] == 10000:
             msg = {
                 'Type': 'Note',
-                'Text': m['Content'], }
+                'Text': m['Content'],}
         elif m['MsgType'] == 10002:
             regx = r'\[CDATA\[(.+?)\]\]'
             data = re.search(regx, m['Content'])
@@ -227,7 +219,6 @@ def produce_msg(core, msgList):
         m = dict(m, **msg)
         rl.append(m)
     return rl
-
 
 def produce_group_chat(core, msg):
     r = re.match('(@[0-9a-z]*?):<br/>(.*)$', msg['Content'])
@@ -251,7 +242,7 @@ def produce_group_chat(core, msg):
         chatroom = core.update_chatroom(msg['FromUserName'])
         member = utils.search_dict_list((chatroom or {}).get(
             'MemberList') or [], 'UserName', actualUserName)
-    # TODO: please check what's wrong here
+# TODO: please check what's wrong here
     if member is None:
         logger.debug('chatroom member fetch failed with %s' % actualUserName)
         msg['ActualNickName'] = ''
@@ -263,9 +254,8 @@ def produce_group_chat(core, msg):
             (atFlag + (u'\u2005' if u'\u2005' in msg['Content'] else ' '))
             in msg['Content'] or msg['Content'].endswith(atFlag))
     msg['ActualUserName'] = actualUserName
-    msg['Content'] = content
+    msg['Content']        = content
     utils.msg_formatter(msg, 'Content')
-
 
 def send_raw_msg(self, msgType, content, toUserName):
     url = '%s/webwxsendmsg' % self.loginInfo['url']
@@ -278,19 +268,17 @@ def send_raw_msg(self, msgType, content, toUserName):
             'ToUserName': (toUserName if toUserName else self.storageClass.userName),
             'LocalID': int(time.time() * 1e4),
             'ClientMsgId': int(time.time() * 1e4),
-        },
+            },
         'Scene': 0, }
-    headers = {'ContentType': 'application/json; charset=UTF-8', 'User-Agent': config.USER_AGENT}
+    headers = { 'ContentType': 'application/json; charset=UTF-8', 'User-Agent' : config.USER_AGENT }
     r = self.s.post(url, headers=headers,
-                    data=json.dumps(data, ensure_ascii=False).encode('utf8'))
+        data=json.dumps(data, ensure_ascii=False).encode('utf8'))
     return ReturnValue(rawResponse=r)
-
 
 def send_msg(self, msg='Test Message', toUserName=None):
     logger.debug('Request to send a text message to %s: %s' % (toUserName, msg))
     r = self.send_raw_msg(1, msg, toUserName)
     return r
-
 
 def _prepare_file(fileDir, file_=None):
     fileDict = {}
@@ -313,9 +301,8 @@ def _prepare_file(fileDir, file_=None):
     fileDict['file_'] = io.BytesIO(file_)
     return fileDict
 
-
 def upload_file(self, fileDir, isPicture=False, isVideo=False,
-                toUserName='filehelper', file_=None, preparedFile=None):
+        toUserName='filehelper', file_=None, preparedFile=None):
     logger.debug('Request to upload a %s: %s' % (
         'picture' if isPicture else 'video' if isVideo else 'file', fileDir))
     if not preparedFile:
@@ -338,23 +325,22 @@ def upload_file(self, fileDir, isPicture=False, isVideo=False,
         ('FromUserName', self.storageClass.userName),
         ('ToUserName', toUserName),
         ('FileMd5', fileMd5)]
-    ), separators=(',', ':'))
+        ), separators = (',', ':'))
     r = {'BaseResponse': {'Ret': -1005, 'ErrMsg': 'Empty file detected'}}
     for chunk in range(chunks):
         r = upload_chunk_file(self, fileDir, fileSymbol, fileSize,
-                              file_, chunk, chunks, uploadMediaRequest)
+            file_, chunk, chunks, uploadMediaRequest)
     file_.close()
     if isinstance(r, dict):
         return ReturnValue(r)
     return ReturnValue(rawResponse=r)
 
-
 def upload_chunk_file(core, fileDir, fileSymbol, fileSize,
-                      file_, chunk, chunks, uploadMediaRequest):
+        file_, chunk, chunks, uploadMediaRequest):
     url = core.loginInfo.get('fileUrl', core.loginInfo['url']) + \
-          '/webwxuploadmedia?f=json'
+        '/webwxuploadmedia?f=json'
     # save it on server
-    cookiesList = {name: data for name, data in core.s.cookies.items()}
+    cookiesList = {name:data for name,data in core.s.cookies.items()}
     fileType = mimetypes.guess_type(fileDir)[0] or 'application/octet-stream'
     files = OrderedDict([
         ('id', (None, 'WU_FILE_0')),
@@ -368,15 +354,13 @@ def upload_chunk_file(core, fileDir, fileSymbol, fileSize,
         ('uploadmediarequest', (None, uploadMediaRequest)),
         ('webwx_data_ticket', (None, cookiesList['webwx_data_ticket'])),
         ('pass_ticket', (None, core.loginInfo['pass_ticket'])),
-        ('filename', (os.path.basename(fileDir), file_.read(524288), 'application/octet-stream'))])
+        ('filename' , (os.path.basename(fileDir), file_.read(524288), 'application/octet-stream'))])
     if chunks == 1:
-        del files['chunk'];
-        del files['chunks']
+        del files['chunk']; del files['chunks']
     else:
         files['chunk'], files['chunks'] = (None, str(chunk)), (None, str(chunks))
-    headers = {'User-Agent': config.USER_AGENT}
+    headers = { 'User-Agent' : config.USER_AGENT }
     return requests.post(url, files=files, headers=headers)
-
 
 def send_file(self, fileDir, toUserName=None, mediaId=None, file_=None):
     logger.debug('Request to send a file(mediaId: %s) to %s: %s' % (
@@ -403,10 +387,9 @@ def send_file(self, fileDir, toUserName=None, mediaId=None, file_=None):
         'Msg': {
             'Type': 6,
             'Content': ("<appmsg appid='wxeb7ec651dd0aefa9' sdkver=''><title>%s</title>" % os.path.basename(fileDir) +
-                        "<des></des><action></action><type>6</type><content></content><url></url><lowurl></lowurl>" +
-                        "<appattach><totallen>%s</totallen><attachid>%s</attachid>" % (str(fileSize), mediaId) +
-                        "<fileext>%s</fileext></appattach><extinfo></extinfo></appmsg>" % os.path.splitext(fileDir)[
-                            1].replace('.', '')),
+                "<des></des><action></action><type>6</type><content></content><url></url><lowurl></lowurl>" +
+                "<appattach><totallen>%s</totallen><attachid>%s</attachid>" % (str(fileSize), mediaId) +
+                "<fileext>%s</fileext></appattach><extinfo></extinfo></appmsg>" % os.path.splitext(fileDir)[1].replace('.','')),
             'FromUserName': self.storageClass.userName,
             'ToUserName': toUserName,
             'LocalID': int(time.time() * 1e4),
@@ -416,9 +399,8 @@ def send_file(self, fileDir, toUserName=None, mediaId=None, file_=None):
         'User-Agent': config.USER_AGENT,
         'Content-Type': 'application/json;charset=UTF-8', }
     r = self.s.post(url, headers=headers,
-                    data=json.dumps(data, ensure_ascii=False).encode('utf8'))
+        data=json.dumps(data, ensure_ascii=False).encode('utf8'))
     return ReturnValue(rawResponse=r)
-
 
 def send_image(self, fileDir=None, toUserName=None, mediaId=None, file_=None):
     logger.debug('Request to send a image(mediaId: %s) to %s: %s' % (
@@ -427,7 +409,7 @@ def send_image(self, fileDir=None, toUserName=None, mediaId=None, file_=None):
         if hasattr(fileDir, 'read'):
             file_, fileDir = fileDir, None
         if fileDir is None:
-            fileDir = 'tmp.jpg'  # specific fileDir to send gifs
+            fileDir = 'tmp.jpg' # specific fileDir to send gifs
     else:
         return ReturnValue({'BaseResponse': {
             'ErrMsg': 'Either fileDir or file_ should be specific',
@@ -459,9 +441,8 @@ def send_image(self, fileDir=None, toUserName=None, mediaId=None, file_=None):
         'User-Agent': config.USER_AGENT,
         'Content-Type': 'application/json;charset=UTF-8', }
     r = self.s.post(url, headers=headers,
-                    data=json.dumps(data, ensure_ascii=False).encode('utf8'))
+        data=json.dumps(data, ensure_ascii=False).encode('utf8'))
     return ReturnValue(rawResponse=r)
-
 
 def send_video(self, fileDir=None, toUserName=None, mediaId=None, file_=None):
     logger.debug('Request to send a video(mediaId: %s) to %s: %s' % (
@@ -470,7 +451,7 @@ def send_video(self, fileDir=None, toUserName=None, mediaId=None, file_=None):
         if hasattr(fileDir, 'read'):
             file_, fileDir = fileDir, None
         if fileDir is None:
-            fileDir = 'tmp.mp4'  # specific fileDir to send other formats
+            fileDir = 'tmp.mp4' # specific fileDir to send other formats
     else:
         return ReturnValue({'BaseResponse': {
             'ErrMsg': 'Either fileDir or file_ should be specific',
@@ -488,20 +469,19 @@ def send_video(self, fileDir=None, toUserName=None, mediaId=None, file_=None):
     data = {
         'BaseRequest': self.loginInfo['BaseRequest'],
         'Msg': {
-            'Type': 43,
-            'MediaId': mediaId,
-            'FromUserName': self.storageClass.userName,
-            'ToUserName': toUserName,
-            'LocalID': int(time.time() * 1e4),
-            'ClientMsgId': int(time.time() * 1e4), },
+            'Type'         : 43,
+            'MediaId'      : mediaId,
+            'FromUserName' : self.storageClass.userName,
+            'ToUserName'   : toUserName,
+            'LocalID'      : int(time.time() * 1e4),
+            'ClientMsgId'  : int(time.time() * 1e4), },
         'Scene': 0, }
     headers = {
-        'User-Agent': config.USER_AGENT,
+        'User-Agent' : config.USER_AGENT,
         'Content-Type': 'application/json;charset=UTF-8', }
     r = self.s.post(url, headers=headers,
-                    data=json.dumps(data, ensure_ascii=False).encode('utf8'))
+        data=json.dumps(data, ensure_ascii=False).encode('utf8'))
     return ReturnValue(rawResponse=r)
-
 
 def send(self, msg, toUserName=None, mediaId=None):
     if not msg:
@@ -529,7 +509,6 @@ def send(self, msg, toUserName=None, mediaId=None):
         r = self.send_msg(msg, toUserName)
     return r
 
-
 def revoke(self, msgId, toUserName, localId=None):
     url = '%s/webwxrevokemsg' % self.loginInfo['url']
     data = {
@@ -539,7 +518,7 @@ def revoke(self, msgId, toUserName, localId=None):
         "ToUserName": toUserName}
     headers = {
         'ContentType': 'application/json; charset=UTF-8',
-        'User-Agent': config.USER_AGENT}
+        'User-Agent' : config.USER_AGENT }
     r = self.s.post(url, headers=headers,
-                    data=json.dumps(data, ensure_ascii=False).encode('utf8'))
+        data=json.dumps(data, ensure_ascii=False).encode('utf8'))
     return ReturnValue(rawResponse=r)
