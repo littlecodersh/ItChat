@@ -1,7 +1,7 @@
-import os, sys, time, re, io
+import os, time, re, io
 import threading
 import json, xml.dom.minidom
-import copy, pickle, random
+import random
 import traceback, logging
 try:
     from httplib import BadStatusLine
