@@ -31,7 +31,7 @@ def load_login(core):
     core.logout            = logout
 
 def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
-        loginCallback=None, exitCallback=None, timeout=None):
+        loginCallback=None, exitCallback=None, timeout=None, timeoutCallback=None):
     start_time = time.time()
     if self.alive or self.isLogging:
         logger.warning('itchat has already logged in.')
@@ -54,6 +54,8 @@ def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
             now = time.time()
             if timeout and (now - start_time) >= timeout:
                 logger.warning('Login timeout, exit.')
+                if hasattr(timeoutCallback, '__call__'):
+                    timeoutCallback()
                 print('Timeout as user setting.')
                 return
 
