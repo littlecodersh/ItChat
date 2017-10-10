@@ -30,7 +30,8 @@ class Core(object):
         self.useHotReload, self.hotReloadDir = False, 'itchat.pkl'
         self.receivingRetryCount = 5
     def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
-            loginCallback=None, exitCallback=None):
+            loginCallback=None, exitCallback=None, timeout=None,
+            timeoutCallback=None):
         ''' log in like web wechat does
             for log in
                 - a QR code will be downloaded and opened
@@ -45,6 +46,11 @@ class Core(object):
                     - if not set, screen is cleared and qrcode is deleted
                 - exitCallback: callback after logged out
                     - it contains calling of logout
+                - timeout: the login process will forcibly end after dedicated
+                           timeout seconds
+                    - if not set, login process will always wait until user
+                      scan the QRCode to proceed.
+                - timeoutCallback: callback after timeout
             for usage
                 ..code::python
 
@@ -399,7 +405,8 @@ class Core(object):
         raise NotImplementedError()
     def auto_login(self, hotReload=False, statusStorageDir='itchat.pkl',
             enableCmdQR=False, picDir=None, qrCallback=None,
-            loginCallback=None, exitCallback=None):
+            loginCallback=None, exitCallback=None, timeout=None,
+            timeoutCallback=None):
         ''' log in like web wechat does
             for log in
                 - a QR code will be downloaded and opened
@@ -416,6 +423,11 @@ class Core(object):
                 - exitCallback: callback after logged out
                     - it contains calling of logout
                 - qrCallback: method that should accept uuid, status, qrcode
+                - timeout: the login process will forcibly end after dedicated
+                           timeout seconds
+                    - if not set, login process will always wait until user
+                      scan the QRCode to proceed.
+                - timeoutCallback: callback after timeout
             for usage
                 ..code::python
 
