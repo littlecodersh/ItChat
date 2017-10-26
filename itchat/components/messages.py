@@ -141,7 +141,11 @@ def produce_msg(core, msgList):
                 'FileName' : '%s.mp4' % time.strftime('%y%m%d-%H%M%S', time.localtime()),
                 'Text': download_video, }
         elif m['MsgType'] == 49: # sharing
-            if m['AppMsgType'] == 6:
+            if m['AppMsgType'] == 0: # unsupported msg
+                msg = {
+                    'Type': 'Note',
+                    'Text': m['Content'], }
+            elif m['AppMsgType'] == 6:
                 rawMsg = m
                 cookiesList = {name:data for name,data in core.s.cookies.items()}
                 def download_atta(attaDir=None):
