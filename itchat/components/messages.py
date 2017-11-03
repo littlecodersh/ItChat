@@ -1,7 +1,7 @@
 import os, time, re, io
 import json
 import mimetypes, hashlib
-import traceback, logging
+import logging
 from collections import OrderedDict
 
 import requests
@@ -89,7 +89,7 @@ def produce_msg(core, msgList):
                     'Type': 'Text',
                     'Text': m['Content'],}
         elif m['MsgType'] == 3 or m['MsgType'] == 47: # picture
-            download_fn = get_download_fn(core, 
+            download_fn = get_download_fn(core,
                 '%s/webwxgetmsgimg' % core.loginInfo['url'], m['NewMsgId'])
             msg = {
                 'Type'     : 'Picture',
@@ -169,7 +169,7 @@ def produce_msg(core, msgList):
                     'Type': 'Attachment',
                     'Text': download_atta, }
             elif m['AppMsgType'] == 8:
-                download_fn = get_download_fn(core, 
+                download_fn = get_download_fn(core,
                     '%s/webwxgetmsgimg' % core.loginInfo['url'], m['NewMsgId'])
                 msg = {
                     'Type'     : 'Picture',
@@ -242,6 +242,7 @@ def produce_group_chat(core, msg):
         chatroom = core.update_chatroom(msg['FromUserName'])
         member = utils.search_dict_list((chatroom or {}).get(
             'MemberList') or [], 'UserName', actualUserName)
+# TODO: please check what's wrong here
     if member is None:
         logger.debug('chatroom member fetch failed with %s' % actualUserName)
         msg['ActualNickName'] = ''
@@ -267,7 +268,7 @@ def send_raw_msg(self, msgType, content, toUserName):
             'ToUserName': (toUserName if toUserName else self.storageClass.userName),
             'LocalID': int(time.time() * 1e4),
             'ClientMsgId': int(time.time() * 1e4),
-            }, 
+            },
         'Scene': 0, }
     headers = { 'ContentType': 'application/json; charset=UTF-8', 'User-Agent' : config.USER_AGENT }
     r = self.s.post(url, headers=headers,
@@ -515,8 +516,8 @@ def revoke(self, msgId, toUserName, localId=None):
         "ClientMsgId": localId or str(time.time() * 1e3),
         "SvrMsgId": msgId,
         "ToUserName": toUserName}
-    headers = { 
-        'ContentType': 'application/json; charset=UTF-8', 
+    headers = {
+        'ContentType': 'application/json; charset=UTF-8',
         'User-Agent' : config.USER_AGENT }
     r = self.s.post(url, headers=headers,
         data=json.dumps(data, ensure_ascii=False).encode('utf8'))

@@ -1,8 +1,6 @@
-import logging
-
 import requests
 
-from . import config, storage, utils, log
+from . import storage
 from .components import load_components
 
 class Core(object):

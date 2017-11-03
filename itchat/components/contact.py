@@ -1,12 +1,10 @@
-import os, time, re, io
+import time, re, io
 import json, copy
-import traceback, logging
-
-import requests
+import logging
 
 from .. import config, utils
 from ..returnvalues import ReturnValue
-from ..storage import contact_change, templates
+from ..storage import contact_change
 from ..utils import update_info_dict
 
 logger = logging.getLogger('itchat')
