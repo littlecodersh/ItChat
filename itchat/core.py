@@ -1,5 +1,5 @@
 import logging
-
+import time
 import requests
 
 from . import config, storage, utils, log
@@ -24,6 +24,7 @@ class Core(object):
         self.chatroomList = self.storageClass.chatroomList
         self.msgList = self.storageClass.msgList
         self.loginInfo = {}
+        self.loginTime=int(time.time()*1000)
         self.s = requests.Session()
         self.uuid = None
         self.functionDict = {'FriendChat': {}, 'GroupChat': {}, 'MpChat': {}}

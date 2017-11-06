@@ -206,19 +206,19 @@ def web_init(self):
     self.storageClass.userName = dic['User']['UserName']
     self.storageClass.nickName = dic['User']['NickName']
     # deal with contact list returned when init
-    contactList = dic.get('ContactList', [])		
-    chatroomList, otherList = [], []		
-    for m in contactList:		
-        if m['Sex'] != 0:		
-            otherList.append(m)		
-        elif '@@' in m['UserName']:		
+    contactList = dic.get('ContactList', [])
+    chatroomList, otherList = [], []
+    for m in contactList:
+        if m['Sex'] != 0:
+            otherList.append(m)
+        elif '@@' in m['UserName']:
             m['MemberList'] = [] # don't let dirty info pollute the list
-            chatroomList.append(m)		
-        elif '@' in m['UserName']:		
+            chatroomList.append(m)
+        elif '@' in m['UserName']:
             # mp will be dealt in update_local_friends as well		
-            otherList.append(m)		
+            otherList.append(m)
     if chatroomList:
-        update_local_chatrooms(self, chatroomList)		
+        update_local_chatrooms(self, chatroomList)
     if otherList:
         update_local_friends(self, otherList)
     return dic
@@ -290,14 +290,15 @@ def start_receiving(self, exitCallback=None, getReceivingFnOnly=False):
 
 def sync_check(self):
     url = '%s/synccheck' % self.loginInfo.get('syncUrl', self.loginInfo['url'])
+    self.loginTime=self.loginTime+1
     params = {
         'r'        : int(time.time() * 1000),
         'skey'     : self.loginInfo['skey'],
         'sid'      : self.loginInfo['wxsid'],
         'uin'      : self.loginInfo['wxuin'],
-        'deviceid' : self.loginInfo['deviceid'],
+        'deviceid' : 'e'+str(random.randint(100000000000000, 999999999999999)),
         'synckey'  : self.loginInfo['synckey'],
-        '_'        : int(time.time() * 1000),}
+        '_'        : self.loginTime,}
     headers = { 'User-Agent' : config.USER_AGENT }
     try:
         r = self.s.get(url, params=params, headers=headers, timeout=config.TIMEOUT)
@@ -324,17 +325,18 @@ def get_msg(self):
     url = '%s/webwxsync?sid=%s&skey=%s&pass_ticket=%s' % (
         self.loginInfo['url'], self.loginInfo['wxsid'],
         self.loginInfo['skey'],self.loginInfo['pass_ticket'])
+    timeInt=(int(time.time() * 1000))-1507533520896
     data = {
         'BaseRequest' : self.loginInfo['BaseRequest'],
         'SyncKey'     : self.loginInfo['SyncKey'],
-        'rr'          : ~int(time.time()), }
+        'rr'          : ~timeInt, }
     headers = {
         'ContentType': 'application/json; charset=UTF-8',
         'User-Agent' : config.USER_AGENT }
     r = self.s.post(url, data=json.dumps(data), headers=headers, timeout=config.TIMEOUT)
     dic = json.loads(r.content.decode('utf-8', 'replace'))
     if dic['BaseResponse']['Ret'] != 0: return None, None
-    self.loginInfo['SyncKey'] = dic['SyncCheckKey']
+    self.loginInfo['SyncKey'] = dic['SyncKey']
     self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val'])
         for item in dic['SyncCheckKey']['List']])
     return dic['AddMsgList'], dic['ModContactList']
