@@ -239,7 +239,7 @@ def produce_group_chat(core, msg):
     member = utils.search_dict_list((chatroom or {}).get(
         'MemberList') or [], 'UserName', actualUserName)
     if member is None:
-        chatroom = core.update_chatroom(msg['FromUserName'])
+        chatroom = core.update_chatroom(chatroomUserName)
         member = utils.search_dict_list((chatroom or {}).get(
             'MemberList') or [], 'UserName', actualUserName)
     if member is None:
