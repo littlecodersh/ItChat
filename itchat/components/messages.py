@@ -47,7 +47,7 @@ def get_download_fn(core, url, msgId):
 def produce_msg(core, msgList):
     ''' for messages types
      * 40 msg, 43 videochat, 50 VOIPMSG, 52 voipnotifymsg
-     * 53 webwxvoipnotifymsg, 9999 sysnotice 
+     * 53 webwxvoipnotifymsg, 9999 sysnotice
     '''
     rl = []
     srl = [40, 43, 50, 52, 53, 9999]
@@ -89,7 +89,7 @@ def produce_msg(core, msgList):
                     'Type': 'Text',
                     'Text': m['Content'],}
         elif m['MsgType'] == 3 or m['MsgType'] == 47: # picture
-            download_fn = get_download_fn(core, 
+            download_fn = get_download_fn(core,
                 '%s/webwxgetmsgimg' % core.loginInfo['url'], m['NewMsgId'])
             msg = {
                 'Type'     : 'Picture',
@@ -173,7 +173,7 @@ def produce_msg(core, msgList):
                     'Type': 'Attachment',
                     'Text': download_atta, }
             elif m['AppMsgType'] == 8:
-                download_fn = get_download_fn(core, 
+                download_fn = get_download_fn(core,
                     '%s/webwxgetmsgimg' % core.loginInfo['url'], m['NewMsgId'])
                 msg = {
                     'Type'     : 'Picture',
@@ -199,7 +199,12 @@ def produce_msg(core, msgList):
                     'Type': 'Sharing',
                     'Text': m['FileName'], }
         elif m['MsgType'] == 51: # phone init
-            msg = update_local_uin(core, m)
+            if m['SubMsgType'] == 0:        # 视频，语音通话
+                msg = {
+                    'Type': 'Text',
+                    'Text': '视频或语音通话',}
+            else:
+                msg = update_local_uin(core, m)
         elif m['MsgType'] == 10000:
             msg = {
                 'Type': 'Note',
@@ -271,7 +276,7 @@ def send_raw_msg(self, msgType, content, toUserName):
             'ToUserName': (toUserName if toUserName else self.storageClass.userName),
             'LocalID': int(time.time() * 1e4),
             'ClientMsgId': int(time.time() * 1e4),
-            }, 
+            },
         'Scene': 0, }
     headers = { 'ContentType': 'application/json; charset=UTF-8', 'User-Agent' : config.USER_AGENT }
     r = self.s.post(url, headers=headers,
@@ -519,8 +524,8 @@ def revoke(self, msgId, toUserName, localId=None):
         "ClientMsgId": localId or str(time.time() * 1e3),
         "SvrMsgId": msgId,
         "ToUserName": toUserName}
-    headers = { 
-        'ContentType': 'application/json; charset=UTF-8', 
+    headers = {
+        'ContentType': 'application/json; charset=UTF-8',
         'User-Agent' : config.USER_AGENT }
     r = self.s.post(url, headers=headers,
         data=json.dumps(data, ensure_ascii=False).encode('utf8'))
