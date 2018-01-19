@@ -127,8 +127,8 @@ def check_login(self, uuid=None):
     uuid = uuid or self.uuid
     url = '%s/cgi-bin/mmwebwx-bin/login' % config.BASE_URL
     localTime = int(time.time())
-    params = 'loginicon=true&uuid=%s&tip=0&r=%s&_=%s' % (
-        uuid, localTime / 1579, localTime)
+    params = 'loginicon=true&uuid=%s&tip=1&r=%s&_=%s' % (
+        uuid, int(-localTime / 1579), localTime)
     headers = { 'User-Agent' : config.USER_AGENT }
     r = self.s.get(url, params=params, headers=headers)
     regx = r'window.code=(\d+)'
@@ -185,12 +185,15 @@ def process_login_info(core, loginContent):
     return True
 
 def web_init(self):
-    url = '%s/webwxinit?r=%s' % (self.loginInfo['url'], int(time.time()))
+    url = '%s/webwxinit' % self.loginInfo['url']
+    params = {
+        'r': int(-time.time() / 1579),
+        'pass_ticket': self.loginInfo['pass_ticket'], }
     data = { 'BaseRequest': self.loginInfo['BaseRequest'], }
     headers = {
         'ContentType': 'application/json; charset=UTF-8',
         'User-Agent' : config.USER_AGENT, }
-    r = self.s.post(url, data=json.dumps(data), headers=headers)
+    r = self.s.post(url, params=params, data=json.dumps(data), headers=headers)
     dic = json.loads(r.content.decode('utf-8', 'replace'))
     # deal with login info
     utils.emoji_formatter(dic['User'], 'NickName')
