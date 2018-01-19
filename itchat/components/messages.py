@@ -199,12 +199,7 @@ def produce_msg(core, msgList):
                     'Type': 'Sharing',
                     'Text': m['FileName'], }
         elif m['MsgType'] == 51: # phone init
-            if m['SubMsgType'] == 0:        # 视频，语音通话
-                msg = {
-                    'Type': 'Text',
-                    'Text': '视频或语音通话',}
-            else:
-                msg = update_local_uin(core, m)
+            msg = update_local_uin(core, m)
         elif m['MsgType'] == 10000:
             msg = {
                 'Type': 'Note',
