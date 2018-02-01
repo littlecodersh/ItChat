@@ -148,8 +148,9 @@ def update_local_chatrooms(core, l):
                 del oldChatroom['MemberList'][i]
         #  - update OwnerUin
         if oldChatroom.get('ChatRoomOwner') and oldChatroom.get('MemberList'):
-            oldChatroom['OwnerUin'] = utils.search_dict_list(oldChatroom['MemberList'],
-                'UserName', oldChatroom['ChatRoomOwner']).get('Uin', 0)
+            old_chart_room_owner = utils.search_dict_list(oldChatroom['MemberList'], 'UserName', oldChatroom['ChatRoomOwner'])
+            if old_chart_room_owner is not None:
+                oldChatroom['OwnerUin'] = old_chart_room_owner.get('Uin', 0)
         #  - update IsAdmin
         if 'OwnerUin' in oldChatroom and oldChatroom['OwnerUin'] != 0:
             oldChatroom['IsAdmin'] = \
