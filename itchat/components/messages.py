@@ -3,6 +3,13 @@ import json
 import mimetypes, hashlib
 import traceback, logging
 from collections import OrderedDict
+try:
+    # Python2
+    from urllib import quote as _quote
+    quote = lambda u: _quote(u.encode("utf-8"))
+except ImportError:
+    # Python3
+    from urllib.parse import quote
 
 import requests
 
@@ -341,9 +348,10 @@ def upload_chunk_file(core, fileDir, fileSymbol, fileSize,
     # save it on server
     cookiesList = {name:data for name,data in core.s.cookies.items()}
     fileType = mimetypes.guess_type(fileDir)[0] or 'application/octet-stream'
+    encoded_filename = quote(os.path.basename(fileDir))
     files = OrderedDict([
         ('id', (None, 'WU_FILE_0')),
-        ('name', (None, os.path.basename(fileDir))),
+        ('name', (None, encoded_filename)),
         ('type', (None, fileType)),
         ('lastModifiedDate', (None, time.strftime('%a %b %d %Y %H:%M:%S GMT+0800 (CST)'))),
         ('size', (None, str(fileSize))),
@@ -353,7 +361,7 @@ def upload_chunk_file(core, fileDir, fileSymbol, fileSize,
         ('uploadmediarequest', (None, uploadMediaRequest)),
         ('webwx_data_ticket', (None, cookiesList['webwx_data_ticket'])),
         ('pass_ticket', (None, core.loginInfo['pass_ticket'])),
-        ('filename' , (os.path.basename(fileDir), file_.read(524288), 'application/octet-stream'))])
+        ('filename' , (encoded_filename, file_.read(524288), 'application/octet-stream'))])
     if chunks == 1:
         del files['chunk']; del files['chunks']
     else:
