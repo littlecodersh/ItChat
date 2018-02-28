@@ -4,6 +4,11 @@ try:
     from HTMLParser import HTMLParser
 except ImportError:
     from html.parser import HTMLParser
+try:
+    from urllib import quote as _quote
+    quote = lambda n: _quote(n.encode('utf8', 'replace'))
+except ImportError:
+    from urllib.parse import quote
 
 import requests
 

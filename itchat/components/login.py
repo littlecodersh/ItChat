@@ -168,6 +168,7 @@ def process_login_info(core, loginContent):
     else:
         core.loginInfo['fileUrl'] = core.loginInfo['syncUrl'] = core.loginInfo['url']
     core.loginInfo['deviceid'] = 'e' + repr(random.random())[2:17]
+    core.loginInfo['logintime'] = int(time.time() * 1e3)
     core.loginInfo['BaseRequest'] = {}
     for node in xml.dom.minidom.parseString(r.text).documentElement.childNodes:
         if node.nodeName == 'skey':
@@ -297,8 +298,9 @@ def sync_check(self):
         'uin'      : self.loginInfo['wxuin'],
         'deviceid' : self.loginInfo['deviceid'],
         'synckey'  : self.loginInfo['synckey'],
-        '_'        : int(time.time() * 1000),}
+        '_'        : self.loginInfo['logintime'], }
     headers = { 'User-Agent' : config.USER_AGENT }
+    self.loginInfo['logintime'] += 1
     try:
         r = self.s.get(url, params=params, headers=headers, timeout=config.TIMEOUT)
     except requests.exceptions.ConnectionError as e:
@@ -334,7 +336,7 @@ def get_msg(self):
     r = self.s.post(url, data=json.dumps(data), headers=headers, timeout=config.TIMEOUT)
     dic = json.loads(r.content.decode('utf-8', 'replace'))
     if dic['BaseResponse']['Ret'] != 0: return None, None
-    self.loginInfo['SyncKey'] = dic['SyncCheckKey']
+    self.loginInfo['SyncKey'] = dic['SyncKey']
     self.loginInfo['synckey'] = '|'.join(['%s_%s' % (item['Key'], item['Val'])
         for item in dic['SyncCheckKey']['List']])
     return dic['AddMsgList'], dic['ModContactList']
