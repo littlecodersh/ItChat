@@ -1,7 +1,7 @@
 import os, time, re, io
 import json
 import mimetypes, hashlib
-import traceback, logging
+import logging
 from collections import OrderedDict
 
 import requests
@@ -47,7 +47,7 @@ def get_download_fn(core, url, msgId):
 def produce_msg(core, msgList):
     ''' for messages types
      * 40 msg, 43 videochat, 50 VOIPMSG, 52 voipnotifymsg
-     * 53 webwxvoipnotifymsg, 9999 sysnotice 
+     * 53 webwxvoipnotifymsg, 9999 sysnotice
     '''
     rl = []
     srl = [40, 43, 50, 52, 53, 9999]
@@ -89,7 +89,7 @@ def produce_msg(core, msgList):
                     'Type': 'Text',
                     'Text': m['Content'],}
         elif m['MsgType'] == 3 or m['MsgType'] == 47: # picture
-            download_fn = get_download_fn(core, 
+            download_fn = get_download_fn(core,
                 '%s/webwxgetmsgimg' % core.loginInfo['url'], m['NewMsgId'])
             msg = {
                 'Type'     : 'Picture',
@@ -141,7 +141,11 @@ def produce_msg(core, msgList):
                 'FileName' : '%s.mp4' % time.strftime('%y%m%d-%H%M%S', time.localtime()),
                 'Text': download_video, }
         elif m['MsgType'] == 49: # sharing
-            if m['AppMsgType'] == 6:
+            if m['AppMsgType'] == 0: # chat history
+                msg = {
+                    'Type': 'Note',
+                    'Text': m['Content'], }
+            elif m['AppMsgType'] == 6:
                 rawMsg = m
                 cookiesList = {name:data for name,data in core.s.cookies.items()}
                 def download_atta(attaDir=None):
@@ -169,7 +173,7 @@ def produce_msg(core, msgList):
                     'Type': 'Attachment',
                     'Text': download_atta, }
             elif m['AppMsgType'] == 8:
-                download_fn = get_download_fn(core, 
+                download_fn = get_download_fn(core,
                     '%s/webwxgetmsgimg' % core.loginInfo['url'], m['NewMsgId'])
                 msg = {
                     'Type'     : 'Picture',
@@ -239,7 +243,7 @@ def produce_group_chat(core, msg):
     member = utils.search_dict_list((chatroom or {}).get(
         'MemberList') or [], 'UserName', actualUserName)
     if member is None:
-        chatroom = core.update_chatroom(msg['FromUserName'])
+        chatroom = core.update_chatroom(chatroomUserName)
         member = utils.search_dict_list((chatroom or {}).get(
             'MemberList') or [], 'UserName', actualUserName)
     if member is None:
@@ -267,7 +271,7 @@ def send_raw_msg(self, msgType, content, toUserName):
             'ToUserName': (toUserName if toUserName else self.storageClass.userName),
             'LocalID': int(time.time() * 1e4),
             'ClientMsgId': int(time.time() * 1e4),
-            }, 
+            },
         'Scene': 0, }
     headers = { 'ContentType': 'application/json; charset=UTF-8', 'User-Agent' : config.USER_AGENT }
     r = self.s.post(url, headers=headers,
@@ -515,8 +519,8 @@ def revoke(self, msgId, toUserName, localId=None):
         "ClientMsgId": localId or str(time.time() * 1e3),
         "SvrMsgId": msgId,
         "ToUserName": toUserName}
-    headers = { 
-        'ContentType': 'application/json; charset=UTF-8', 
+    headers = {
+        'ContentType': 'application/json; charset=UTF-8',
         'User-Agent' : config.USER_AGENT }
     r = self.s.post(url, headers=headers,
         data=json.dumps(data, ensure_ascii=False).encode('utf8'))

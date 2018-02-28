@@ -275,6 +275,8 @@ A: 有些账号是天生无法给自己的账号发送信息的，建议使用`f
 
 [yaphone/itchat4j][yaphone-itchat4j]: 用Java扩展个人微信号的能力
 
+[kanjielu/jeeves][kanjielu-jeeves]: 使用springboot开发的微信机器人
+
 ## 问题和建议
 
 如果有什么问题或者建议都可以在这个[Issue][issue#1]和我讨论
@@ -306,4 +308,5 @@ A: 有些账号是天生无法给自己的账号发送信息的，建议使用`f
 [Mojo-Weixin]: https://github.com/sjdy521/Mojo-Weixin
 [HanSon-vbot]: https://github.com/hanson/vbot
 [yaphone-itchat4j]: https://github.com/yaphone/itchat4j
+[kanjielu-jeeves]: https://github.com/kanjielu/jeeves
 [issue#1]: https://github.com/littlecodersh/ItChat/issues/1
