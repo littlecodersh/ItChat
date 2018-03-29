@@ -458,7 +458,7 @@ class Core(object):
     def search_mps(self, name=None, userName=None):
         return self.storageClass.search_mps(name, userName)
 
-    def start_rpc_server(self):
+    def start_rpc_server(self, host, port):
         ''' start rpc server
             it is defined in components/rpc.py
         '''
