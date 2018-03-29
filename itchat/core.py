@@ -27,6 +27,8 @@ class Core(object):
         self.functionDict = {'FriendChat': {}, 'GroupChat': {}, 'MpChat': {}}
         self.useHotReload, self.hotReloadDir = False, 'itchat.pkl'
         self.receivingRetryCount = 5
+        self.rpc = None
+
     def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
             loginCallback=None, exitCallback=None):
         ''' log in like web wechat does
@@ -455,5 +457,11 @@ class Core(object):
         return self.storageClass.search_chatrooms(name, userName)
     def search_mps(self, name=None, userName=None):
         return self.storageClass.search_mps(name, userName)
+
+    def start_rpc_server(self):
+        ''' start rpc server
+            it is defined in components/rpc.py
+        '''
+        raise NotImplementedError()
 
 load_components(Core)
