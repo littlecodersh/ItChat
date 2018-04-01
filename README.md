@@ -239,6 +239,27 @@ itchat.logout()
 
 若不设置loginCallback的值，则将会自动删除二维码图片并清空命令行显示。
 
+### RPC调用
+
+如果你想启动RPC服务器，请使用下面的命令，监听地址和端口可根据自己需求修改
+
+```python
+import itchat
+
+itchat.start_rpc_server(‘localhost’, 9000)
+```
+
+几乎所有的API都已经导出，细节请查看rpc.py文件
+
+客户端代码示例
+
+```python
+import xmlrpc.client
+
+rpc = xmlrpc.client.ServerProxy("http://localhost:9000/")
+rpc.get_friends()
+```
+
 ## 常见问题与解答
 
 Q: 如何通过这个包将自己的微信号变为控制器？
