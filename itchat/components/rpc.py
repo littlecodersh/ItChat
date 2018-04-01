@@ -3,6 +3,7 @@ import six.moves.xmlrpc_server as rpc
 import six.moves.xmlrpc_client as cli
 import itchat.storage.templates as tpl
 import itchat.returnvalues as rv
+import itchat.storage.messagequeue as mq
 import threading
 import types
 import base64
@@ -63,6 +64,7 @@ exported_functions = [
 	'search_chatrooms',
 	'search_mps',
     'set_logging',
+	'recv',
 ]
 
 
@@ -79,6 +81,7 @@ def register_types():
     cli.Marshaller.dispatch[tpl.ChatroomMember] = dump_obj
     cli.Marshaller.dispatch[tpl.MassivePlatform] = dump_obj
     cli.Marshaller.dispatch[rv.ReturnValue] = dump_obj
+    cli.Marshaller.dispatch[mq.Message] = dump_obj
 
 
 def load_rpc(core):

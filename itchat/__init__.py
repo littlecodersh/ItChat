@@ -20,6 +20,7 @@ originInstance = new_instance()
 
 # rpc
 start_rpc_server            = originInstance.start_rpc_server
+recv                        = originInstance.recv
 
 # components.login
 login                       = originInstance.login
