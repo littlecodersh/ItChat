@@ -75,6 +75,10 @@ def dump_obj(marshaller, value, write, escape=cli.escape):
         encoded = base64.encodebytes(value.getvalue())
         write(encoded.decode('ascii'))
         write('</base64></value>')
+    elif isinstance(value, int):
+        write('<value><i8>')
+        write('%d' % value)
+        write('</i8></value>')
     else:
         write('<value><string>')
         write(escape(json.dumps(value)))
@@ -89,6 +93,7 @@ def register_types():
     cli.Marshaller.dispatch[tpl.MassivePlatform] = dump_obj
     cli.Marshaller.dispatch[rv.ReturnValue] = dump_obj
     cli.Marshaller.dispatch[io.BytesIO] = dump_obj
+    cli.Marshaller.dispatch[int] = dump_obj
 
 
 def load_rpc(core):

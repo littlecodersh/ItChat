@@ -120,7 +120,8 @@ class Storage(object):
         tmp = self.msgList
         count = 1024
         while count > 0 and not tmp.empty():
-            rtn.append(dict(tmp.get()))
+            elem = tmp.get()
+            rtn.append(dict(elem))
             count -= 1
         return rtn
         
