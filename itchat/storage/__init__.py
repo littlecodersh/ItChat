@@ -117,10 +117,9 @@ class Storage(object):
                 return matchList
     def recv(self):
         rtn = []
-        tmp = self.msgList
         count = 1024
-        while count > 0 and not tmp.empty():
-            elem = tmp.get()
+        while count > 0 and not self.msgList.empty():
+            elem = self.msgList.get()
             rtn.append(dict(elem))
             count -= 1
         return rtn
