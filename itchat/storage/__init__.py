@@ -118,8 +118,9 @@ class Storage(object):
     def recv(self):
         rtn = []
         tmp = self.msgList
-        self.msgList = Queue(-1)
-        while not tmp.empty():
+        count = 1024
+        while count > 0 and not tmp.empty():
             rtn.append(dict(tmp.get()))
+            count -= 1
         return rtn
         
