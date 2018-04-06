@@ -101,7 +101,7 @@ def load_rpc(core):
 
 
 def start_rpc_server(self, host, port):
-    server = rpc.SimpleXMLRPCServer((host, port), allow_none=True)
+    server = rpc.SimpleXMLRPCServer((host, port), logRequests=False, allow_none=True)
     server.register_introspection_functions()
     for i in exported_functions:
         if hasattr(self, i):
