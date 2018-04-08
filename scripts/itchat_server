@@ -28,12 +28,10 @@ cat << EOF | python3
 import sys
 import itchat
 
+loginSuccess = False
+
 def lc():
-    try:
-        itchat.start_rpc_server('${HOST}', ${PORT}, block=True)
-    except:
-        print('exiting...')
-        sys.exit(0)
+    loginSuccess = True
 
 def ec():
     itchat.logout()
@@ -43,7 +41,9 @@ def ec():
 if __name__ == '__main__':
     try:
         itchat.login(enableCmdQR=${QRCODE}, loginCallback=lc, exitCallback=ec)
+        if loginSuccess:
+            itchat.start_rpc_server('${HOST}', ${PORT}, block=True)
     except:
-        print('exiting before login...')
-        sys.exit(-1)
+        print('exiting...')
+        sys.exit(0)
 EOF
