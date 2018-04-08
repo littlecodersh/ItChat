@@ -1,0 +1,26 @@
+#!/usr/bin/env sh
+
+HOST=localhost
+PORT=9000
+
+if [ $# == 2 ]
+then
+    HOST=$1
+    PORT=$2
+fi
+
+cat << EOF | python3
+import sys
+import itchat
+
+def lc():
+    itchat.start_rpc_server('${HOST}', ${PORT}, block=True)
+
+def ec():
+    itchat.logout()
+    sys.exit(1)
+
+
+if __name__ == '__main__':
+    itchat.login(enableCmdQR=True, loginCallback=lc, exitCallback=ec)
+EOF
