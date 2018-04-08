@@ -100,15 +100,20 @@ def load_rpc(core):
     core.start_rpc_server = start_rpc_server
 
 
-def start_rpc_server(self, host, port):
+def start_rpc_server(self, host, port, block=False):
     server = rpc.SimpleXMLRPCServer((host, port), logRequests=False, allow_none=True)
     server.register_introspection_functions()
     for i in exported_functions:
         if hasattr(self, i):
             server.register_function(getattr(self, i))
-    rpc_thread = threading.Thread(target=server.serve_forever, args=())
-    rpc_thread.daemon = True
     logger.info('Starting RPC server')
-    register_types()
-    rpc_thread.start()
     self.rpc = server
+    if not block:
+        rpc_thread = threading.Thread(target=server.serve_forever, args=())
+        rpc_thread.daemon = True
+        register_types()
+        rpc_thread.start()
+    else:
+        register_types()
+        server.serve_forever()
+
