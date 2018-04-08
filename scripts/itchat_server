@@ -2,7 +2,7 @@
 
 HOST=localhost
 PORT=9000
-QRCODE=TRUE
+QRCODE=True
 
 usage() { echo "Usage: $0 [-h <HOST_IP> ] [-p <PORT>] [-2]" 1>&2; exit 1; }
 
