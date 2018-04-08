@@ -41,5 +41,9 @@ def ec():
 
 
 if __name__ == '__main__':
-    itchat.login(enableCmdQR=${QRCODE}, loginCallback=lc, exitCallback=ec)
+    try:
+        itchat.login(enableCmdQR=${QRCODE}, loginCallback=lc, exitCallback=ec)
+    except:
+        print('exiting before login...')
+        sys.exit(-1)
 EOF
