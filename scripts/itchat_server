@@ -28,12 +28,15 @@ cat << EOF | python3
 import sys
 import itchat
 
+def quit():
+    print('error, exiting...')
+    sys.exit(-1)
 
 if __name__ == '__main__':
     try:
-        itchat.login(enableCmdQR=${QRCODE})
+        itchat.auto_login(enableCmdQR=${QRCODE}, hotReload=True, exitCallback=quit)
         itchat.start_rpc_server('${HOST}', ${PORT}, block=True)
-    except:
+    except KeyboardInterrupt:
         print('exiting...')
         sys.exit(0)
 EOF
