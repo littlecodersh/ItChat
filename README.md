@@ -246,7 +246,7 @@ itchat.logout()
 ```python
 import itchat
 
-itchat.start_rpc_server(‘localhost’, 9000)
+itchat.start_rpc_server('localhost', 9000)
 ```
 
 几乎所有的API都已经导出，细节请查看rpc.py文件
@@ -256,7 +256,7 @@ itchat.start_rpc_server(‘localhost’, 9000)
 ```python
 import xmlrpc.client
 
-rpc = xmlrpc.client.ServerProxy("http://localhost:9000/")
+rpc = xmlrpc.client.ServerProxy('http://localhost:9000/')
 rpc.get_friends()
 ```
 

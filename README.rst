@@ -242,7 +242,7 @@ If you want to start RPC server, please use the command below. You can specify t
 .. code:: python
     import itchat
 
-    itchat.start_rpc_server(‘localhost’, 9000)
+    itchat.start_rpc_server('localhost', 9000)
 
 Almost all the APIs are exported for RPC use, please check rpc.py for detail
 
@@ -251,7 +251,7 @@ Client side code:
 .. code:: python
     import xmlrpc.client
 
-    rpc = xmlrpc.client.ServerProxy("http://localhost:9000/")
+    rpc = xmlrpc.client.ServerProxy('http://localhost:9000/')
     rpc.get_friends()
 
 
