@@ -1,7 +1,7 @@
 import os, time, re, io
 import json
 import mimetypes, hashlib
-import traceback, logging
+import logging
 from collections import OrderedDict
 
 import requests
@@ -141,7 +141,7 @@ def produce_msg(core, msgList):
                 'FileName' : '%s.mp4' % time.strftime('%y%m%d-%H%M%S', time.localtime()),
                 'Text': download_video, }
         elif m['MsgType'] == 49: # sharing
-            if m['AppMsgType'] == 0: # unsupported msg
+            if m['AppMsgType'] == 0: # chat history
                 msg = {
                     'Type': 'Note',
                     'Text': m['Content'], }
@@ -243,7 +243,7 @@ def produce_group_chat(core, msg):
     member = utils.search_dict_list((chatroom or {}).get(
         'MemberList') or [], 'UserName', actualUserName)
     if member is None:
-        chatroom = core.update_chatroom(msg['FromUserName'])
+        chatroom = core.update_chatroom(chatroomUserName)
         member = utils.search_dict_list((chatroom or {}).get(
             'MemberList') or [], 'UserName', actualUserName)
     if member is None:
@@ -345,9 +345,10 @@ def upload_chunk_file(core, fileDir, fileSymbol, fileSize,
     # save it on server
     cookiesList = {name:data for name,data in core.s.cookies.items()}
     fileType = mimetypes.guess_type(fileDir)[0] or 'application/octet-stream'
+    fileName = utils.quote(os.path.basename(fileDir))
     files = OrderedDict([
         ('id', (None, 'WU_FILE_0')),
-        ('name', (None, os.path.basename(fileDir))),
+        ('name', (None, fileName)),
         ('type', (None, fileType)),
         ('lastModifiedDate', (None, time.strftime('%a %b %d %Y %H:%M:%S GMT+0800 (CST)'))),
         ('size', (None, str(fileSize))),
@@ -357,7 +358,7 @@ def upload_chunk_file(core, fileDir, fileSymbol, fileSize,
         ('uploadmediarequest', (None, uploadMediaRequest)),
         ('webwx_data_ticket', (None, cookiesList['webwx_data_ticket'])),
         ('pass_ticket', (None, core.loginInfo['pass_ticket'])),
-        ('filename' , (os.path.basename(fileDir), file_.read(524288), 'application/octet-stream'))])
+        ('filename' , (fileName, file_.read(524288), 'application/octet-stream'))])
     if chunks == 1:
         del files['chunk']; del files['chunks']
     else:

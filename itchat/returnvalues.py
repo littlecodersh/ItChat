@@ -1,6 +1,4 @@
 #coding=utf8
-import sys
-
 TRANSLATE = 'Chinese'
 
 class ReturnValue(dict):

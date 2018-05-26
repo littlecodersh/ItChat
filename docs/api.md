@@ -102,7 +102,7 @@ def start_receiving(self, finishCallback=None):
 def get_msg(self):
     ''' fetch messages
         for fetching
-            - method blocks for sometime util
+            - method blocks for sometime until
                 - new messages are to be received
                 - or anytime they like
             - synckey is updated with returned synccheckkey

@@ -10,7 +10,7 @@ A wechat robot can handle all the basic messages with only less than 30 lines of
 
 And it's similiar to itchatmp (api for wechat massive platform), learn once and get two tools.
 
-Now Wechat is an important part of personal life, hopefully this repo can help you extend your personal wechat account's functionality and enbetter user's experience with wechat.
+Now Wechat is an important part of personal life, hopefully this repo can help you extend your personal wechat account's functionality and better user's experience with wechat.
 
 ## Installation
 
@@ -168,7 +168,7 @@ itchat.search_friends(wechatAccount='littlecodersh')
 itchat.search_friends(name='LittleCoder机器人', wechatAccount='littlecodersh')
 ```
 
-There are detailed information about searching and getting of massive platforms and chatrooms in document.
+There is detailed information about searching and getting of massive platforms and chatrooms in document.
 
 ### Download and send attachments
 
@@ -238,10 +238,6 @@ If loginCallback is not set, qr picture will be deleted and cmd will be cleared.
 If you exit through phone, exitCallback will also be called.
 
 ## FAQ
-
-Q: Why I can't upload files whose name is not purely english?
-
-A: This is caused because of the encoding of `requests`, you may fix it by placing [fields.py][fields.py-2](py3 version is [here][fields.py-3]) in packages/urllib3 of requests.
 
 Q: How to use this package to use my wechat as an monitor?
 

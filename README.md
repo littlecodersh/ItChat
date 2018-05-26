@@ -241,10 +241,6 @@ itchat.logout()
 
 ## 常见问题与解答
 
-Q: 为什么中文的文件没有办法上传？
-
-A: 这是由于`requests`的编码问题导致的。若需要支持中文文件传输，将[fields.py][fields.py-2](py3版本见[这里][fields.py-3])文件放入requests包的packages/urllib3下即可
-
 Q: 如何通过这个包将自己的微信号变为控制器？
 
 A: 有两种方式：发送、接受自己UserName的消息；发送接收文件传输助手（filehelper）的消息
@@ -275,6 +271,8 @@ A: 有些账号是天生无法给自己的账号发送信息的，建议使用`f
 
 [yaphone/itchat4j][yaphone-itchat4j]: 用Java扩展个人微信号的能力
 
+[kanjielu/jeeves][kanjielu-jeeves]: 使用springboot开发的微信机器人
+
 ## 问题和建议
 
 如果有什么问题或者建议都可以在这个[Issue][issue#1]和我讨论
@@ -295,8 +293,6 @@ A: 有些账号是天生无法给自己的账号发送信息的，建议使用`f
 [robot-qr]: http://7xrip4.com1.z0.glb.clouddn.com/ItChat%2FQRCode2.jpg?imageView/2/w/400/
 [robot-demo-file]: http://7xrip4.com1.z0.glb.clouddn.com/ItChat%2FScreenshots%2F%E5%BE%AE%E4%BF%A1%E8%8E%B7%E5%8F%96%E6%96%87%E4%BB%B6%E5%9B%BE%E7%89%87.png?imageView/2/w/300/
 [robot-demo-login]: http://7xrip4.com1.z0.glb.clouddn.com/ItChat%2FScreenshots%2F%E7%99%BB%E5%BD%95%E7%95%8C%E9%9D%A2%E6%88%AA%E5%9B%BE.jpg?imageView/2/w/450/
-[fields.py-2]: https://gist.github.com/littlecodersh/9a0c5466f442d67d910f877744011705
-[fields.py-3]: https://gist.github.com/littlecodersh/e93532d5e7ddf0ec56c336499165c4dc
 [littlecodersh]: https://github.com/littlecodersh
 [tempdban]: https://github.com/tempdban
 [Chyroc]: https://github.com/Chyroc
@@ -306,4 +302,5 @@ A: 有些账号是天生无法给自己的账号发送信息的，建议使用`f
 [Mojo-Weixin]: https://github.com/sjdy521/Mojo-Weixin
 [HanSon-vbot]: https://github.com/hanson/vbot
 [yaphone-itchat4j]: https://github.com/yaphone/itchat4j
+[kanjielu-jeeves]: https://github.com/kanjielu/jeeves
 [issue#1]: https://github.com/littlecodersh/ItChat/issues/1
