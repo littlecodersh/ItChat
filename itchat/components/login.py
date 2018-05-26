@@ -115,11 +115,11 @@ def get_QR(self, uuid=None, enableCmdQR=False, picDir=None, qrCallback=None):
     if hasattr(qrCallback, '__call__'):
         qrCallback(uuid=uuid, status='0', qrcode=qrStorage.getvalue())
     else:
+        with open(picDir, 'wb') as f:
+            f.write(qrStorage.getvalue())
         if enableCmdQR:
             utils.print_cmd_qr(qrCode.text(1), enableCmdQR=enableCmdQR)
         else:
-            with open(picDir, 'wb') as f:
-                f.write(qrStorage.getvalue())
             utils.print_qr(picDir)
     return qrStorage
 
