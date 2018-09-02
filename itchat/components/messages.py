@@ -364,7 +364,7 @@ def upload_chunk_file(core, fileDir, fileSymbol, fileSize,
     else:
         files['chunk'], files['chunks'] = (None, str(chunk)), (None, str(chunks))
     headers = { 'User-Agent' : config.USER_AGENT }
-    return core.s.post(url, files=files, headers=headers)
+    return core.s.post(url, files=files, headers=headers, timeout=config.TIMEOUT)
 
 def send_file(self, fileDir, toUserName=None, mediaId=None, file_=None):
     logger.debug('Request to send a file(mediaId: %s) to %s: %s' % (
