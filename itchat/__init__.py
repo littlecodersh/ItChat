@@ -18,6 +18,10 @@ originInstance = new_instance()
 # but it makes auto-fill a real mess, so forgive me for my following **
 # actually it toke me less than 30 seconds, god bless Uganda
 
+# rpc
+start_rpc_server            = originInstance.start_rpc_server
+recv                        = originInstance.recv
+
 # components.login
 login                       = originInstance.login
 get_QRuuid                  = originInstance.get_QRuuid

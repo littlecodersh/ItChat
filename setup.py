@@ -49,6 +49,8 @@ setup(
 
     install_requires=['requests', 'pyqrcode', 'pypng'],
 
+    scripts = ['scripts/itchat_server'],
+
     # List additional groups of dependencies here
     extras_require={},
 )

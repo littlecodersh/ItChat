@@ -3,6 +3,7 @@ from .hotreload import load_hotreload
 from .login import load_login
 from .messages import load_messages
 from .register import load_register
+from .rpc import load_rpc
 
 def load_components(core):
     load_contact(core)
@@ -10,3 +11,4 @@ def load_components(core):
     load_login(core)
     load_messages(core)
     load_register(core)
+    load_rpc(core)

@@ -115,3 +115,12 @@ class Storage(object):
                     if name in m['NickName']:
                         matchList.append(copy.deepcopy(m))
                 return matchList
+    def recv(self):
+        rtn = []
+        count = 1024
+        while count > 0 and not self.msgList.empty():
+            elem = self.msgList.get()
+            rtn.append(dict(elem))
+            count -= 1
+        return rtn
+        

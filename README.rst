@@ -235,6 +235,26 @@ If loginCallback is not set, qr picture will be deleted and cmd will be cleared.
 
 If you exit through phone, exitCallback will also be called.
 
+*RPC Call*
+
+If you want to start RPC server, please use the command below. You can specify the listening address and port. 
+
+.. code:: python
+    import itchat
+
+    itchat.start_rpc_server('localhost', 9000)
+
+Almost all the APIs are exported for RPC use, please check rpc.py for detail
+
+Client side code:
+
+.. code:: python
+    import xmlrpc.client
+
+    rpc = xmlrpc.client.ServerProxy('http://localhost:9000/')
+    rpc.get_friends()
+
+
 **FAQ**
 
 Q: Why I can't send files whose name is encoded in utf8?
