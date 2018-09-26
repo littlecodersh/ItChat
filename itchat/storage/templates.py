@@ -13,7 +13,7 @@ class AttributeDict(dict):
             return self[keyName]
         except KeyError:
             raise AttributeError("'%s' object has no attribute '%s'" % (
-                self.__class__.__name__.split('.')[-1], value))
+                self.__class__.__name__.split('.')[-1], keyName))
     def get(self, v, d=None):
         try:
             return self[v]
