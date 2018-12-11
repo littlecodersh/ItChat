@@ -345,7 +345,7 @@ def upload_chunk_file(core, fileDir, fileSymbol, fileSize,
     # save it on server
     cookiesList = {name:data for name,data in core.s.cookies.items()}
     fileType = mimetypes.guess_type(fileDir)[0] or 'application/octet-stream'
-    fileName = utils.quote(os.path.basename(fileDir))
+    fileName = os.path.basename(fileDir)
     files = OrderedDict([
         ('id', (None, 'WU_FILE_0')),
         ('name', (None, fileName)),
@@ -358,7 +358,7 @@ def upload_chunk_file(core, fileDir, fileSymbol, fileSize,
         ('uploadmediarequest', (None, uploadMediaRequest)),
         ('webwx_data_ticket', (None, cookiesList['webwx_data_ticket'])),
         ('pass_ticket', (None, core.loginInfo['pass_ticket'])),
-        ('filename' , (fileName, file_.read(524288), 'application/octet-stream'))])
+        ('filename' , (utils.quote(fileName), file_.read(524288), 'application/octet-stream'))])
     if chunks == 1:
         del files['chunk']; del files['chunks']
     else:
