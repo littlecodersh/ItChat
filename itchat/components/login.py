@@ -51,7 +51,8 @@ def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
             logger.info('Please scan the QR code to log in.')
         isLoggedIn = False
         while not isLoggedIn:
-            now = time.time()
+            if timeout:
+                now = time.time()
             if timeout and (now - start_time) >= timeout:
                 logger.warning('Login timeout, exit.')
                 if hasattr(timeoutCallback, '__call__'):
