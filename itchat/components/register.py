@@ -18,7 +18,7 @@ def load_register(core):
 
 def auto_login(self, hotReload=False, statusStorageDir='itchat.pkl',
         enableCmdQR=False, picDir=None, qrCallback=None,
-        loginCallback=None, exitCallback=None):
+        loginCallback=None, exitCallback=None, timeout=None, timeoutCallback=None):
     if not test_connect():
         logger.info("You can't get access to internet or wechat domain, so exit.")
         sys.exit()
@@ -29,11 +29,13 @@ def auto_login(self, hotReload=False, statusStorageDir='itchat.pkl',
                 loginCallback=loginCallback, exitCallback=exitCallback):
             return
         self.login(enableCmdQR=enableCmdQR, picDir=picDir, qrCallback=qrCallback,
-            loginCallback=loginCallback, exitCallback=exitCallback)
+            loginCallback=loginCallback, exitCallback=exitCallback, timeout=timeout,
+            timeoutCallback=timeoutCallback)
         self.dump_login_status(statusStorageDir)
     else:
         self.login(enableCmdQR=enableCmdQR, picDir=picDir, qrCallback=qrCallback,
-            loginCallback=loginCallback, exitCallback=exitCallback)
+            loginCallback=loginCallback, exitCallback=exitCallback, timeout=timeout,
+            timeoutCallback=timeoutCallback)
 
 def configured_reply(self):
     ''' determine the type of message and reply if its method is defined

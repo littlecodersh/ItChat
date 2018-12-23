@@ -31,7 +31,8 @@ def load_login(core):
     core.logout            = logout
 
 def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
-        loginCallback=None, exitCallback=None):
+        loginCallback=None, exitCallback=None, timeout=None, timeoutCallback=None):
+    start_time = time.time()
     if self.alive or self.isLogging:
         logger.warning('itchat has already logged in.')
         return
@@ -50,6 +51,15 @@ def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
             logger.info('Please scan the QR code to log in.')
         isLoggedIn = False
         while not isLoggedIn:
+            if timeout:
+                now = time.time()
+            if timeout and (now - start_time) >= timeout:
+                logger.warning('Login timeout, exit.')
+                if hasattr(timeoutCallback, '__call__'):
+                    timeoutCallback()
+                print('Timeout as user setting.')
+                return
+
             status = self.check_login()
             if hasattr(qrCallback, '__call__'):
                 qrCallback(uuid=self.uuid, status=status, qrcode=qrStorage.getvalue())
