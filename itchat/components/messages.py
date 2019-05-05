@@ -273,8 +273,8 @@ def send_raw_msg(self, msgType, content, toUserName):
             'ClientMsgId': int(time.time() * 1e4),
             },
         'Scene': 0, }
-    headers = { 'ContentType': 'application/json; charset=UTF-8', 'User-Agent' : config.USER_AGENT }
-    r = self.s.post(url, headers=headers,
+    headers = { 'ContentType': 'application/json; charset=UTF-8' }
+    r = self.post_raw(url=url, headers=headers,
         data=json.dumps(data, ensure_ascii=False).encode('utf8'))
     return ReturnValue(rawResponse=r)
 
@@ -400,9 +400,8 @@ def send_file(self, fileDir, toUserName=None, mediaId=None, file_=None):
             'ClientMsgId': int(time.time() * 1e4), },
         'Scene': 0, }
     headers = {
-        'User-Agent': config.USER_AGENT,
         'Content-Type': 'application/json;charset=UTF-8', }
-    r = self.s.post(url, headers=headers,
+    r = self.post_raw(url=url, headers=headers,
         data=json.dumps(data, ensure_ascii=False).encode('utf8'))
     return ReturnValue(rawResponse=r)
 
@@ -442,9 +441,8 @@ def send_image(self, fileDir=None, toUserName=None, mediaId=None, file_=None):
         data['Msg']['Type'] = 47
         data['Msg']['EmojiFlag'] = 2
     headers = {
-        'User-Agent': config.USER_AGENT,
         'Content-Type': 'application/json;charset=UTF-8', }
-    r = self.s.post(url, headers=headers,
+    r = self.post_raw(url=url, headers=headers,
         data=json.dumps(data, ensure_ascii=False).encode('utf8'))
     return ReturnValue(rawResponse=r)
 
@@ -481,9 +479,8 @@ def send_video(self, fileDir=None, toUserName=None, mediaId=None, file_=None):
             'ClientMsgId'  : int(time.time() * 1e4), },
         'Scene': 0, }
     headers = {
-        'User-Agent' : config.USER_AGENT,
         'Content-Type': 'application/json;charset=UTF-8', }
-    r = self.s.post(url, headers=headers,
+    r = self.post_raw(url=url, headers=headers,
         data=json.dumps(data, ensure_ascii=False).encode('utf8'))
     return ReturnValue(rawResponse=r)
 
@@ -521,8 +518,7 @@ def revoke(self, msgId, toUserName, localId=None):
         "SvrMsgId": msgId,
         "ToUserName": toUserName}
     headers = {
-        'ContentType': 'application/json; charset=UTF-8',
-        'User-Agent' : config.USER_AGENT }
-    r = self.s.post(url, headers=headers,
+        'ContentType': 'application/json; charset=UTF-8', }
+    r = self.post_raw(url=url, headers=headers,
         data=json.dumps(data, ensure_ascii=False).encode('utf8'))
     return ReturnValue(rawResponse=r)

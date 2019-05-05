@@ -31,15 +31,14 @@ def update_chatroom(self, userName, detailedMember=False):
     url = '%s/webwxbatchgetcontact?type=ex&r=%s' % (
         self.loginInfo['url'], int(time.time()))
     headers = {
-        'ContentType': 'application/json; charset=UTF-8',
-        'User-Agent' : config.USER_AGENT }
+        'ContentType': 'application/json; charset=UTF-8', }
     data = {
         'BaseRequest': self.loginInfo['BaseRequest'],
         'Count': len(userName),
         'List': [{
             'UserName': u,
             'ChatRoomId': '', } for u in userName], }
-    chatroomList = json.loads(self.s.post(url, data=json.dumps(data), headers=headers
+    chatroomList = json.loads(self.post_raw(url=url, data=json.dumps(data), headers=headers
             ).content.decode('utf8', 'replace')).get('ContactList')
     if not chatroomList:
         return ReturnValue({'BaseResponse': {
@@ -51,8 +50,7 @@ def update_chatroom(self, userName, detailedMember=False):
             url = '%s/webwxbatchgetcontact?type=ex&r=%s' % (
                 self.loginInfo['url'], int(time.time()))
             headers = {
-                'ContentType': 'application/json; charset=UTF-8',
-                'User-Agent' : config.USER_AGENT, }
+                'ContentType': 'application/json; charset=UTF-8', }
             data = {
                 'BaseRequest': self.loginInfo['BaseRequest'],
                 'Count': len(memberList),
@@ -60,7 +58,7 @@ def update_chatroom(self, userName, detailedMember=False):
                     'UserName': member['UserName'],
                     'EncryChatRoomId': encryChatroomId} \
                         for member in memberList], }
-            return json.loads(self.s.post(url, data=json.dumps(data), headers=headers
+            return json.loads(self.post_raw(url=url, data=json.dumps(data), headers=headers
                     ).content.decode('utf8', 'replace'))['ContactList']
         MAX_GET_NUMBER = 50
         for chatroom in chatroomList:
@@ -81,15 +79,14 @@ def update_friend(self, userName):
     url = '%s/webwxbatchgetcontact?type=ex&r=%s' % (
         self.loginInfo['url'], int(time.time()))
     headers = {
-        'ContentType': 'application/json; charset=UTF-8',
-        'User-Agent' : config.USER_AGENT }
+        'ContentType': 'application/json; charset=UTF-8', }
     data = {
         'BaseRequest': self.loginInfo['BaseRequest'],
         'Count': len(userName),
         'List': [{
             'UserName': u,
             'EncryChatRoomId': '', } for u in userName], }
-    friendList = json.loads(self.s.post(url, data=json.dumps(data), headers=headers
+    friendList = json.loads(self.post_raw(url=url, data=json.dumps(data), headers=headers
             ).content.decode('utf8', 'replace')).get('ContactList')
 
     update_local_friends(self, friendList)
@@ -267,11 +264,8 @@ def get_contact(self, update=False):
     def _get_contact(seq=0):
         url = '%s/webwxgetcontact?r=%s&seq=%s&skey=%s' % (self.loginInfo['url'],
             int(time.time()), seq, self.loginInfo['skey'])
-        headers = {
-            'ContentType': 'application/json; charset=UTF-8',
-            'User-Agent' : config.USER_AGENT, }
         try:
-            r = self.s.get(url, headers=headers)
+            r = self.get_raw(url=url)
         except:
             logger.info('Failed to fetch contact, that may because of the amount of your chatrooms')
             for chatroom in self.get_chatrooms():
@@ -330,9 +324,7 @@ def set_alias(self, userName, alias):
         'CmdId'       : 2,
         'RemarkName'  : alias,
         'BaseRequest' : self.loginInfo['BaseRequest'], }
-    headers = { 'User-Agent' : config.USER_AGENT }
-    r = self.s.post(url, json.dumps(data, ensure_ascii=False).encode('utf8'),
-        headers=headers)
+    r = self.post_raw(url=url, data=json.dumps(data, ensure_ascii=False).encode('utf8'))
     r = ReturnValue(rawResponse=r)
     if r:
         oldFriendInfo['RemarkName'] = alias
@@ -346,8 +338,7 @@ def set_pinned(self, userName, isPinned=True):
         'CmdId'       : 3,
         'OP'          : int(isPinned),
         'BaseRequest' : self.loginInfo['BaseRequest'], }
-    headers = { 'User-Agent' : config.USER_AGENT }
-    r = self.s.post(url, json=data, headers=headers)
+    r = self.post_raw(url=url, json=data)
     return ReturnValue(rawResponse=r)
 
 def add_friend(self, userName, status=2, verifyContent='', autoUpdate=True):
@@ -369,9 +360,8 @@ def add_friend(self, userName, status=2, verifyContent='', autoUpdate=True):
         'SceneList': [33],
         'skey': self.loginInfo['skey'], }
     headers = {
-        'ContentType': 'application/json; charset=UTF-8',
-        'User-Agent' : config.USER_AGENT }
-    r = self.s.post(url, headers=headers,
+        'ContentType': 'application/json; charset=UTF-8', }
+    r = self.post_raw(url=url, headers=headers,
         data=json.dumps(data, ensure_ascii=False).encode('utf8', 'replace'))
     if autoUpdate:
         self.update_friend(userName)
@@ -406,8 +396,7 @@ def get_head_img(self, userName=None, chatroomUserName=None, picDir=None):
             if 'EncryChatRoomId' in chatroom:
                 params['chatroomid'] = chatroom['EncryChatRoomId']
             params['chatroomid'] =  params.get('chatroomid') or chatroom['UserName']
-    headers = { 'User-Agent' : config.USER_AGENT }
-    r = self.s.get(url, params=params, stream=True, headers=headers)
+    r = self.get_raw(url=url, params=params, stream=True)
     tempStorage = io.BytesIO()
     for block in r.iter_content(1024):
         tempStorage.write(block)
@@ -430,9 +419,8 @@ def create_chatroom(self, memberList, topic=''):
         'MemberList': [{'UserName': member['UserName']} for member in memberList],
         'Topic': topic, }
     headers = {
-        'content-type': 'application/json; charset=UTF-8',
-        'User-Agent' : config.USER_AGENT }
-    r = self.s.post(url, headers=headers,
+        'content-type': 'application/json; charset=UTF-8', }
+    r = self.post_raw(url=url, headers=headers,
         data=json.dumps(data, ensure_ascii=False).encode('utf8', 'ignore'))
     return ReturnValue(rawResponse=r)
 
@@ -444,9 +432,8 @@ def set_chatroom_name(self, chatroomUserName, name):
         'ChatRoomName': chatroomUserName,
         'NewTopic': name, }
     headers = {
-        'content-type': 'application/json; charset=UTF-8',
-        'User-Agent' : config.USER_AGENT }
-    r = self.s.post(url, headers=headers,
+        'content-type': 'application/json; charset=UTF-8', }
+    r = self.post_raw(url=url, headers=headers,
         data=json.dumps(data, ensure_ascii=False).encode('utf8', 'ignore'))
     return ReturnValue(rawResponse=r)
 
@@ -458,9 +445,8 @@ def delete_member_from_chatroom(self, chatroomUserName, memberList):
         'ChatRoomName': chatroomUserName,
         'DelMemberList': ','.join([member['UserName'] for member in memberList]), }
     headers = {
-        'content-type': 'application/json; charset=UTF-8',
-        'User-Agent' : config.USER_AGENT}
-    r = self.s.post(url, data=json.dumps(data),headers=headers)
+        'content-type': 'application/json; charset=UTF-8', }
+    r = self.post_raw(url=url, data=json.dumps(data),headers=headers)
     return ReturnValue(rawResponse=r)
 
 def add_member_into_chatroom(self, chatroomUserName, memberList,
@@ -486,7 +472,6 @@ def add_member_into_chatroom(self, chatroomUserName, memberList,
         'ChatRoomName' : chatroomUserName,
         memberKeyName  : ','.join([member['UserName'] for member in memberList]), }
     headers = {
-        'content-type': 'application/json; charset=UTF-8',
-        'User-Agent' : config.USER_AGENT}
-    r = self.s.post(url, data=json.dumps(params),headers=headers)
+        'content-type': 'application/json; charset=UTF-8', }
+    r = self.post_raw(url=url, data=json.dumps(params),headers=headers)
     return ReturnValue(rawResponse=r)

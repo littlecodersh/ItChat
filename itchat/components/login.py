@@ -98,8 +98,7 @@ def get_QRuuid(self):
     params = {
         'appid' : 'wx782c26e4c19acffb',
         'fun'   : 'new', }
-    headers = { 'User-Agent' : config.USER_AGENT }
-    r = self.s.get(url, params=params, headers=headers)
+    r = self.get_raw(url=url, params=params)
     regx = r'window.QRLogin.code = (\d+); window.QRLogin.uuid = "(\S+?)";'
     data = re.search(regx, r.text)
     if data and data.group(1) == '200':
@@ -129,8 +128,7 @@ def check_login(self, uuid=None):
     localTime = int(time.time())
     params = 'loginicon=true&uuid=%s&tip=1&r=%s&_=%s' % (
         uuid, int(-localTime / 1579), localTime)
-    headers = { 'User-Agent' : config.USER_AGENT }
-    r = self.s.get(url, params=params, headers=headers)
+    r = self.get_raw(url=url, params=params)
     regx = r'window.code=(\d+)'
     data = re.search(regx, r.text)
     if data and data.group(1) == '200':
@@ -192,9 +190,8 @@ def web_init(self):
         'pass_ticket': self.loginInfo['pass_ticket'], }
     data = { 'BaseRequest': self.loginInfo['BaseRequest'], }
     headers = {
-        'ContentType': 'application/json; charset=UTF-8',
-        'User-Agent' : config.USER_AGENT, }
-    r = self.s.post(url, params=params, data=json.dumps(data), headers=headers)
+        'ContentType': 'application/json; charset=UTF-8', }
+    r = self.post_raw(url=url, params=params, data=json.dumps(data), headers=headers)
     dic = json.loads(r.content.decode('utf-8', 'replace'))
     # deal with login info
     utils.emoji_formatter(dic['User'], 'NickName')
@@ -234,9 +231,8 @@ def show_mobile_login(self):
         'ToUserName'   : self.storageClass.userName,
         'ClientMsgId'  : int(time.time()), }
     headers = {
-        'ContentType': 'application/json; charset=UTF-8',
-        'User-Agent' : config.USER_AGENT, }
-    r = self.s.post(url, data=json.dumps(data), headers=headers)
+        'ContentType': 'application/json; charset=UTF-8', }
+    r = self.post_raw(url=url, data=json.dumps(data), headers=headers)
     return ReturnValue(rawResponse=r)
 
 def start_receiving(self, exitCallback=None, getReceivingFnOnly=False):
@@ -299,10 +295,9 @@ def sync_check(self):
         'deviceid' : self.loginInfo['deviceid'],
         'synckey'  : self.loginInfo['synckey'],
         '_'        : self.loginInfo['logintime'], }
-    headers = { 'User-Agent' : config.USER_AGENT }
     self.loginInfo['logintime'] += 1
     try:
-        r = self.s.get(url, params=params, headers=headers, timeout=config.TIMEOUT)
+        r = self.get_raw(url=url, params=params, timeout=config.TIMEOUT)
     except requests.exceptions.ConnectionError as e:
         try:
             if not isinstance(e.args[0].args[1], BadStatusLine):
@@ -331,9 +326,8 @@ def get_msg(self):
         'SyncKey'     : self.loginInfo['SyncKey'],
         'rr'          : ~int(time.time()), }
     headers = {
-        'ContentType': 'application/json; charset=UTF-8',
-        'User-Agent' : config.USER_AGENT }
-    r = self.s.post(url, data=json.dumps(data), headers=headers, timeout=config.TIMEOUT)
+        'ContentType': 'application/json; charset=UTF-8', }
+    r = self.post_raw(url=url, data=json.dumps(data), headers=headers, timeout=config.TIMEOUT)
     dic = json.loads(r.content.decode('utf-8', 'replace'))
     if dic['BaseResponse']['Ret'] != 0: return None, None
     self.loginInfo['SyncKey'] = dic['SyncKey']
@@ -348,8 +342,7 @@ def logout(self):
             'redirect' : 1,
             'type'     : 1,
             'skey'     : self.loginInfo['skey'], }
-        headers = { 'User-Agent' : config.USER_AGENT }
-        self.s.get(url, params=params, headers=headers)
+        self.get_raw(url=url, params=params)
         self.alive = False
     self.isLogging = False
     self.s.cookies.clear()

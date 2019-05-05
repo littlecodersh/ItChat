@@ -2,9 +2,10 @@ import requests
 
 from . import storage
 from .components import load_components
+from .config import USER_AGENT
 
 class Core(object):
-    def __init__(self):
+    def __init__(self, proxies=None, userAgent=None):
         ''' init is the only method defined in core.py
             alive is value showing whether core is running
                 - you should call logout method to change it
@@ -27,6 +28,10 @@ class Core(object):
         self.functionDict = {'FriendChat': {}, 'GroupChat': {}, 'MpChat': {}}
         self.useHotReload, self.hotReloadDir = False, 'itchat.pkl'
         self.receivingRetryCount = 5
+        if proxies:
+            self.s.proxies = proxies
+        self.userAgent = userAgent or USER_AGENT
+
     def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
             loginCallback=None, exitCallback=None):
         ''' log in like web wechat does
@@ -365,6 +370,14 @@ class Core(object):
                 - toUserName: 'UserName' key of friend dict
                 - mediaId: if set, uploading will not be repeated
             it is defined in components/messages.py
+        '''
+        raise NotImplementedError()
+    def post_raw(self, url, data=None, json=None, headers={}):
+        '''
+        '''
+        raise NotImplementedError()
+    def get_raw(self, url, params=None, headers={}):
+        '''
         '''
         raise NotImplementedError()
     def revoke(self, msgId, toUserName, localId=None):
