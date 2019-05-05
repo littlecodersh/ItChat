@@ -7,8 +7,8 @@ __version__ = VERSION
 
 instanceList = []
 
-def new_instance():
-    newInstance = Core()
+def new_instance(proxies=None, userAgent=None):
+    newInstance = Core(proxies=proxies, userAgent=userAgent)
     instanceList.append(newInstance)
     return newInstance
 
