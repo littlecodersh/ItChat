@@ -61,7 +61,7 @@ def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
                     isLoggedIn = None
             elif status == '408':
                 break
-	    time.sleep(1)
+	        time.sleep(1)
         if isLoggedIn:
             break
         elif self.isLogging:
