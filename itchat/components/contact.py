@@ -389,7 +389,7 @@ def get_head_img(self, userName=None, chatroomUserName=None, picDir=None):
         'type': 'big', }
     url = '%s/webwxgeticon' % self.loginInfo['url']
     if chatroomUserName is None:
-        infoDict = self.storageClass.search_friends(userName=userName)
+        infoDict = self.storageClass.search_friends(userName=userName) or self.storageClass.search_mps(userName=userName)
         if infoDict is None:
             return ReturnValue({'BaseResponse': {
                 'ErrMsg': 'No friend found',
