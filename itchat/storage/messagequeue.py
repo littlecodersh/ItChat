@@ -13,7 +13,7 @@ class Queue(queue.Queue):
         queue.Queue.put(self, Message(message))
 
 class Message(AttributeDict):
-    def download(self, fileName):
+    def download(self, fileName=None):
         if hasattr(self.text, '__call__'):
             return self.text(fileName)
         else:
