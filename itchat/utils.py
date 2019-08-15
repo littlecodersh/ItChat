@@ -18,14 +18,6 @@ logger = logging.getLogger('itchat')
 
 emojiRegex = re.compile(r'<span class="emoji emoji(.{1,10})"></span>')
 htmlParser = HTMLParser()
-try:
-    b = u'\u2588'
-    sys.stdout.write(b + '\r')
-    sys.stdout.flush()
-except UnicodeEncodeError:
-    BLOCK = 'MM'
-else:
-    BLOCK = b
 friendInfoTemplate = {}
 for k in ('UserName', 'City', 'DisplayName', 'PYQuanPin', 'RemarkPYInitial', 'Province',
         'KeyWord', 'RemarkName', 'PYInitial', 'EncryChatRoomId', 'Alias', 'Signature', 
@@ -39,6 +31,17 @@ friendInfoTemplate['MemberList'] = []
 
 def clear_screen():
     os.system('cls' if config.OS == 'Windows' else 'clear')
+
+def get_BLOCK():
+    try:
+        b = u'\u2588'
+        sys.stdout.write(b + '\r')
+        sys.stdout.flush()
+    except UnicodeEncodeError:
+        BLOCK = 'MM'
+    else:
+        BLOCK = b
+    return BLOCK
 
 def emoji_formatter(d, k):
     ''' _emoji_deebugger is for bugs about emoji match caused by wechat backstage
@@ -89,7 +92,9 @@ def print_qr(fileDir):
     else:
         os.startfile(fileDir)
 
-def print_cmd_qr(qrText, white=BLOCK, black='  ', enableCmdQR=True):
+def print_cmd_qr(qrText, white=None, black='  ', enableCmdQR=True):
+    if white == None:
+        white = get_BLOCK()
     blockCount = int(enableCmdQR)
     if abs(blockCount) == 0:
         blockCount = 1
