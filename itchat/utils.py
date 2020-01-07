@@ -90,6 +90,8 @@ def print_qr(fileDir):
         os.startfile(fileDir)
 
 def print_cmd_qr(qrText, white=BLOCK, black='  ', enableCmdQR=True):
+    if config.OS == 'Darwin' or config.OS == 'Linux':
+        white = BLOCK*2 # White BLOCK on these OSes is half-width char.
     blockCount = int(enableCmdQR)
     if abs(blockCount) == 0:
         blockCount = 1
