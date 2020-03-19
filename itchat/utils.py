@@ -4,11 +4,6 @@ try:
     from HTMLParser import HTMLParser
 except ImportError:
     from html.parser import HTMLParser
-try:
-    from urllib import quote as _quote
-    quote = lambda n: _quote(n.encode('utf8', 'replace'))
-except ImportError:
-    from urllib.parse import quote
 
 import requests
 
@@ -124,15 +119,14 @@ def print_line(msg, oneLine = False):
         ).decode(sys.stdin.encoding or 'utf8', 'replace'))
     sys.stdout.flush()
 
-def test_connect(retryTime=5):
+def test_connect(retryTime=15):
     for i in range(retryTime):
         try:
             r = requests.get(config.BASE_URL)
             return True
         except:
             if i == retryTime - 1:
-                logger.error(traceback.format_exc())
-                return False
+                return traceback.format_exc()
 
 def contact_deep_copy(core, contact):
     with core.storageClass.updateLock:

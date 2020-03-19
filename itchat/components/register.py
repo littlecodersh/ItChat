@@ -19,9 +19,10 @@ def load_register(core):
 def auto_login(self, hotReload=False, statusStorageDir='itchat.pkl',
         enableCmdQR=False, picDir=None, qrCallback=None,
         loginCallback=None, exitCallback=None):
-    if not test_connect():
-        logger.info("You can't get access to internet or wechat domain, so exit.")
-        sys.exit()
+    x=test_connect()
+    if x!=True:
+        for f in self.functionDict['Error']:
+            f("You can't get access to wechat. ",x)
     self.useHotReload = hotReload
     self.hotReloadDir = statusStorageDir
     if hotReload:

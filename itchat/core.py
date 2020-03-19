@@ -1,6 +1,8 @@
+import logging
+
 import requests
 
-from . import storage
+from . import config, storage, utils, log
 from .components import load_components
 
 class Core(object):
@@ -24,7 +26,7 @@ class Core(object):
         self.loginInfo = {}
         self.s = requests.Session()
         self.uuid = None
-        self.functionDict = {'FriendChat': {}, 'GroupChat': {}, 'MpChat': {}}
+        self.functionDict = {'FriendChat': {}, 'GroupChat': {}, 'MpChat': {},'Error':[]}
         self.useHotReload, self.hotReloadDir = False, 'itchat.pkl'
         self.receivingRetryCount = 5
     def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
@@ -125,7 +127,7 @@ class Core(object):
     def get_msg(self):
         ''' fetch messages
             for fetching
-                - method blocks for sometime until
+                - method blocks for sometime util
                     - new messages are to be received
                     - or anytime they like
                 - synckey is updated with returned synccheckkey
@@ -455,5 +457,5 @@ class Core(object):
         return self.storageClass.search_chatrooms(name, userName)
     def search_mps(self, name=None, userName=None):
         return self.storageClass.search_mps(name, userName)
-
+requests.adapters.DEFAULT_RETRIES = 10
 load_components(Core)

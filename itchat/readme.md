@@ -1,6 +1,6 @@
 As itchat is multi-threaded, it's impossible to catch the internet errors it has produced. So I added some callbacks.
 
-In core.functionDict, I added the key "Error" whose value is a list, where we may store error-handling functions.
+In core.functionDict, I added the key "Error" whose value is a list, where we may store error-handling functions. 
 
 Use '@itchat.error_register(True)' to register your error-handling function.
 
