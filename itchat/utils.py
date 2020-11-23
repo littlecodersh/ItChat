@@ -18,6 +18,9 @@ logger = logging.getLogger('itchat')
 
 emojiRegex = re.compile(r'<span class="emoji emoji(.{1,10})"></span>')
 htmlParser = HTMLParser()
+if not hasattr(htmlParser, 'unescape'):
+    import html
+    htmlParser.unescape = html.unescape
 try:
     b = u'\u2588'
     sys.stdout.write(b + '\r')
