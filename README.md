@@ -12,6 +12,16 @@ itchat是一个开源的微信个人号接口，使用python调用微信从未�
 
 如今微信已经成为了个人社交的很大一部分，希望这个项目能够帮助你扩展你的个人的微信号、方便自己的生活。
 
+
+
+## 安装 UOS Patch
+
+暂时请通过github安装
+
+```
+pip3 install git+https://github.com/luvletter2333/ItChat.git
+```
+
 ## 安装
 
 可以通过本命令安装itchat：
