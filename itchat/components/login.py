@@ -19,6 +19,7 @@ from .messages import produce_msg
 
 logger = logging.getLogger('itchat')
 
+
 def load_login(core):
     core.login             = login
     core.get_QRuuid        = get_QRuuid
@@ -29,6 +30,7 @@ def load_login(core):
     core.start_receiving   = start_receiving
     core.get_msg           = get_msg
     core.logout            = logout
+
 
 def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
         loginCallback=None, exitCallback=None):
@@ -97,7 +99,9 @@ def get_QRuuid(self):
     url = '%s/jslogin' % config.BASE_URL
     params = {
         'appid' : 'wx782c26e4c19acffb',
-        'fun'   : 'new', }
+        'fun'   : 'new',
+        'redirect_uri' : 'https://wx.qq.com/cgi-bin/mmwebwx-bin/webwxnewloginpage?mod=desktop',
+        'lang'  : 'zh_CN' }
     headers = { 'User-Agent' : config.USER_AGENT }
     r = self.s.get(url, params=params, headers=headers)
     regx = r'window.QRLogin.code = (\d+); window.QRLogin.uuid = "(\S+?)";'
@@ -151,7 +155,11 @@ def process_login_info(core, loginContent):
     '''
     regx = r'window.redirect_uri="(\S+)";'
     core.loginInfo['url'] = re.search(regx, loginContent).group(1)
-    headers = { 'User-Agent' : config.USER_AGENT }
+    headers = { 'User-Agent' : config.USER_AGENT,
+                'client-version' : config.UOS_PATCH_CLIENT_VERSION,
+                'extspam' : config.UOS_PATCH_EXTSPAM,
+                'referer' : 'https://wx.qq.com/?&lang=zh_CN&target=t'
+              }
     r = core.s.get(core.loginInfo['url'], headers=headers, allow_redirects=False)
     core.loginInfo['url'] = core.loginInfo['url'][:core.loginInfo['url'].rfind('/')]
     for indexUrl, detailedUrl in (
@@ -170,15 +178,24 @@ def process_login_info(core, loginContent):
     core.loginInfo['deviceid'] = 'e' + repr(random.random())[2:17]
     core.loginInfo['logintime'] = int(time.time() * 1e3)
     core.loginInfo['BaseRequest'] = {}
-    for node in xml.dom.minidom.parseString(r.text).documentElement.childNodes:
-        if node.nodeName == 'skey':
-            core.loginInfo['skey'] = core.loginInfo['BaseRequest']['Skey'] = node.childNodes[0].data
-        elif node.nodeName == 'wxsid':
-            core.loginInfo['wxsid'] = core.loginInfo['BaseRequest']['Sid'] = node.childNodes[0].data
-        elif node.nodeName == 'wxuin':
-            core.loginInfo['wxuin'] = core.loginInfo['BaseRequest']['Uin'] = node.childNodes[0].data
-        elif node.nodeName == 'pass_ticket':
-            core.loginInfo['pass_ticket'] = core.loginInfo['BaseRequest']['DeviceID'] = node.childNodes[0].data
+    cookies = core.s.cookies.get_dict()
+    core.loginInfo['skey'] = core.loginInfo['BaseRequest']['Skey'] = ""
+    core.loginInfo['wxsid'] = core.loginInfo['BaseRequest']['Sid'] = cookies["wxsid"]
+    core.loginInfo['wxuin'] = core.loginInfo['BaseRequest']['Uin'] = cookies["wxuin"]
+    core.loginInfo['pass_ticket'] = core.loginInfo['BaseRequest']['DeviceID'] = core.loginInfo['deviceid']
+    # A question : why pass_ticket == DeviceID ?
+    #               deviceID is only a randomly generated number
+
+    # UOS PATCH By luvletter2333, Sun Feb 28 10:00 PM
+    # for node in xml.dom.minidom.parseString(r.text).documentElement.childNodes:
+    #     if node.nodeName == 'skey':
+    #         core.loginInfo['skey'] = core.loginInfo['BaseRequest']['Skey'] = node.childNodes[0].data
+    #     elif node.nodeName == 'wxsid':
+    #         core.loginInfo['wxsid'] = core.loginInfo['BaseRequest']['Sid'] = node.childNodes[0].data
+    #     elif node.nodeName == 'wxuin':
+    #         core.loginInfo['wxuin'] = core.loginInfo['BaseRequest']['Uin'] = node.childNodes[0].data
+    #     elif node.nodeName == 'pass_ticket':
+    #         core.loginInfo['pass_ticket'] = core.loginInfo['BaseRequest']['DeviceID'] = node.childNodes[0].data
     if not all([key in core.loginInfo for key in ('skey', 'wxsid', 'wxuin', 'pass_ticket')]):
         logger.error('Your wechat account may be LIMITED to log in WEB wechat, error info:\n%s' % r.text)
         core.isLogging = False
