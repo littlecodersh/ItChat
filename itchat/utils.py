@@ -1,9 +1,12 @@
 import re, os, sys, subprocess, copy, traceback, logging
 
+from html import unescape
+
 try:
     from HTMLParser import HTMLParser
 except ImportError:
     from html.parser import HTMLParser
+
 try:
     from urllib import quote as _quote
     quote = lambda n: _quote(n.encode('utf8', 'replace'))
@@ -71,7 +74,9 @@ def emoji_formatter(d, k):
 def msg_formatter(d, k):
     emoji_formatter(d, k)
     d[k] = d[k].replace('<br/>', '\n')
-    d[k]  = htmlParser.unescape(d[k])
+    # d[k] = htmlParser.unescape(d[k])
+    # FIX Python 3.9 HTMLParser.unescape is removed. See https://docs.python.org/3.9/whatsnew/3.9.html
+    d[k] = unescape(d[k])
 
 def check_file(fileDir):
     try:

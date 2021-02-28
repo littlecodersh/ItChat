@@ -9,3 +9,6 @@ test.py
 itchat.pkl
 QR.jpg
 .DS_Store
+venv/*
+.idea/*
+.vscode/*
