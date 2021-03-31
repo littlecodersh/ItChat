@@ -18,6 +18,13 @@ logger = logging.getLogger('itchat')
 
 emojiRegex = re.compile(r'<span class="emoji emoji(.{1,10})"></span>')
 htmlParser = HTMLParser()
+
+try:
+    unescape = htmlParser.unescape
+except:
+    from html.parser import unescape
+
+
 try:
     b = u'\u2588'
     sys.stdout.write(b + '\r')
@@ -71,7 +78,7 @@ def emoji_formatter(d, k):
 def msg_formatter(d, k):
     emoji_formatter(d, k)
     d[k] = d[k].replace('<br/>', '\n')
-    d[k]  = htmlParser.unescape(d[k])
+    d[k]  = unescape(d[k])
 
 def check_file(fileDir):
     try:
