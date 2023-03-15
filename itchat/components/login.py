@@ -49,6 +49,7 @@ def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
                 picDir=picDir, qrCallback=qrCallback)
             logger.info('Please scan the QR code to log in.')
         isLoggedIn = False
+        time.sleep(15)
         while not isLoggedIn:
             status = self.check_login()
             if hasattr(qrCallback, '__call__'):
