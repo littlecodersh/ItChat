@@ -1,4 +1,4 @@
-import os, time, re, io
+import os, time, re, io, sys
 import threading
 import json, xml.dom.minidom
 import random
@@ -56,10 +56,18 @@ def login(self, enableCmdQR=False, picDir=None, qrCallback=None,
             if status == '200':
                 isLoggedIn = True
             elif status == '201':
+                # Here we should sleep for a while to wait user
+                # otherwise it will call a lot of check_login
+                # which acts like attacking server
+                time.sleep(20)
                 if isLoggedIn is not None:
                     logger.info('Please press confirm on your phone.')
                     isLoggedIn = None
-            elif status != '408':
+            elif status == '403':
+                sys.exit(-1)
+            elif status == '408':
+                logger.info("You didn't scan the QR code yet.")
+            else:
                 break
         if isLoggedIn:
             break
@@ -123,25 +131,29 @@ def get_QR(self, uuid=None, enableCmdQR=False, picDir=None, qrCallback=None):
             utils.print_qr(picDir)
     return qrStorage
 
-def check_login(self, uuid=None):
+def check_login(self, uuid=None, tip=1):
     uuid = uuid or self.uuid
     url = '%s/cgi-bin/mmwebwx-bin/login' % config.BASE_URL
     localTime = int(time.time())
-    params = 'loginicon=true&uuid=%s&tip=1&r=%s&_=%s' % (
-        uuid, int(-localTime / 1579), localTime)
+    params = 'loginicon=true&uuid=%s&tip=%d&r=%s&_=%s' % (
+        uuid, tip, int(-localTime / 1579), localTime)
     headers = { 'User-Agent' : config.USER_AGENT }
-    r = self.s.get(url, params=params, headers=headers)
-    regx = r'window.code=(\d+)'
-    data = re.search(regx, r.text)
-    if data and data.group(1) == '200':
-        if process_login_info(self, r.text):
-            return '200'
+    try:
+        r = self.s.get(url, params=params, headers=headers)
+        regx = r'window.code=(\d+)'
+        data = re.search(regx, r.text)
+        if data and data.group(1) == '200':
+            if process_login_info(self, r.text):
+                return '200'
+            else:
+                return '400'
+        elif data:
+            return data.group(1)
         else:
             return '400'
-    elif data:
-        return data.group(1)
-    else:
-        return '400'
+    except requests.exceptions.ConnectionError:
+        logger.error('Remote end closed connection without response.')
+        return '403'
 
 def process_login_info(core, loginContent):
     ''' when finish login (scanning qrcode)
@@ -250,6 +262,9 @@ def start_receiving(self, exitCallback=None, getReceivingFnOnly=False):
                     self.alive = False
                 elif i == '0':
                     pass
+                elif i == '1101':
+                    logger.info('Confirm on mobile to re-login')
+                    status = self.check_login(tip=0)
                 else:
                     msgList, contactList = self.get_msg()
                     if msgList:
@@ -317,6 +332,8 @@ def sync_check(self):
     r.raise_for_status()
     regx = r'window.synccheck={retcode:"(\d+)",selector:"(\d+)"}'
     pm = re.search(regx, r.text)
+    if pm is not None and pm.group(1) == '1101': # mobile login out
+        return '1101'
     if pm is None or pm.group(1) != '0':
         logger.debug('Unexpected sync check result: %s' % r.text)
         return None
