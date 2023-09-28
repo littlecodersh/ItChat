@@ -71,7 +71,12 @@ def emoji_formatter(d, k):
 def msg_formatter(d, k):
     emoji_formatter(d, k)
     d[k] = d[k].replace('<br/>', '\n')
-    d[k]  = htmlParser.unescape(d[k])
+    try:
+        d[k]  = htmlParser.unescape(d[k])
+    except AttributeError: # Python3.9 above
+        from html import unescape
+        d[k] = unescape(d[k])
+
 
 def check_file(fileDir):
     try:
